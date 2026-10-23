@@ -171,7 +171,7 @@ class GuildScreen(App app) : IScreen
       {
         if (i == _cursor)
           highlight = lines.Count;
-        lines.Add($"  {_choices[i].Name}, {_choices[i].ClassName}");
+        lines.Add($"  {_choices[i].Name}, {_choices[i].Role}");
       }
       lines.Add(end < _choices.Count ? "  (more below)" : "");
     }

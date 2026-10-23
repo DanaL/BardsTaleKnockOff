@@ -200,7 +200,7 @@ unsafe class GameUI
     _text.Draw($"{c.HP}/{c.MaxHP}", left + ColHP, y, RosterText);
     _text.Draw(c.MaxMP > 0 ? $"{c.MP}/{c.MaxMP}" : "-", left + ColMP, y, RosterText);
     _text.Draw(c.Condition, left + ColConditions, y, RosterText);
-    _text.Draw(c.ClassName, left + ColClass, y, RosterText);
+    _text.Draw(c.Role.ToString(), left + ColClass, y, RosterText);
   }
 
   // --- Debug overhead map, drawn in the text panel -----------------------------

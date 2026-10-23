@@ -1,10 +1,14 @@
 namespace BardsTaleKnockOff;
 
+enum Lineage { Human, Orc, Dwarf, Gnome, Elf, Goblin }
+enum Role { Warrior, Rogue, Hunter, Conjurer, Magician }
+
 // Placeholder character model
 class Character
 {
   public required string Name { get; init; }
-  public required string ClassName { get; init; }
+  public required Lineage Lineage { get; init; }
+  public required Role Role { get; init; }
   public int AC { get; set; }
   public int HP { get; set; }
   public int MaxHP { get; set; }
@@ -44,20 +48,17 @@ class Party
     Members[MaxMembers - 1] = null;
   }
 
-  // Ready-made characters for the Guild's roster, so there's someone to
-  // adventure with before character creation exists (Bard's Tale shipped
-  // with a pre-made party too).
-  public static List<Character> SampleRoster() => [.. Sample().Members.OfType<Character>()];
+  //public static List<Character> SampleRoster() => [.. Sample().Members.OfType<Character>()];
 
-  public static Party Sample()
-  {
-    var party = new Party();
-    party.Members[0] = new() { Name = "Thorvald", ClassName = "Warrior", AC = 4, HP = 28, MaxHP = 28 };
-    party.Members[1] = new() { Name = "Elspeth", ClassName = "Paladin", AC = 3, HP = 19, MaxHP = 24 };
-    party.Members[2] = new() { Name = "Pip", ClassName = "Rogue", AC = 7, HP = 12, MaxHP = 15, Condition = "Poisoned" };
-    party.Members[3] = new() { Name = "Melisande", ClassName = "Bard", AC = 8, HP = 14, MaxHP = 14 };
-    party.Members[4] = new() { Name = "Aldric the Wise", ClassName = "Conjurer", AC = 10, HP = 9, MaxHP = 9, MP = 11, MaxMP = 16 };
-    
-    return party;
-  }
+  // public static Party Sample()
+  // {
+  //   var party = new Party();
+  //   party.Members[0] = new() { Name = "Thorvald", ClassName = "Warrior", AC = 4, HP = 28, MaxHP = 28 };
+  //   party.Members[1] = new() { Name = "Elspeth", ClassName = "Paladin", AC = 3, HP = 19, MaxHP = 24 };
+  //   party.Members[2] = new() { Name = "Pip", ClassName = "Rogue", AC = 7, HP = 12, MaxHP = 15, Condition = "Poisoned" };
+  //   party.Members[3] = new() { Name = "Melisande", ClassName = "Bard", AC = 8, HP = 14, MaxHP = 14 };
+  //   party.Members[4] = new() { Name = "Aldric the Wise", ClassName = "Conjurer", AC = 10, HP = 9, MaxHP = 9, MP = 11, MaxMP = 16 };
+
+  //   return party;
+  // }
 }
