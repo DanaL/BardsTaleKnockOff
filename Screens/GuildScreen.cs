@@ -13,7 +13,20 @@ class GuildScreen(App app) : IScreen
   Mode _mode = Mode.Menu;
   string _status = "";
 
+  // While adding: the characters who could join (on file, not already in the
+  // party) in alphabetical order, which one is selected, and which is the
+  // first of the rows currently scrolled into view.
+  const int VisibleRows = 10;
+  List<Character> _choices = [];
+  int _cursor;
+  int _scrollTop;
+
   Party Party => app.Game!.Party;
+
+  List<Character> AddableCharacters() =>
+    [.. app.Roster
+      .Where(c => !Party.Contains(c))
+      .OrderBy(c => c.Name, StringComparer.CurrentCultureIgnoreCase)];
 
   public void OnKey(SDL_KeyboardEvent key)
   {
@@ -45,9 +58,14 @@ class GuildScreen(App app) : IScreen
         else if (app.Roster.Count == 0)
           _status = "You have not created any characters yet!";
         else if (!app.Roster.Any(c => !Party.Contains(c)))
-          _status = "Everyone on file is already in the party.";          
+          _status = "Everyone on file is already in the party.";
         else
+        {
           _mode = Mode.ChoosingToAdd;
+          _choices = AddableCharacters();
+          _cursor = 0;
+          _scrollTop = 0;
+        }
         break;
       case SDL_Keycode.SDLK_R:
         if (Party.Count == 0)
@@ -69,23 +87,52 @@ class GuildScreen(App app) : IScreen
     }
   }
 
+  // Up/Down (and PageUp/PageDown) move the selection, Enter adds the selected
+  // character, Esc goes back to the menu. After adding, the list stays open
+  // so you can pick several people in a row.
   void OnAddKey(SDL_KeyboardEvent key)
   {
-    _mode = Mode.Menu;
-    if (key.key == SDL_Keycode.SDLK_ESCAPE)
-      return;
-
-    int index = (int)key.key - '1';
-    if (index < 0 || index >= app.Roster.Count)
+    switch (key.key)
     {
-      _status = "There's nobody by that letter.";
-      return;
+      case SDL_Keycode.SDLK_UP:
+        MoveCursor(-1);
+        break;
+      case SDL_Keycode.SDLK_DOWN:
+        MoveCursor(1);
+        break;
+      case SDL_Keycode.SDLK_PAGEUP:
+        MoveCursor(-VisibleRows);
+        break;
+      case SDL_Keycode.SDLK_PAGEDOWN:
+        MoveCursor(VisibleRows);
+        break;
+      case SDL_Keycode.SDLK_RETURN:
+      case SDL_Keycode.SDLK_KP_ENTER:
+        var c = _choices[_cursor];
+        Party.Add(c);
+        _status = $"{c.Name} joins the party.";
+        _choices = AddableCharacters();
+        if (Party.IsFull || _choices.Count == 0)
+          _mode = Mode.Menu;
+        else
+          MoveCursor(0);  // keep the cursor and scroll position valid
+        break;
+      case SDL_Keycode.SDLK_ESCAPE:
+        _mode = Mode.Menu;
+        _status = "";
+        break;
     }
-    var c = app.Roster[index];
-    if (Party.Contains(c))
-      _status = $"{c.Name} is already in the party.";
-    else
-      Party.Add(c);
+  }
+
+  void MoveCursor(int delta)
+  {
+    _cursor = Math.Clamp(_cursor + delta, 0, _choices.Count - 1);
+    // Scroll just enough to keep the selected row in view.
+    if (_cursor < _scrollTop)
+      _scrollTop = _cursor;
+    else if (_cursor >= _scrollTop + VisibleRows)
+      _scrollTop = _cursor - VisibleRows + 1;
+    _scrollTop = Math.Clamp(_scrollTop, 0, Math.Max(0, _choices.Count - VisibleRows));
   }
 
   // Party members are numbered 1-6, as in the roster at the bottom.
@@ -107,30 +154,33 @@ class GuildScreen(App app) : IScreen
   public void Draw(GameUI ui)
   {
     var lines = new List<string> { "Welcome to the Adventurers' Guild.", "" };
-    
+    int highlight = -1;
+
     lines.AddRange(_mode switch
     {
-      Mode.ChoosingToAdd => ["Add whom to the party?"],
+      Mode.ChoosingToAdd => ["Add whom to the party?", "Up/Down to choose, Enter to add, Esc when done.", ""],
       Mode.ChoosingToRemove => ["Remove whom from the party?"],
       _ => ["C) Create a character", "A) Add to party", "R) Remove from party", "L) Leave the Guild"]
     });
 
     if (_mode == Mode.ChoosingToAdd)
     {
-      for (int i = 0; i < app.Roster.Count; i++)
+      lines.Add(_scrollTop > 0 ? "  (more above)" : "");
+      int end = Math.Min(_scrollTop + VisibleRows, _choices.Count);
+      for (int i = _scrollTop; i < end; i++)
       {
-        var c = app.Roster[i];
-        var inParty = Party.Contains(c) ? " (in party)" : "";
-        lines.Add($"  {(char)('0' + i + 1)}) {c.Name}, {c.ClassName}{inParty}");
+        if (i == _cursor)
+          highlight = lines.Count;
+        lines.Add($"  {_choices[i].Name}, {_choices[i].ClassName}");
       }
-      lines.Add("");
+      lines.Add(end < _choices.Count ? "  (more below)" : "");
     }
 
     if (_status.Length > 0)
       lines.AddRange(["", _status]);
 
     ui.DrawPicture("Adventurers' Guild");
-    ui.DrawTextPanel(lines);
+    ui.DrawTextPanel(lines, highlight);
     ui.DrawRoster(Party);
   }
 }

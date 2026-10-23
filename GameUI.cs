@@ -49,6 +49,7 @@ unsafe class GameUI
   static readonly Rgb PanelBorder = new(110, 110, 116);
   static readonly Rgb InfoBackground = new(255, 255, 255);
   static readonly Rgb InfoText = new(0, 0, 0);
+  static readonly Rgb Highlight = new(255, 242, 168);  // pale yellow: selected row
   static readonly Rgb RosterBackground = new(44, 44, 48);
   static readonly Rgb RosterHeading = new(232, 200, 120);
   static readonly Rgb RosterText = new(236, 236, 236);
@@ -108,7 +109,10 @@ unsafe class GameUI
   // Text in the panel to the right of the picture, word-wrapped. If there's
   // more than fits, the last lines are shown, so this works both for menus
   // (which fit) and for the message log (newest at the bottom).
-  public void DrawTextPanel(IEnumerable<string> paragraphs)
+  //
+  // highlight is the index of a paragraph to draw on a highlighted
+  // background (e.g. the selected row of a list), or -1 for none.
+  public void DrawTextPanel(IEnumerable<string> paragraphs, int highlight = -1)
   {
     Frame(InfoRect);
     FillRect(InfoBackground, InfoRect);
@@ -117,12 +121,23 @@ unsafe class GameUI
     int width = InfoRect.w - 2 * InfoPadding;
     int maxLines = (int)((InfoRect.h - 2 * InfoPadding + 1) / _smallText.LineHeight);
 
-    var lines = paragraphs.SelectMany(p => _smallText.Wrap(p, width)).ToList();
+    // Remember which paragraph each wrapped line came from, for highlighting.
+    var lines = paragraphs
+      .SelectMany((p, index) => _smallText.Wrap(p, width).Select(line => (line, index)))
+      .ToList();
     int first = Math.Max(0, lines.Count - maxLines);
     float y = InfoRect.y + InfoPadding;
     for (int i = first; i < lines.Count; i++)
     {
-      _smallText.Draw(lines[i], InfoRect.x + InfoPadding, y, InfoText);
+      if (lines[i].index == highlight)
+      {
+        // The line's text starts at y (top of the capitals); the band covers
+        // the whole line height, from half a pixel above.
+        var band = new SDL_FRect { x = InfoRect.x + 1, y = y - 0.5f, w = InfoRect.w - 2, h = _smallText.LineHeight };
+        SDL_SetRenderDrawColor(_renderer, Highlight.R, Highlight.G, Highlight.B, 255);
+        SDL_RenderFillRect(_renderer, &band);
+      }
+      _smallText.Draw(lines[i].line, InfoRect.x + InfoPadding, y, InfoText);
       y += _smallText.LineHeight;
     }
   }
