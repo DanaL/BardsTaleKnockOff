@@ -11,17 +11,64 @@ namespace BardsTaleKnockOff;
 // Command line (handy for testing):
 //   --seed N              which random map to build
 //   --pos X Y DIR         starting square and facing (DIR = N, E, S or W)
-//   --shot FILE.png       draw one frame, save it and exit
 //   --pillars             use the pillar-hall test map instead of a maze
 //   --grove               use an open field with scattered trees instead
 //   --range N             how many squares ahead you can see (1-3)
 //   --town / --night      outdoor town style by day / by night
 //   --map                 start with the debug map showing
+
+enum GameEventType { Quitting, Cancel, KeyInput, NoEvent }
+record struct GameEvent(GameEventType Type, char Value);
+
 unsafe class Program
 {
   // The screen is GameUI.ScreenW x ScreenH logical pixels, scaled up to the
   // window by a whole-number factor, which keeps the pixel art crisp.
   const int WindowScale = 4;
+
+  static GameEvent PollEvent()
+  {
+    SDL_Event e;
+    while (SDL_PollEvent(&e))
+    {
+      if (e.type == (uint)SDL_EventType.SDL_EVENT_QUIT)
+      {
+        return new GameEvent(GameEventType.Quitting, '\0');
+      }
+      else if (e.type == (uint)SDL_EventType.SDL_EVENT_KEY_DOWN)
+      {
+        switch (e.key.scancode)
+        {
+          case SDL_Scancode.SDL_SCANCODE_ESCAPE:
+            return new(GameEventType.Cancel, '\0');
+          case SDL_Scancode.SDL_SCANCODE_UP:
+          case SDL_Scancode.SDL_SCANCODE_W:
+            return new(GameEventType.KeyInput, 'W');
+          case SDL_Scancode.SDL_SCANCODE_DOWN:
+          case SDL_Scancode.SDL_SCANCODE_S:
+            return new(GameEventType.KeyInput, 'S');
+          case SDL_Scancode.SDL_SCANCODE_LEFT:
+          case SDL_Scancode.SDL_SCANCODE_A:
+            return new(GameEventType.KeyInput, 'A');
+          case SDL_Scancode.SDL_SCANCODE_RIGHT:
+          case SDL_Scancode.SDL_SCANCODE_D:
+            return new(GameEventType.KeyInput, 'D');
+          case SDL_Scancode.SDL_SCANCODE_Q:
+            return new(GameEventType.KeyInput, 'Q');            
+          case SDL_Scancode.SDL_SCANCODE_E:
+            return new(GameEventType.KeyInput, 'E');
+          case SDL_Scancode.SDL_SCANCODE_1:
+          case SDL_Scancode.SDL_SCANCODE_2:
+          case SDL_Scancode.SDL_SCANCODE_3:
+            return new(GameEventType.KeyInput, (char) ('0' + e.key.scancode - SDL_Scancode.SDL_SCANCODE_0));
+          case SDL_Scancode.SDL_SCANCODE_M:
+            return new(GameEventType.KeyInput, 'M');
+        }
+      }
+    }
+
+    return new(GameEventType.NoEvent, '\0');
+  }
 
   static int Main(string[] args)
   {
@@ -137,54 +184,34 @@ unsafe class Program
     bool running = true;
     while (running)
     {
-      SDL_Event e;
-      while (SDL_PollEvent(&e))
+      GameEvent ev = PollEvent();
+      switch (ev.Type)
       {
-        if (e.type == (uint)SDL_EventType.SDL_EVENT_QUIT)
-        {
+        case GameEventType.Quitting:
           running = false;
-        }
-        else if (e.type == (uint)SDL_EventType.SDL_EVENT_KEY_DOWN)
-        {
-          switch (e.key.scancode)
+          break;
+        case GameEventType.KeyInput:
+          switch (ev.Value)
           {
-            case SDL_Scancode.SDL_SCANCODE_ESCAPE:
-              running = false;
-              break;
-            case SDL_Scancode.SDL_SCANCODE_UP:
-            case SDL_Scancode.SDL_SCANCODE_W:
+            case 'W':
               state.TryMove(state.Facing);
               break;
-            case SDL_Scancode.SDL_SCANCODE_DOWN:
-            case SDL_Scancode.SDL_SCANCODE_S:
+            case 'S':
               state.TryMove(state.Facing.Opposite());
               break;
-            case SDL_Scancode.SDL_SCANCODE_LEFT:
-            case SDL_Scancode.SDL_SCANCODE_A:
+            case 'A':
               state.Facing = state.Facing.TurnLeft();
               break;
-            case SDL_Scancode.SDL_SCANCODE_RIGHT:
-            case SDL_Scancode.SDL_SCANCODE_D:
+            case 'D':
               state.Facing = state.Facing.TurnRight();
               break;
-            case SDL_Scancode.SDL_SCANCODE_Q:
-              state.TryMove(state.Facing.TurnLeft());
-              break;
-            case SDL_Scancode.SDL_SCANCODE_E:
-              state.TryMove(state.Facing.TurnRight());
-              break;
-            case SDL_Scancode.SDL_SCANCODE_1:
-            case SDL_Scancode.SDL_SCANCODE_2:
-            case SDL_Scancode.SDL_SCANCODE_3:
-              state.ViewRange = e.key.scancode - SDL_Scancode.SDL_SCANCODE_1 + 1;
-              break;
-            case SDL_Scancode.SDL_SCANCODE_M:
+            case 'M':
               state.ShowMap = !state.ShowMap;
-              break;            
+              break;
           }
-        }
+          break;
       }
-
+      
       SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
       SDL_RenderClear(renderer);
       ui.Draw(state);
