@@ -21,6 +21,34 @@ class Party
   public Character? Special { get; set; }
   public Character?[] Members { get; } = new Character?[MaxMembers];
 
+  public int Count => Members.Count(m => m is not null);
+  public bool IsFull => Count == MaxMembers;
+  public bool Contains(Character c) => Members.Contains(c);
+
+  // Add to the first empty slot. False if the party is full.
+  public bool Add(Character c)
+  {
+    int slot = Array.IndexOf(Members, null);
+    if (slot < 0)
+      return false;
+    Members[slot] = c;
+    return true;
+  }
+
+  // Remove the member in a slot (0-based) and close the gap, so members
+  // always fill slots 1, 2, 3... with no holes.
+  public void RemoveAt(int slot)
+  {
+    for (int i = slot; i < MaxMembers - 1; i++)
+      Members[i] = Members[i + 1];
+    Members[MaxMembers - 1] = null;
+  }
+
+  // Ready-made characters for the Guild's roster, so there's someone to
+  // adventure with before character creation exists (Bard's Tale shipped
+  // with a pre-made party too).
+  public static List<Character> SampleRoster() => [.. Sample().Members.OfType<Character>()];
+
   public static Party Sample()
   {
     var party = new Party();

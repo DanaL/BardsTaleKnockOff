@@ -1,14 +1,12 @@
+using System.Runtime.InteropServices;
 using SDL;
 using static SDL.SDL3;
 using static SDL.SDL3_ttf;
 
 namespace BardsTaleKnockOff;
 
-// Controls: Up/W forward, Down/S back, Left/A turn left, Right/D turn right,
-// Q/E sidestep, 1/2/3 set view range, M toggle debug map, F12 screenshot,
-// Esc quit.
-//
 // Command line (handy for testing):
+//   --quickstart          skip the menus: straight into the town with a party
 //   --seed N              which random map to build
 //   --pos X Y DIR         starting square and facing (DIR = N, E, S or W)
 //   --pillars             use the pillar-hall test map instead of a maze
@@ -16,107 +14,60 @@ namespace BardsTaleKnockOff;
 //   --range N             how many squares ahead you can see (1-3)
 //   --town / --night      outdoor town style by day / by night
 //   --map                 start with the debug map showing
-
-enum GameEventType { Quitting, Cancel, KeyInput, NoEvent }
-record struct GameEvent(GameEventType Type, char Value);
-
+//
+// The program is a stack of screens (see Screens/). The main loop below
+// never changes: it hands each keyboard event to the screen on top, then
+// draws, until there are no screens left.
 unsafe class Program
 {
   // The screen is GameUI.ScreenW x ScreenH logical pixels, scaled up to the
   // window by a whole-number factor, which keeps the pixel art crisp.
   const int WindowScale = 4;
 
-  static GameEvent PollEvent()
-  {
-    SDL_Event e;
-    while (SDL_PollEvent(&e))
-    {
-      if (e.type == (uint)SDL_EventType.SDL_EVENT_QUIT)
-      {
-        return new GameEvent(GameEventType.Quitting, '\0');
-      }
-      else if (e.type == (uint)SDL_EventType.SDL_EVENT_KEY_DOWN)
-      {
-        switch (e.key.scancode)
-        {
-          case SDL_Scancode.SDL_SCANCODE_ESCAPE:
-            return new(GameEventType.Cancel, '\0');
-          case SDL_Scancode.SDL_SCANCODE_UP:
-          case SDL_Scancode.SDL_SCANCODE_W:
-            return new(GameEventType.KeyInput, 'W');
-          case SDL_Scancode.SDL_SCANCODE_DOWN:
-          case SDL_Scancode.SDL_SCANCODE_S:
-            return new(GameEventType.KeyInput, 'S');
-          case SDL_Scancode.SDL_SCANCODE_LEFT:
-          case SDL_Scancode.SDL_SCANCODE_A:
-            return new(GameEventType.KeyInput, 'A');
-          case SDL_Scancode.SDL_SCANCODE_RIGHT:
-          case SDL_Scancode.SDL_SCANCODE_D:
-            return new(GameEventType.KeyInput, 'D');
-          case SDL_Scancode.SDL_SCANCODE_Q:
-            return new(GameEventType.KeyInput, 'Q');            
-          case SDL_Scancode.SDL_SCANCODE_E:
-            return new(GameEventType.KeyInput, 'E');
-          case SDL_Scancode.SDL_SCANCODE_1:
-          case SDL_Scancode.SDL_SCANCODE_2:
-          case SDL_Scancode.SDL_SCANCODE_3:
-            return new(GameEventType.KeyInput, (char) ('0' + e.key.scancode - SDL_Scancode.SDL_SCANCODE_0));
-          case SDL_Scancode.SDL_SCANCODE_M:
-            return new(GameEventType.KeyInput, 'M');
-        }
-      }
-    }
-
-    return new(GameEventType.NoEvent, '\0');
-  }
-
   static int Main(string[] args)
   {
-    int seed = Environment.TickCount;
-    int px = 0, py = 1;
-    Dir facing = Dir.North;
-    bool pillars = false;
-    bool grove = false;
-    bool showMap = false;
-    int? viewRangeArg = null;
-    var style = LevelStyle.Dungeon;
+    var options = new NewGameOptions();
+    bool quickstart = false;
     var unknownArgs = new List<string>();
 
     for (int i = 0; i < args.Length; i++)
     {
       switch (args[i].ToLowerInvariant())
       {
+        case "--quickstart":
+          quickstart = true;
+          break;
         case "--seed":
-          seed = int.Parse(args[++i]);
+          options.Seed = int.Parse(args[++i]);
           break;
         case "--pos":
-          px = int.Parse(args[++i]);
-          py = int.Parse(args[++i]);
-          facing = args[++i].ToUpperInvariant() switch
+          options.X = int.Parse(args[++i]);
+          options.Y = int.Parse(args[++i]);
+          options.Facing = args[++i].ToUpperInvariant() switch
           {
             "E" => Dir.East,
             "S" => Dir.South,
             "W" => Dir.West,
             _ => Dir.North
           };
-          break;        
+          break;
         case "--range":
-          viewRangeArg = Math.Clamp(int.Parse(args[++i]), 1, 3);
+          options.ViewRange = Math.Clamp(int.Parse(args[++i]), 1, 3);
           break;
         case "--town":
-          style = LevelStyle.TownDay;
+          options.Style = LevelStyle.TownDay;
           break;
         case "--night":
-          style = LevelStyle.TownNight;
+          options.Style = LevelStyle.TownNight;
           break;
         case "--grove":
-          grove = true;
+          options.Grove = true;
           break;
         case "--pillars":
-          pillars = true;
+          options.Pillars = true;
           break;
         case "--map":
-          showMap = true;
+          options.ShowMap = true;
           break;
         default:
           unknownArgs.Add(args[i]);
@@ -126,7 +77,7 @@ unsafe class Program
 
     foreach (var arg in unknownArgs)
       Console.Error.WriteLine($"Unknown option: {arg}");
-    
+
     if (!SDL_Init(SDL_InitFlags.SDL_INIT_VIDEO))
     {
       Console.Error.WriteLine($"SDL_Init failed: {SDL_GetError()}");
@@ -151,71 +102,53 @@ unsafe class Program
     SDL_SetRenderLogicalPresentation(renderer, GameUI.ScreenW, GameUI.ScreenH,
       SDL_RendererLogicalPresentation.SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
 
+    // SDL starts with text input on; screens switch it on only when they
+    // want typed characters (see App.StartTextInput).
+    SDL_StopTextInput(window);
+
     var assetDir = Path.Combine(AppContext.BaseDirectory, "assets");
     var ui = new GameUI(renderer,
       new ViewRenderer(renderer, assetDir),
       Path.Combine(assetDir, "m5x7.ttf"));
 
-    var state = new GameState
+    var app = new App(window, options);
+    if (quickstart)
     {
-      Map = pillars ? MazeBuilder.Pillars()
-        : grove ? MazeBuilder.Grove(seed)
-        : MazeBuilder.Build(seed),
-      Style = style,
-      Party = new Party(), // Party.Sample(),
-      X = px,
-      Y = py,
-      Facing = facing,
-      ViewRange = viewRangeArg ?? style.DefaultViewRange,
-      ShowMap = showMap
-    };
-    state.Say("Welcome to Dana's Bard's Tale Knockoff!");
-    state.Say("");
-    state.Say("B) Begin new Adventure!");
-    state.Say(" - you will be taken the Adventurers' Guild where you can create new characters.");
-    state.Say("");
-    state.Say("L) Load saved game");
-    state.Say("C) Credits");
-
-    foreach (var arg in unknownArgs)
-      state.Say($"(Unknown command-line option ignored: {arg})");
-    Console.WriteLine($"Seed {seed}");
-
-    bool running = true;
-    while (running)
+      app.NewGame();
+      foreach (var c in app.Roster.Take(Party.MaxMembers))
+        app.Game!.Party.Add(c);
+      app.Screens.Push(new TownScreen(app));
+    }
+    else
     {
-      GameEvent ev = PollEvent();
-      switch (ev.Type)
+      app.Screens.Push(new MainMenuScreen(app,
+        unknownArgs.Select(a => $"(Unknown command-line option ignored: {a})")));
+    }
+
+    while (!app.Screens.IsEmpty)
+    {
+      SDL_Event e;
+      while (!app.Screens.IsEmpty && SDL_PollEvent(&e))
       {
-        case GameEventType.Quitting:
-          running = false;
-          break;
-        case GameEventType.KeyInput:
-          switch (ev.Value)
-          {
-            case 'W':
-              state.TryMove(state.Facing);
-              break;
-            case 'S':
-              state.TryMove(state.Facing.Opposite());
-              break;
-            case 'A':
-              state.Facing = state.Facing.TurnLeft();
-              break;
-            case 'D':
-              state.Facing = state.Facing.TurnRight();
-              break;
-            case 'M':
-              state.ShowMap = !state.ShowMap;
-              break;
-          }
-          break;
+        switch ((SDL_EventType)e.type)
+        {
+          case SDL_EventType.SDL_EVENT_QUIT:
+            app.Screens.Clear();
+            break;
+          case SDL_EventType.SDL_EVENT_KEY_DOWN:
+            app.Screens.Top?.OnKey(e.key);
+            break;
+          case SDL_EventType.SDL_EVENT_TEXT_INPUT:
+            app.Screens.Top?.OnText(Marshal.PtrToStringUTF8((nint)e.text.text) ?? "");
+            break;
+        }
       }
-      
+      if (app.Screens.IsEmpty)
+        break;
+
       SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
       SDL_RenderClear(renderer);
-      ui.Draw(state);
-
+      app.Screens.Draw(ui);
       SDL_RenderPresent(renderer);
       SDL_Delay(16);
     }

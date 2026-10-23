@@ -14,6 +14,9 @@ namespace BardsTaleKnockOff;
 //
 // Everything is in logical pixels; SDL scales the whole screen up to the
 // window by a whole-number factor.
+//
+// GameUI doesn't decide what goes on screen; screens (see Screens/) do, by
+// calling the building blocks below.
 unsafe class GameUI
 {
   public const int ScreenW = 344;
@@ -50,6 +53,8 @@ unsafe class GameUI
   static readonly Rgb RosterHeading = new(232, 200, 120);
   static readonly Rgb RosterText = new(236, 236, 236);
   static readonly Rgb RosterDim = new(140, 140, 146);
+  static readonly Rgb PictureBackground = new(20, 20, 24);
+  static readonly Rgb PictureCaption = new(200, 200, 206);
 
   // Roster column positions, relative to the left of the roster's text area.
   const int ColName = 12;
@@ -72,33 +77,47 @@ unsafe class GameUI
     _smallText = new TextRenderer(renderer, fontPath, scale: 0.5f);
   }
 
-  public void Draw(GameState state)
-  {
-    FillRect(Background, new SDL_Rect { x = 0, y = 0, w = ScreenW, h = ScreenH });
+  // --- Building blocks for screens ---------------------------------------------
+  //
+  // Each screen draws itself by combining these. A typical screen calls
+  // DrawDungeonView or DrawPicture, then DrawTextPanel, then DrawRoster.
 
+  // Fill the whole screen with the background colour. ScreenStack calls this
+  // before drawing, so screens don't need to.
+  public void Clear() => FillRect(Background, new SDL_Rect { x = 0, y = 0, w = ScreenW, h = ScreenH });
+
+  // The first-person view of the map.
+  public void DrawDungeonView(GameState state)
+  {
     Frame(ViewRect);
     _view.Draw(state.Map, state.X, state.Y, state.Facing, state.ViewRange, state.Style, ViewRect.x, ViewRect.y);
-
-    Frame(InfoRect);
-    FillRect(InfoBackground, InfoRect);
-    if (state.ShowMap)
-      DrawMinimap(state);
-    else
-      DrawMessages(state);
-
-    Frame(RosterRect);
-    FillRect(RosterBackground, RosterRect);
-    DrawRoster(state.Party);
   }
 
-  void DrawMessages(GameState state)
+  // Something other than the map in the picture area (the Guild, a shop, a
+  // title screen...). Until there's art for these, it's a dark panel with a
+  // caption in the middle.
+  public void DrawPicture(string caption)
   {
+    Frame(ViewRect);
+    FillRect(PictureBackground, ViewRect);
+    float x = ViewRect.x + (ViewRect.w - _text.Measure(caption)) / 2;
+    float y = ViewRect.y + (ViewRect.h - 7) / 2;
+    _text.Draw(caption, MathF.Round(x), MathF.Round(y), PictureCaption);
+  }
+
+  // Text in the panel to the right of the picture, word-wrapped. If there's
+  // more than fits, the last lines are shown, so this works both for menus
+  // (which fit) and for the message log (newest at the bottom).
+  public void DrawTextPanel(IEnumerable<string> paragraphs)
+  {
+    Frame(InfoRect);
+    FillRect(InfoBackground, InfoRect);
+
     const int InfoPadding = 3;
     int width = InfoRect.w - 2 * InfoPadding;
     int maxLines = (int)((InfoRect.h - 2 * InfoPadding + 1) / _smallText.LineHeight);
 
-    // Wrap everything, then show the newest lines that fit.
-    var lines = state.Messages.SelectMany(m => _smallText.Wrap(m, width)).ToList();
+    var lines = paragraphs.SelectMany(p => _smallText.Wrap(p, width)).ToList();
     int first = Math.Max(0, lines.Count - maxLines);
     float y = InfoRect.y + InfoPadding;
     for (int i = first; i < lines.Count; i++)
@@ -108,8 +127,33 @@ unsafe class GameUI
     }
   }
 
-  void DrawRoster(Party party)
+  // A boxed message in the middle of the screen, on top of whatever is
+  // already drawn. For questions like "Really quit?".
+  public void DrawPrompt(IEnumerable<string> paragraphs)
   {
+    const int BoxW = 200;
+    const int BoxPadding = 6;
+    var lines = paragraphs.SelectMany(p => _text.Wrap(p, BoxW - 2 * BoxPadding)).ToList();
+    int boxH = 2 * BoxPadding + lines.Count * TextRenderer.BaseLineHeight - 3;
+    var box = new SDL_Rect { x = (ScreenW - BoxW) / 2, y = (ScreenH - boxH) / 2, w = BoxW, h = boxH };
+
+    Frame(box);
+    FillRect(RosterBackground, box);
+    int y = box.y + BoxPadding;
+    foreach (var line in lines)
+    {
+      _text.Draw(line, box.x + BoxPadding, y, RosterText);
+      y += TextRenderer.BaseLineHeight;
+    }
+  }
+
+  // The party roster along the bottom. Null draws the empty slots (e.g. on
+  // the main menu, before there is a party).
+  public void DrawRoster(Party? party)
+  {
+    Frame(RosterRect);
+    FillRect(RosterBackground, RosterRect);
+
     int left = RosterRect.x + Padding;
     int y = RosterRect.y + Padding;
 
@@ -121,11 +165,11 @@ unsafe class GameUI
     _text.Draw("Class", left + ColClass, y, RosterHeading);
     y += TextRenderer.BaseLineHeight;
 
-    DrawRosterLine("S)", party.Special, left, y);
+    DrawRosterLine("S)", party?.Special, left, y);
     y += TextRenderer.BaseLineHeight;
     for (int i = 0; i < Party.MaxMembers; i++)
     {
-      DrawRosterLine($"{i + 1})", party.Members[i], left, y);
+      DrawRosterLine($"{i + 1})", party?.Members[i], left, y);
       y += TextRenderer.BaseLineHeight;
     }
   }
@@ -148,8 +192,11 @@ unsafe class GameUI
 
   const int MapCell = 5;
 
-  void DrawMinimap(GameState state)
+  public void DrawMinimap(GameState state)
   {
+    Frame(InfoRect);
+    FillRect(InfoBackground, InfoRect);
+
     var map = state.Map;
     int mapX = InfoRect.x + (InfoRect.w - Dungeon.Size * MapCell) / 2;
     int mapY = InfoRect.y + (InfoRect.h - Dungeon.Size * MapCell) / 2;

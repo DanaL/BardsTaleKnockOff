@@ -1,0 +1,88 @@
+using SDL;
+
+namespace BardsTaleKnockOff;
+
+// Pushed on top of the Guild. For now it only asks for a name and makes a
+// placeholder character; race, class and rolling stats would go here as
+// further steps (each could be a mode of this screen, like the Guild's, or
+// its own screen pushed in turn).
+//
+// Shows how typing works: text input is switched on while this screen is
+// open, letters arrive through OnText, and only the editing keys (Enter,
+// Backspace, Esc) are handled in OnKey.
+class CreateCharacterScreen(App app) : IScreen
+{
+  const int MaxNameLength = 15;
+
+  string _name = "";
+  string _status = "";
+
+  public void OnEnter() => app.StartTextInput();
+  public void OnExit() => app.StopTextInput();
+
+  public void OnText(string text)
+  {
+    foreach (char ch in text)
+    {
+      if (_name.Length < MaxNameLength && (char.IsLetterOrDigit(ch) || ch is ' ' or '\'' or '-'))
+        _name += ch;
+    }
+    _status = "";
+  }
+
+  public void OnKey(SDL_KeyboardEvent key)
+  {
+    switch (key.key)
+    {
+      case SDL_Keycode.SDLK_BACKSPACE:
+        if (_name.Length > 0)
+          _name = _name[..^1];
+        break;
+      case SDL_Keycode.SDLK_RETURN:
+      case SDL_Keycode.SDLK_KP_ENTER:
+        Finish();
+        break;
+      case SDL_Keycode.SDLK_ESCAPE:
+        app.Screens.Pop();
+        break;
+    }
+  }
+
+  void Finish()
+  {
+    var name = _name.Trim();
+    if (name.Length == 0)
+    {
+      _status = "Every adventurer needs a name.";
+      return;
+    }
+    if (app.Roster.Any(c => c.Name.Equals(name, StringComparison.OrdinalIgnoreCase)))
+    {
+      _status = $"There's already a {name} on file.";
+      return;
+    }
+
+    // Placeholder stats until real character creation exists.
+    app.Roster.Add(new Character { Name = name, ClassName = "Warrior", AC = 10, HP = 12, MaxHP = 12 });
+    app.Screens.Pop();
+  }
+
+  public void Draw(GameUI ui)
+  {
+    var lines = new List<string>
+    {
+      "Create a character",
+      "",
+      "Name your character:",
+      $"  {_name}_",
+      "",
+      "Enter to accept, Esc to cancel."
+    };
+    if (_status.Length > 0)
+      lines.AddRange(["", _status]);
+
+    ui.DrawPicture("Adventurers' Guild");
+    ui.DrawTextPanel(lines);
+    ui.DrawRoster(app.Game?.Party);
+  }
+}

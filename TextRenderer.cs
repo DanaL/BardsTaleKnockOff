@@ -80,14 +80,17 @@ unsafe class TextRenderer
   }
 
   // Split text into lines no wider than width pixels, breaking between words.
+  // Leading spaces are kept as an indent on the first line.
   public List<string> Wrap(string text, float width)
   {
     var lines = new List<string>();
-    var line = "";
-    foreach (var word in text.Split(' '))
+    var body = text.TrimStart(' ');
+    var line = text[..(text.Length - body.Length)];
+    bool lineHasWords = false;
+    foreach (var word in body.Split(' '))
     {
-      var candidate = line.Length == 0 ? word : line + " " + word;
-      if (line.Length > 0 && Measure(candidate) > width)
+      var candidate = lineHasWords ? line + " " + word : line + word;
+      if (lineHasWords && Measure(candidate) > width)
       {
         lines.Add(line);
         line = word;
@@ -96,6 +99,7 @@ unsafe class TextRenderer
       {
         line = candidate;
       }
+      lineHasWords = true;
     }
     lines.Add(line);
     return lines;
