@@ -28,7 +28,6 @@ unsafe class Program
     int seed = Environment.TickCount;
     int px = 0, py = 1;
     Dir facing = Dir.North;
-    string? shotFile = null;
     bool pillars = false;
     bool grove = false;
     bool showMap = false;
@@ -53,10 +52,7 @@ unsafe class Program
             "W" => Dir.West,
             _ => Dir.North
           };
-          break;
-        case "--shot":
-          shotFile = args[++i];
-          break;
+          break;        
         case "--range":
           viewRangeArg = Math.Clamp(int.Parse(args[++i]), 1, 3);
           break;
@@ -80,10 +76,10 @@ unsafe class Program
           break;
       }
     }
+
     foreach (var arg in unknownArgs)
       Console.Error.WriteLine($"Unknown option: {arg}");
-    bool oneShot = shotFile is not null;
-
+    
     if (!SDL_Init(SDL_InitFlags.SDL_INIT_VIDEO))
     {
       Console.Error.WriteLine($"SDL_Init failed: {SDL_GetError()}");
@@ -119,15 +115,21 @@ unsafe class Program
         : grove ? MazeBuilder.Grove(seed)
         : MazeBuilder.Build(seed),
       Style = style,
-      Party = Party.Sample(),
+      Party = new Party(), // Party.Sample(),
       X = px,
       Y = py,
       Facing = facing,
       ViewRange = viewRangeArg ?? style.DefaultViewRange,
       ShowMap = showMap
     };
-    state.Say("Welcome, adventurers!");
-    state.Say("Arrow keys or WASD to move. Q/E to sidestep. 1-3 change your light. M shows the map.");
+    state.Say("Welcome to Dana's Bard's Tale Knockoff!");
+    state.Say("");
+    state.Say("B) Begin new Adventure!");
+    state.Say(" - you will be taken the Adventurers' Guild where you can create new characters.");
+    state.Say("");
+    state.Say("L) Load saved game");
+    state.Say("C) Credits");
+
     foreach (var arg in unknownArgs)
       state.Say($"(Unknown command-line option ignored: {arg})");
     Console.WriteLine($"Seed {seed}");
@@ -178,10 +180,7 @@ unsafe class Program
               break;
             case SDL_Scancode.SDL_SCANCODE_M:
               state.ShowMap = !state.ShowMap;
-              break;
-            case SDL_Scancode.SDL_SCANCODE_F12:
-              shotFile = $"screenshot-{DateTime.Now:yyyyMMdd-HHmmss}.png";
-              break;
+              break;            
           }
         }
       }
@@ -189,14 +188,6 @@ unsafe class Program
       SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
       SDL_RenderClear(renderer);
       ui.Draw(state);
-
-      if (shotFile is not null)
-      {
-        SaveScreenshot(renderer, shotFile);
-        shotFile = null;
-        if (oneShot)
-          running = false;
-      }
 
       SDL_RenderPresent(renderer);
       SDL_Delay(16);
@@ -207,18 +198,5 @@ unsafe class Program
     TTF_Quit();
     SDL_Quit();
     return 0;
-  }
-
-  static void SaveScreenshot(SDL_Renderer* renderer, string file)
-  {
-    SDL_Surface* surface = SDL_RenderReadPixels(renderer, null);
-    if (surface == null)
-    {
-      Console.Error.WriteLine($"Screenshot failed: {SDL_GetError()}");
-      return;
-    }
-    SDL_SavePNG(surface, file);
-    SDL_DestroySurface(surface);
-    Console.WriteLine($"Saved {file}");
   }
 }

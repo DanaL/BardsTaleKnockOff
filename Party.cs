@@ -29,6 +29,7 @@ class Party
     party.Members[2] = new() { Name = "Pip", ClassName = "Rogue", AC = 7, HP = 12, MaxHP = 15, Condition = "Poisoned" };
     party.Members[3] = new() { Name = "Melisande", ClassName = "Bard", AC = 8, HP = 14, MaxHP = 14 };
     party.Members[4] = new() { Name = "Aldric the Wise", ClassName = "Conjurer", AC = 10, HP = 9, MaxHP = 9, MP = 11, MaxMP = 16 };
+    
     return party;
   }
 }

@@ -1,6 +1,5 @@
 namespace BardsTaleKnockOff;
 
-// Everything about the game in progress that the UI needs to draw.
 class GameState
 {
   public required Dungeon Map { get; set; }
