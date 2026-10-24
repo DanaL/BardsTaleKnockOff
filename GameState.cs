@@ -13,7 +13,7 @@ namespace BardsTaleKnockOff;
 
 class GameState
 {
-  public required Dungeon Map { get; set; }
+  public required Dungeon? Map { get; set; }
   public required LevelStyle Style { get; set; }
   public required Party Party { get; set; }
 
@@ -21,9 +21,6 @@ class GameState
   public int Y { get; set; }
   public Dir Facing { get; set; } = Dir.North;
   public int ViewRange { get; set; } = 2;
-
-  // Show the debug overhead map in the text panel instead of messages.
-  public bool ShowMap { get; set; }
 
   // Text for the info panel, oldest first. The panel shows as many of the
   // most recent lines as fit.
@@ -40,7 +37,7 @@ class GameState
 
   public void TryMove(Dir dir)
   {
-    if (!Map.CanPass(X, Y, dir))
+    if (!Map.Passable(X, Y, dir))
     {
       Say("Ouch! You can't go that way.");
       return;

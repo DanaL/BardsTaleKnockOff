@@ -224,10 +224,11 @@ unsafe class ViewRenderer
       foreach (int lat in OuterToInner)
       {
         var (x, y) = Square(lat, depth);
+        Tile tile = map.TileAt(x, y);
 
         if (!twilight)
         {
-          var tex = EdgeTexture(map.GetEdge(x, y, facing));
+          var tex = EdgeTexture(tile.EdgeForDir(facing));
           if (tex != null)
           {
             if (FrontWalls.TryGetValue((lat, depth), out var front))
@@ -238,16 +239,16 @@ unsafe class ViewRenderer
         }
 
         if (lat <= 0)
-          DrawSide(EdgeTexture(map.GetEdge(x, y, facing.TurnLeft())), lat, depth, false, originX, originY, light);
+          DrawSide(EdgeTexture(tile.EdgeForDir(facing.TurnLeft())), lat, depth, false, originX, originY, light);
         if (lat >= 0)
-          DrawSide(EdgeTexture(map.GetEdge(x, y, facing.TurnRight())), lat, depth, true, originX, originY, light);
+          DrawSide(EdgeTexture(tile.EdgeForDir(facing.TurnRight())), lat, depth, true, originX, originY, light);
 
         DrawFloorAndCeiling(floorTex, lat, depth, light);
         DrawFloorAndCeiling(ceilingTex, lat, depth, light);
 
         // Features stand on the floor, so they go after it. (Tree sprites
         // include their own patch of ground.)
-        var feature = map.GetFeature(x, y);
+        var feature = tile.Feature;
         if (feature != Feature.None && style.FeatureSheets.TryGetValue(feature, out var featureSheet))
         {
           var tex = Sheet(featureSheet);

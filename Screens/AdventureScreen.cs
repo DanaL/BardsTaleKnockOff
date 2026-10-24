@@ -16,7 +16,7 @@ namespace BardsTaleKnockOff;
 // Walking around the map. This is where the main adventuring loop lives:
 // exploring now; random encounters (push a combat screen, pop it when the
 // fight ends), shops and so on later.
-class TownScreen(App app) : IScreen
+class AdventureScreen(App app) : IScreen
 {
   GameState Game => app.Game!;
 
@@ -53,9 +53,6 @@ class TownScreen(App app) : IScreen
       case SDL_Scancode.SDL_SCANCODE_3:
         Game.ViewRange = key.scancode - SDL_Scancode.SDL_SCANCODE_1 + 1;
         break;
-      case SDL_Scancode.SDL_SCANCODE_M:
-        Game.ShowMap = !Game.ShowMap;
-        break;
       case SDL_Scancode.SDL_SCANCODE_ESCAPE:
         app.Screens.Push(new ConfirmScreen(app, "Abandon this adventure and return to the main menu?", () =>
         {
@@ -69,10 +66,7 @@ class TownScreen(App app) : IScreen
   public void Draw(GameUI ui)
   {
     ui.DrawDungeonView(Game);
-    if (Game.ShowMap)
-      ui.DrawMinimap(Game);
-    else
-      ui.DrawTextPanel(Game.Messages);
+    ui.DrawTextPanel(Game.Messages);
     ui.DrawRoster(Game.Party);
   }
 }

@@ -13,11 +13,11 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-class MainMenuScreen(App app, IEnumerable<string>? notes = null) : IScreen
+class MainMenuScreen(App app) : IScreen
 {
   // Extra lines shown under the menu, e.g. "load isn't written yet" or
   // warnings about the command line.
-  readonly List<string> _notes = [.. notes ?? []];
+  readonly List<string> _notes = [];
 
   public void OnKey(SDL_KeyboardEvent key)
   {

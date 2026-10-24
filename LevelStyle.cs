@@ -44,8 +44,9 @@ class LevelStyle
 
   static readonly Dictionary<Edge, string> StoneEdges = new()
   {
+    [Edge.PermWall] = "walls.png",
     [Edge.Wall] = "walls.png",
-    [Edge.Door] = "doors.png"
+    [Edge.StoneDoor] = "doors.png"
   };
 
   static readonly Dictionary<Feature, string> OutdoorFeatures = new()
@@ -66,7 +67,7 @@ class LevelStyle
 
   public static readonly LevelStyle TownDay = new()
   {
-    FloorSheet = "grass.png",
+    FloorSheet = "dirt.png",
     EdgeSheets = StoneEdges,
     FeatureSheets = OutdoorFeatures,
     SkyBands = [new(64, 104, 184), new(86, 128, 204), new(112, 154, 220), new(146, 184, 232), new(178, 206, 238)],
@@ -77,7 +78,7 @@ class LevelStyle
 
   public static readonly LevelStyle TownNight = new()
   {
-    FloorSheet = "grass.png",
+    FloorSheet = "dirt.png",
     EdgeSheets = StoneEdges,
     FeatureSheets = OutdoorFeatures,
     SkyBands = [new(4, 6, 20), new(8, 11, 32), new(14, 18, 46), new(22, 28, 62)],

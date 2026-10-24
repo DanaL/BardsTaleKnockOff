@@ -11,7 +11,9 @@
 
 namespace BardsTaleKnockOff;
 
-enum Edge : byte { Open, Wall, Door }
+enum Edge : byte { Open, PermWall, Wall, StoneDoor }
+enum Ceiling : byte { None, Stone }
+enum Floor : byte { Stone, Dirt }
 
 // Something standing in the middle of a square, drawn as a sprite that fills
 // the square (e.g. a tree). Unlike edges, these belong to the square itself.
@@ -39,49 +41,44 @@ static class DirExt
   };
 }
 
+record struct Tile(Floor Floor, Ceiling Ceiling, Feature Feature, Edge EdgeN, Edge EdgeS, Edge EdgeE, Edge EdgeW)
+{
+  public Edge EdgeForDir(Dir dir) => dir switch {
+    Dir.North => EdgeN,
+    Dir.South => EdgeS,
+    Dir.East => EdgeE,
+    _ => EdgeW
+  };
+}
+
 // Bard's Tale levels are 22x22 and wrap. Technically BT maps were all toruses
 class Dungeon
 {
   public const int Size = 22;
 
+  readonly Tile[,] _tiles = new Tile[Size, Size];
   readonly Edge[,,] _edges = new Edge[Size, Size, 4];
   readonly Feature[,] _features = new Feature[Size, Size];
 
   public static int Wrap(int v) => ((v % Size) + Size) % Size;
-
-  public Edge GetEdge(int x, int y, Dir side) => _edges[Wrap(x), Wrap(y), (int)side];
-
-  public void SetEdge(int x, int y, Dir side, Edge edge, bool oneWay = false)
-  {
-    _edges[Wrap(x), Wrap(y), (int)side] = edge;
-    if (!oneWay)
-    {
-      var (dx, dy) = side.Delta();
-      _edges[Wrap(x + dx), Wrap(y + dy), (int)side.Opposite()] = edge;
-    }
-  }
-
-  public void Fill(Edge edge)
-  {
-    for (int x = 0; x < Size; x++) {
-      for (int y = 0; y < Size; y++) {
-        for (int s = 0; s < 4; s++) {
-          _edges[x, y, s] = edge;
-        }
-      }
-    }
-  }
-
-  public Feature GetFeature(int x, int y) => _features[Wrap(x), Wrap(y)];
-  public void SetFeature(int x, int y, Feature f) => _features[Wrap(x), Wrap(y)] = f;
+  public Tile TileAt(int x, int y) => _tiles[x, y];
 
   // Can the party step from (x, y) through the given side?
-  public bool CanPass(int x, int y, Dir side)
+  public bool Passable(int x, int y, Dir side)
   {
-    if (GetEdge(x, y, side) == Edge.Wall)
+    var tile = _tiles[x, y];
+    Edge edge = side switch
+    {
+      Dir.North => tile.EdgeN,
+      Dir.South => tile.EdgeS,
+      Dir.East => tile.EdgeE,
+      _ => tile.EdgeW
+    };
+    if (edge == Edge.Wall || edge == Edge.PermWall)
       return false;
+    
       
     var (dx, dy) = side.Delta();
-    return !GetFeature(x + dx, y + dy).Blocks();
+    return !_tiles[x + dx, y + dy].Feature.Blocks();
   }
 }

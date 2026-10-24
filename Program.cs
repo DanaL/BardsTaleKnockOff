@@ -16,16 +16,6 @@ using static SDL.SDL3_ttf;
 
 namespace BardsTaleKnockOff;
 
-// Command line (handy for testing):
-//   --quickstart          skip the menus: straight into the town with a party
-//   --seed N              which random map to build
-//   --pos X Y DIR         starting square and facing (DIR = N, E, S or W)
-//   --pillars             use the pillar-hall test map instead of a maze
-//   --grove               use an open field with scattered trees instead
-//   --range N             how many squares ahead you can see (1-3)
-//   --town / --night      outdoor town style by day / by night
-//   --map                 start with the debug map showing
-//
 // The program is a stack of screens (see Screens/). The main loop below
 // never changes: it hands each keyboard event to the screen on top, then
 // draws, until there are no screens left.
@@ -35,60 +25,8 @@ unsafe class Program
   // window by a whole-number factor, which keeps the pixel art crisp.
   const int WindowScale = 4;
 
-  static int Main(string[] args)
+  static int Main()
   {
-    var options = new NewGameOptions();
-    bool quickstart = false;
-    var unknownArgs = new List<string>();
-
-    for (int i = 0; i < args.Length; i++)
-    {
-      switch (args[i].ToLowerInvariant())
-      {
-        case "--quickstart":
-          quickstart = true;
-          break;
-        case "--seed":
-          options.Seed = int.Parse(args[++i]);
-          break;
-        case "--pos":
-          options.X = int.Parse(args[++i]);
-          options.Y = int.Parse(args[++i]);
-          options.Facing = args[++i].ToUpperInvariant() switch
-          {
-            "E" => Dir.East,
-            "S" => Dir.South,
-            "W" => Dir.West,
-            _ => Dir.North
-          };
-          break;
-        case "--range":
-          options.ViewRange = Math.Clamp(int.Parse(args[++i]), 1, 3);
-          break;
-        case "--town":
-          options.Style = LevelStyle.TownDay;
-          break;
-        case "--night":
-          options.Style = LevelStyle.TownNight;
-          break;
-        case "--grove":
-          options.Grove = true;
-          break;
-        case "--pillars":
-          options.Pillars = true;
-          break;
-        case "--map":
-          options.ShowMap = true;
-          break;
-        default:
-          unknownArgs.Add(args[i]);
-          break;
-      }
-    }
-
-    foreach (var arg in unknownArgs)
-      Console.Error.WriteLine($"Unknown option: {arg}");
-
     if (!SDL_Init(SDL_InitFlags.SDL_INIT_VIDEO))
     {
       Console.Error.WriteLine($"SDL_Init failed: {SDL_GetError()}");
@@ -122,20 +60,10 @@ unsafe class Program
       new ViewRenderer(renderer, assetDir),
       Path.Combine(assetDir, "m5x7.ttf"));
 
-    var app = new App(window, options);
-    if (quickstart)
-    {
-      app.NewGame();
-      foreach (var c in app.Roster.Take(Party.MaxMembers))
-        app.Game!.Party.Add(c);
-      app.Screens.Push(new TownScreen(app));
-    }
-    else
-    {
-      app.Screens.Push(new MainMenuScreen(app,
-        unknownArgs.Select(a => $"(Unknown command-line option ignored: {a})")));
-    }
-
+    var app = new App(window);
+    
+      app.Screens.Push(new MainMenuScreen(app));
+    
     while (!app.Screens.IsEmpty)
     {
       SDL_Event e;

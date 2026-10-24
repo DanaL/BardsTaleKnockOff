@@ -159,7 +159,7 @@ unsafe class GameUI
   {
     const int BoxW = 200;
     const int BoxPadding = 6;
-    var lines = paragraphs.SelectMany(p => _text.Wrap(p, BoxW - 2 * BoxPadding)).ToList();
+    List<string> lines = [.. paragraphs.SelectMany(p => _text.Wrap(p, BoxW - 2 * BoxPadding))];
     int boxH = 2 * BoxPadding + lines.Count * TextRenderer.BaseLineHeight - 3;
     var box = new SDL_Rect { x = (ScreenW - BoxW) / 2, y = (ScreenH - boxH) / 2, w = BoxW, h = boxH };
 
@@ -213,60 +213,6 @@ unsafe class GameUI
     _text.Draw(c.Condition, left + ColConditions, y, RosterText);
     _text.Draw(c.Role.ToString(), left + ColClass, y, RosterText);
   }
-
-  // --- Debug overhead map, drawn in the text panel -----------------------------
-
-  const int MapCell = 5;
-
-  public void DrawMinimap(GameState state)
-  {
-    Frame(InfoRect);
-    FillRect(InfoBackground, InfoRect);
-
-    var map = state.Map;
-    int mapX = InfoRect.x + (InfoRect.w - Dungeon.Size * MapCell) / 2;
-    int mapY = InfoRect.y + (InfoRect.h - Dungeon.Size * MapCell) / 2;
-    FillRect(new Rgb(30, 30, 40), new SDL_Rect { x = mapX, y = mapY, w = Dungeon.Size * MapCell, h = Dungeon.Size * MapCell });
-
-    for (int x = 0; x < Dungeon.Size; x++)
-    {
-      for (int y = 0; y < Dungeon.Size; y++)
-      {
-        float left = mapX + x * MapCell, top = mapY + y * MapCell;
-        float right = left + MapCell, bottom = top + MapCell;
-        if (map.GetFeature(x, y) == Feature.Tree)
-          FillRect(new Rgb(40, 140, 50), new SDL_Rect { x = (int)left + 1, y = (int)top + 1, w = MapCell - 2, h = MapCell - 2 });
-
-        // Each square draws its north and west edges. The map wraps, so the
-        // last row/column's south/east edges are the first row/column's north/west.
-        DrawMapEdge(map.GetEdge(x, y, Dir.North), left, top, right, top);
-        DrawMapEdge(map.GetEdge(x, y, Dir.West), left, top, left, bottom);
-        if (y == Dungeon.Size - 1)
-          DrawMapEdge(map.GetEdge(x, y, Dir.South), left, bottom, right, bottom);
-        if (x == Dungeon.Size - 1)
-          DrawMapEdge(map.GetEdge(x, y, Dir.East), right, top, right, bottom);
-      }
-    }
-
-    // Party: a dot in the square plus a pixel showing which way it faces.
-    int cx = mapX + state.X * MapCell + 2, cy = mapY + state.Y * MapCell + 2;
-    var (fx, fy) = state.Facing.Delta();
-    FillRect(new Rgb(255, 230, 60), new SDL_Rect { x = cx, y = cy, w = 1, h = 1 });
-    FillRect(new Rgb(255, 80, 60), new SDL_Rect { x = cx + fx, y = cy + fy, w = 1, h = 1 });
-  }
-
-  void DrawMapEdge(Edge edge, float x1, float y1, float x2, float y2)
-  {
-    if (edge == Edge.Open)
-      return;
-    if (edge == Edge.Door)
-      SDL_SetRenderDrawColor(_renderer, 200, 120, 40, 255);
-    else
-      SDL_SetRenderDrawColor(_renderer, 170, 170, 180, 255);
-    SDL_RenderLine(_renderer, x1, y1, x2, y2);
-  }
-
-  // --- Helpers -----------------------------------------------------------------
 
   void FillRect(Rgb colour, SDL_Rect r)
   {
