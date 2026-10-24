@@ -186,7 +186,6 @@ unsafe class ViewRenderer
     SDL_Texture* EdgeTexture(Edge edge) =>
       style.EdgeSheets.TryGetValue(edge, out var name) ? Sheet(name) : null;
 
-    var floorTex = Sheet(style.FloorSheet);
     var ceilingTex = Sheet(style.CeilingSheet);
 
     void DrawFloorAndCeiling(SDL_Texture* tex, int lat, int depth, byte light)
@@ -205,6 +204,9 @@ unsafe class ViewRenderer
     SDL_SetRenderClipRect(_renderer, &clip);
 
     DrawBackground(style, originX, originY);
+
+    var stoneFloorTexture = Sheet("floor.png");
+    var dirtTexture = Sheet("dirt.png");
 
     // View range r: squares 0..r-1 are fully lit. Square r is a dim "twilight"
     // square: its floor and side walls show, but its far wall is in the dark.
@@ -243,6 +245,11 @@ unsafe class ViewRenderer
         if (lat >= 0)
           DrawSide(EdgeTexture(tile.EdgeForDir(facing.TurnRight())), lat, depth, true, originX, originY, light);
 
+        var floorTex = tile.Floor switch
+        {
+          Floor.Dirt => dirtTexture,
+          _ => stoneFloorTexture
+        };
         DrawFloorAndCeiling(floorTex, lat, depth, light);
         DrawFloorAndCeiling(ceilingTex, lat, depth, light);
 
