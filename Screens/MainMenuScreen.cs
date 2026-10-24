@@ -47,8 +47,6 @@ class MainMenuScreen(App app) : IScreen
       "Welcome to Dana's Bard's Tale Knockoff!",
       "",
       "B) Begin new Adventure!",
-      " - you will be taken to the Adventurers' Guild where you can create new characters.",
-      "",
       "L) Load saved game",
       "C) Credits",
       "Q) Quit",

@@ -13,14 +13,17 @@ namespace BardsTaleKnockOff;
 
 class GameState
 {
-  public required Dungeon? Map { get; set; }
+  public List<Dungeon> Maps { get; set; } = [];
   public required LevelStyle Style { get; set; }
   public required Party Party { get; set; }
 
+  public int CurrLevel { get; set; }
   public int X { get; set; }
   public int Y { get; set; }
   public Dir Facing { get; set; } = Dir.North;
   public int ViewRange { get; set; } = 2;
+
+  public Dungeon CurrMap => Maps[CurrLevel];
 
   // Text for the info panel, oldest first. The panel shows as many of the
   // most recent lines as fit.
@@ -37,7 +40,7 @@ class GameState
 
   public void TryMove(Dir dir)
   {
-    if (!Map.Passable(X, Y, dir))
+    if (!Maps[CurrLevel].Passable(X, Y, dir))
     {
       Say("Ouch! You can't go that way.");
       return;

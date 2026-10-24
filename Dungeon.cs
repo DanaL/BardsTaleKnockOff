@@ -55,13 +55,11 @@ record struct Tile(Floor Floor, Ceiling Ceiling, Feature Feature, Edge EdgeN, Ed
 class Dungeon
 {
   public const int Size = 22;
-
   readonly Tile[,] _tiles = new Tile[Size, Size];
-  readonly Edge[,,] _edges = new Edge[Size, Size, 4];
-  readonly Feature[,] _features = new Feature[Size, Size];
 
   public static int Wrap(int v) => ((v % Size) + Size) % Size;
-  public Tile TileAt(int x, int y) => _tiles[x, y];
+  public Tile TileAt(int x, int y) => _tiles[Wrap(x), Wrap(y)];
+  public void SetTile(int x, int y, Tile tile) => _tiles[x, y] = tile;
 
   // Can the party step from (x, y) through the given side?
   public bool Passable(int x, int y, Dir side)
@@ -77,7 +75,6 @@ class Dungeon
     if (edge == Edge.Wall || edge == Edge.PermWall)
       return false;
     
-      
     var (dx, dy) = side.Delta();
     return !_tiles[x + dx, y + dy].Feature.Blocks();
   }

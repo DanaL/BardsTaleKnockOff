@@ -9,6 +9,7 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.Net;
 using SDL;
 using static SDL.SDL3;
 
@@ -34,12 +35,15 @@ unsafe class App(SDL_Window* window)
   {
     Game = new GameState
     {
-      Map = null,
       Style = LevelStyle.Dungeon,
       Party = new Party(),
       Facing = Dir.North,
       ViewRange = 2
     };
+
+    string townMapPath = ResourcePath.GetDataFilePath("town.txt");
+    Dungeon town = MapLoader.Load(townMapPath);
+    Game.Maps.Add(town);
   }
 
   // Switch typed-character events (IScreen.OnText) on or off. Leave it off

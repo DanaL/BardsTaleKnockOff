@@ -60,9 +60,8 @@ unsafe class Program
       new ViewRenderer(renderer, assetDir),
       Path.Combine(assetDir, "m5x7.ttf"));
 
-    var app = new App(window);
-    
-      app.Screens.Push(new MainMenuScreen(app));
+    var app = new App(window);    
+    app.Screens.Push(new MainMenuScreen(app));
     
     while (!app.Screens.IsEmpty)
     {
@@ -96,6 +95,7 @@ unsafe class Program
     SDL_DestroyWindow(window);
     TTF_Quit();
     SDL_Quit();
+    
     return 0;
   }
 }
