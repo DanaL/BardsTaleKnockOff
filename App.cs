@@ -40,6 +40,8 @@ unsafe class App
   // The adventure in progress, or null before one has begun.
   public GameState? Game { get; set; }
 
+  public Rng Rng { get; set; } = new Rng(DateTime.UtcNow.GetHashCode());
+  
   public void NewGame()
   {
     var o = Options;

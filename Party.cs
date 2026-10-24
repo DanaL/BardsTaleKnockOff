@@ -15,6 +15,13 @@ class Character
   public int MP { get; set; }
   public int MaxMP { get; set; }
   public string Condition { get; set; } = "";
+  public int Str { get; set; }
+  public int Dex { get; set; }
+  public int Con { get; set; }
+  public int Lore { get; set; }
+  public int Luck { get; set; }
+
+  public static int StatToMod(int stat) => (int) Math.Floor((stat - 10.0) / 2);
 }
 
 class Party
