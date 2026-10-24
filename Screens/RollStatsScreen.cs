@@ -1,3 +1,14 @@
+// {BardsTaleKnockoff} - A roguelike computer RPG
+// Written in 2026 by Dana Larose <ywg.dana@gmail.com>
+//
+// To the extent possible under law, the author(s) have dedicated all copyright
+// and related and neighboring rights to this software to the public domain
+// worldwide. This software is distributed without any warranty.
+//
+// You should have received a copy of the CC0 Public Domain Dedication along 
+// with this software. If not, 
+// see <http://creativecommons.org/publicdomain/zero/1.0/>.
+
 using SDL;
 
 namespace BardsTaleKnockOff;
@@ -5,10 +16,10 @@ namespace BardsTaleKnockOff;
 class RollStatsScreen : IScreen
 {
   int _str, _dex, _con, _lore, _luck, _hp, _mp;
-  private readonly App _app;
-  private readonly string _name;
-  private readonly Lineage _lineage;
-  private readonly Role _role;
+  readonly App _app;
+  readonly string _name;
+  readonly Lineage _lineage;
+  readonly Role _role;
 
   public RollStatsScreen(App app, string name, Lineage lineage, Role role)
   {
