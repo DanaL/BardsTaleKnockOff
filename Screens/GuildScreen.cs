@@ -84,7 +84,7 @@ class GuildScreen(App app) : IScreen
         else
           _mode = Mode.ChoosingToRemove;
         break;
-      case SDL_Keycode.SDLK_L:
+      case SDL_Keycode.SDLK_E:
         if (Party.Count == 0)
         {
           _status = "You can't go adventuring alone. Add someone to your party first.";
@@ -174,7 +174,7 @@ class GuildScreen(App app) : IScreen
     {
       Mode.ChoosingToAdd => ["Add whom to the party?", "Up/Down to choose, Enter to add, Esc when done.", ""],
       Mode.ChoosingToRemove => ["Remove whom from the party?"],
-      _ => ["C) Create a character", "A) Add to party", "R) Remove from party", "L) Leave the Guild"]
+      _ => ["C) Create a character", "A) Add to party", "R) Remove from party", "E) Enter town"]
     });
 
     if (_mode == Mode.ChoosingToAdd)

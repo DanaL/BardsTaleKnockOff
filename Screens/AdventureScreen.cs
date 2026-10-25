@@ -33,8 +33,7 @@ class AdventureScreen(App app) : IScreen
         break;
       case SDL_Scancode.SDL_SCANCODE_DOWN:
       case SDL_Scancode.SDL_SCANCODE_S:
-        GS.TryMove(GS.Facing.Opposite());
-        ResolveMove();
+        GS.Facing = GS.Facing.Opposite();
         break;
       case SDL_Scancode.SDL_SCANCODE_LEFT:
       case SDL_Scancode.SDL_SCANCODE_A:
@@ -43,12 +42,6 @@ class AdventureScreen(App app) : IScreen
       case SDL_Scancode.SDL_SCANCODE_RIGHT:
       case SDL_Scancode.SDL_SCANCODE_D:
         GS.Facing = GS.Facing.TurnRight();
-        break;
-      case SDL_Scancode.SDL_SCANCODE_Q:
-        GS.TryMove(GS.Facing.TurnLeft());
-        break;
-      case SDL_Scancode.SDL_SCANCODE_E:
-        GS.TryMove(GS.Facing.TurnRight());
         break;
       case SDL_Scancode.SDL_SCANCODE_L:
         GS.Say($"Loc: {GS.X}, {GS.Y}");
