@@ -49,7 +49,12 @@ class AdventureScreen(App app) : IScreen
       case SDL_Scancode.SDL_SCANCODE_1:
       case SDL_Scancode.SDL_SCANCODE_2:
       case SDL_Scancode.SDL_SCANCODE_3:
-        GS.ViewRange = key.scancode - SDL_Scancode.SDL_SCANCODE_1 + 1;
+      case SDL_Scancode.SDL_SCANCODE_4:
+      case SDL_Scancode.SDL_SCANCODE_5:
+      case SDL_Scancode.SDL_SCANCODE_6:
+        int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1 + 1;
+        if (slot <= app.Roster.Count)
+          app.Screens.Push(new CharacterScreen(app, slot));
         break;
       case SDL_Scancode.SDL_SCANCODE_ESCAPE:
         app.Screens.Push(new ConfirmScreen(app, "Abandon this adventure and return to the main menu?", () =>

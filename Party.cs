@@ -31,6 +31,9 @@ class Character
   public int Con { get; set; }
   public int Lore { get; set; }
   public int Luck { get; set; }
+  public int Gold { get; set; }
+  public int XP { get; set; }
+  public int Level { get; set; }
 
   public static int StatToMod(int stat) => (int) Math.Floor((stat - 10.0) / 2);
 }
@@ -65,18 +68,4 @@ class Party
       Members[i] = Members[i + 1];
     Members[MaxMembers - 1] = null;
   }
-
-  //public static List<Character> SampleRoster() => [.. Sample().Members.OfType<Character>()];
-
-  // public static Party Sample()
-  // {
-  //   var party = new Party();
-  //   party.Members[0] = new() { Name = "Thorvald", ClassName = "Warrior", AC = 4, HP = 28, MaxHP = 28 };
-  //   party.Members[1] = new() { Name = "Elspeth", ClassName = "Paladin", AC = 3, HP = 19, MaxHP = 24 };
-  //   party.Members[2] = new() { Name = "Pip", ClassName = "Rogue", AC = 7, HP = 12, MaxHP = 15, Condition = "Poisoned" };
-  //   party.Members[3] = new() { Name = "Melisande", ClassName = "Bard", AC = 8, HP = 14, MaxHP = 14 };
-  //   party.Members[4] = new() { Name = "Aldric the Wise", ClassName = "Conjurer", AC = 10, HP = 9, MaxHP = 9, MP = 11, MaxMP = 16 };
-
-  //   return party;
-  // }
 }
