@@ -27,13 +27,13 @@ unsafe class App(SDL_Window* window)
   public List<Character> Roster { get; } = [];
 
   // The adventure in progress, or null before one has begun.
-  public GameState? Game { get; set; }
+  public GameState? GameState { get; set; }
 
   public Rng Rng { get; set; } = new Rng(DateTime.UtcNow.GetHashCode());
 
   public void NewGame()
   {
-    Game = new GameState
+    GameState = new GameState
     {
       Party = new Party(),
       Facing = Dir.North,
@@ -42,7 +42,7 @@ unsafe class App(SDL_Window* window)
 
     string townMapPath = ResourcePath.GetDataFilePath("town.txt");
     Dungeon town = MapLoader.Load(townMapPath);
-    Game.Maps.Add(town);
+    GameState.Maps.Add(town);
   }
 
   // Switch typed-character events (IScreen.OnText) on or off. Leave it off

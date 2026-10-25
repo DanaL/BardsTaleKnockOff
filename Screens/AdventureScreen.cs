@@ -18,7 +18,7 @@ namespace BardsTaleKnockOff;
 // fight ends), shops and so on later.
 class AdventureScreen(App app) : IScreen
 {
-  GameState Game => app.Game!;
+  GameState GS => app.GameState!;
 
   public void OnKey(SDL_KeyboardEvent key)
   {
@@ -28,48 +28,61 @@ class AdventureScreen(App app) : IScreen
     {
       case SDL_Scancode.SDL_SCANCODE_UP:
       case SDL_Scancode.SDL_SCANCODE_W:
-        Game.TryMove(Game.Facing);
+        GS.TryMove(GS.Facing);
+        ResolveMove();
         break;
       case SDL_Scancode.SDL_SCANCODE_DOWN:
       case SDL_Scancode.SDL_SCANCODE_S:
-        Game.TryMove(Game.Facing.Opposite());
+        GS.TryMove(GS.Facing.Opposite());
+        ResolveMove();
         break;
       case SDL_Scancode.SDL_SCANCODE_LEFT:
       case SDL_Scancode.SDL_SCANCODE_A:
-        Game.Facing = Game.Facing.TurnLeft();
+        GS.Facing = GS.Facing.TurnLeft();
         break;
       case SDL_Scancode.SDL_SCANCODE_RIGHT:
       case SDL_Scancode.SDL_SCANCODE_D:
-        Game.Facing = Game.Facing.TurnRight();
+        GS.Facing = GS.Facing.TurnRight();
         break;
       case SDL_Scancode.SDL_SCANCODE_Q:
-        Game.TryMove(Game.Facing.TurnLeft());
+        GS.TryMove(GS.Facing.TurnLeft());
         break;
       case SDL_Scancode.SDL_SCANCODE_E:
-        Game.TryMove(Game.Facing.TurnRight());
+        GS.TryMove(GS.Facing.TurnRight());
         break;
       case SDL_Scancode.SDL_SCANCODE_L:
-        Game.Say($"Loc: {Game.X}, {Game.Y}");
+        GS.Say($"Loc: {GS.X}, {GS.Y}");
         break;
       case SDL_Scancode.SDL_SCANCODE_1:
       case SDL_Scancode.SDL_SCANCODE_2:
       case SDL_Scancode.SDL_SCANCODE_3:
-        Game.ViewRange = key.scancode - SDL_Scancode.SDL_SCANCODE_1 + 1;
+        GS.ViewRange = key.scancode - SDL_Scancode.SDL_SCANCODE_1 + 1;
         break;
       case SDL_Scancode.SDL_SCANCODE_ESCAPE:
         app.Screens.Push(new ConfirmScreen(app, "Abandon this adventure and return to the main menu?", () =>
         {
-          app.Game = null;
+          app.GameState = null;
           app.Screens.Replace(new MainMenuScreen(app));
         }));
         break;
     }
   }
 
+  void ResolveMove()
+  {
+    Tile tile = GS.CurrMap.TileAt(GS.X, GS.Y);
+    if (tile.Feature == Feature.Guild)
+    {
+      // I think eventually visiting the guild will autosave the
+      // current characters?
+      app.Screens.Replace(new GuildScreen(app));
+    }
+  }
+
   public void Draw(GameUI ui)
   {
-    ui.DrawDungeonView(Game);
-    ui.DrawTextPanel(Game.Messages);
-    ui.DrawRoster(Game.Party);
+    ui.DrawDungeonView(GS);
+    ui.DrawTextPanel(GS.Messages);
+    ui.DrawRoster(GS.Party);
   }
 }
