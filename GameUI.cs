@@ -112,8 +112,30 @@ unsafe class GameUI
   {
     Frame(ViewRect);
     FillRect(PictureBackground, ViewRect);
-    float x = ViewRect.x + (ViewRect.w - _text.Measure(caption)) / 2;
-    float y = ViewRect.y + (ViewRect.h - 7) / 2;
+    DrawCaption(caption, ViewRect);
+  }
+
+  // A picture from assets/ in the picture area, with a caption along the
+  // bottom like Bard's Tale's location names. Anything the image doesn't
+  // cover (or transparent parts of it) shows the picture background.
+  public void DrawImage(string fileName, string caption)
+  {
+    Frame(ViewRect);
+    FillRect(PictureBackground, ViewRect);
+    _view.DrawImage(fileName, ViewRect.x, ViewRect.y);
+
+    var band = new SDL_Rect { x = ViewRect.x, y = ViewRect.y + ViewRect.h - CaptionBandH, w = ViewRect.w, h = CaptionBandH };
+    FillRect(PictureBackground, band);
+    DrawCaption(caption, band);
+  }
+
+  const int CaptionBandH = 11;
+
+  // Caption text centred in r. Glyphs are 7 pixels tall.
+  void DrawCaption(string caption, SDL_Rect r)
+  {
+    float x = r.x + (r.w - _text.Measure(caption)) / 2;
+    float y = r.y + (r.h - 7) / 2;
     _text.Draw(caption, MathF.Round(x), MathF.Round(y), PictureCaption);
   }
 

@@ -13,12 +13,8 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-// The Adventurers' Guild: create characters, choose the party from the
-// characters on file, then leave for the town.
 class GuildScreen(App app) : IScreen
 {
-  // What the next key press means. This is screen state: it only matters
-  // while the Guild is open, so it lives here rather than in the game.
   enum Mode { Menu, ChoosingToAdd, ChoosingToRemove }
 
   Mode _mode = Mode.Menu;

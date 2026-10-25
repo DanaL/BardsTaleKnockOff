@@ -176,6 +176,27 @@ unsafe class ViewRenderer
   static readonly SDL_FRect FarFaceSrc = new() { x = 377, y = 31, w = 46, h = 58 };
   const float FarFaceScreenX = 57f;
 
+  // A full-view picture (a building interior, a title card...) from assets/,
+  // drawn at its own size, centred in the view and clipped to it.
+  public void DrawImage(string name, int originX, int originY)
+  {
+    var tex = Sheet(name);
+    float w, h;
+    SDL_GetTextureSize(tex, &w, &h);
+    var dst = new SDL_FRect
+    {
+      x = originX + MathF.Floor((ViewW - w) / 2),
+      y = originY + MathF.Floor((ViewH - h) / 2),
+      w = w,
+      h = h
+    };
+
+    var clip = new SDL_Rect { x = originX, y = originY, w = ViewW, h = ViewH };
+    SDL_SetRenderClipRect(_renderer, &clip);
+    SDL_RenderTexture(_renderer, tex, null, &dst);
+    SDL_SetRenderClipRect(_renderer, null);
+  }
+
   public void Draw(GameState gs, int px, int py, Dir facing, int originX, int originY)
   {
     Dungeon map = gs.CurrMap;

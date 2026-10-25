@@ -70,6 +70,10 @@ class AdventureScreen(App app) : IScreen
       // current characters?
       app.Screens.Replace(new GuildScreen(app));
     }
+    else if (tile.Feature == Feature.House)
+    {
+      app.Screens.Push(new HouseScreen(app));
+    }
   }
 
   public void Draw(GameUI ui)
