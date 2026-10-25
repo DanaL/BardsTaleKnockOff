@@ -24,6 +24,17 @@ class MainMenuScreen(App app) : IScreen
     switch (key.key)
     {
       case SDL_Keycode.SDLK_B:
+
+        Character c = new()
+        {
+          Name = "Dana", Role = Role.Warrior, Lineage = Lineage.Gnome,
+          Str = 16, Dex = 13, Con = 13, Lore = 8, Luck = 10,
+          AC = 10, HP = 15, MaxHP = 15, MP = 0, MaxMP = 0
+        };
+        app.Roster.Add(c);
+
+
+
         app.NewGame();
         app.Screens.Replace(new GuildScreen(app));
         break;

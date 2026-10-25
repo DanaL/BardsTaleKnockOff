@@ -48,6 +48,9 @@ class AdventureScreen(App app) : IScreen
       case SDL_Scancode.SDL_SCANCODE_E:
         Game.TryMove(Game.Facing.TurnRight());
         break;
+      case SDL_Scancode.SDL_SCANCODE_L:
+        Game.Say($"Loc: {Game.X}, {Game.Y}");
+        break;
       case SDL_Scancode.SDL_SCANCODE_1:
       case SDL_Scancode.SDL_SCANCODE_2:
       case SDL_Scancode.SDL_SCANCODE_3:

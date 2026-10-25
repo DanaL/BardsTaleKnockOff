@@ -91,7 +91,10 @@ class GuildScreen(App app) : IScreen
         }
         else
         {
-          app.Game!.Say("You leave the Guild and step out into the town.");
+          app.Game!.X = 2;
+          app.Game.Y = 11;
+          app.Game.Facing = Dir.East;
+          app.Game.Say("You leave the Guild and step out into the town.");
           app.Screens.Replace(new AdventureScreen(app));
         }
         break;

@@ -62,7 +62,7 @@ unsafe class Program
 
     var app = new App(window);    
     app.Screens.Push(new MainMenuScreen(app));
-    
+
     while (!app.Screens.IsEmpty)
     {
       SDL_Event e;
