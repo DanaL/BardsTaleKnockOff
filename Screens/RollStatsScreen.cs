@@ -107,9 +107,10 @@ class RollStatsScreen : IScreen
           Name = _name, Role = _role, Lineage = _lineage,
           Str = _str, Dex = _dex, Con = _con, Lore = _lore, Luck = _luck,
           AC = 10, HP = _hp, MaxHP = _hp, MP = _mp, MaxMP = _mp, Level = 1,
-          Gold = 100
+          Gold = _app.Rng.Next(250, 301)
         };
         _app.Roster.Add(c);
+        Serialize.WriteSaveGame(_app);
         while (_app.Screens.Top is not GuildScreen)
           _app.Screens.Pop();
         return;

@@ -71,8 +71,7 @@ class AdventureScreen(App app) : IScreen
     Tile tile = GS.CurrMap.TileAt(GS.X, GS.Y);
     if (tile.Feature == Feature.Guild)
     {
-      // I think eventually visiting the guild will autosave the
-      // current characters?
+      Serialize.WriteSaveGame(app);
       app.Screens.Replace(new GuildScreen(app));
     }
     else if (tile.Feature == Feature.House)

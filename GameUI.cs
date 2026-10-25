@@ -197,7 +197,7 @@ unsafe class GameUI
 
   // The party roster along the bottom. Null draws the empty slots (e.g. on
   // the main menu, before there is a party).
-  public void DrawRoster(Party? party)
+  public void DrawRoster(Party? party = null)
   {
     Frame(RosterRect);
     FillRect(RosterBackground, RosterRect);

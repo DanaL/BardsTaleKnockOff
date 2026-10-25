@@ -18,6 +18,33 @@ readonly record struct Rgb(byte R, byte G, byte B);
 // (haze on a bright day).
 enum DistanceFade { ToBlack, ToBackground }
 
+static class Util
+{
+  const string GameFolder = "DanasBardsTale";
+  public static double ToDouble(string s) => double.Parse(s, System.Globalization.CultureInfo.InvariantCulture);
+
+  public static string SavePath
+  {
+    get
+    {
+      try
+      {
+        string basePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        string gamePath = Path.Combine(basePath, GameFolder, "Saves");
+
+        // CreateDirectory is safe to call even if directory exists
+        Directory.CreateDirectory(gamePath);
+
+        return gamePath;
+      }
+      catch (Exception ex)
+      {
+        throw new Exception($"Failed to initialize save directory: {ex.Message}", ex);
+      }
+    }
+  }
+}
+
 static class ResourcePath
 {
   public static string GetDataFilePath(string filename) => FindResourcePath("data", filename);

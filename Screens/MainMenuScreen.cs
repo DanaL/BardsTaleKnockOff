@@ -24,12 +24,10 @@ class MainMenuScreen(App app) : IScreen
     switch (key.key)
     {
       case SDL_Keycode.SDLK_B:
-        app.NewGame();
-        app.Screens.Replace(new GuildScreen(app));
+        app.Screens.Replace(new CreateCampaignScreen(app));
         break;
       case SDL_Keycode.SDLK_L:
-        _notes.Clear();
-        _notes.Add("Loading saved games isn't written yet.");
+        app.Screens.Replace(new LoadCampaignScreen(app));
         break;
       case SDL_Keycode.SDLK_C:
         app.Screens.Push(new CreditsScreen(app));
@@ -46,8 +44,8 @@ class MainMenuScreen(App app) : IScreen
     ui.DrawTextPanel([
       "Welcome to Dana's Bard's Tale Knockoff!",
       "",
+      "L) Load campaign",
       "B) Begin new campaign",
-      "L) Load load campaign",
       "C) Credits",
       "Q) Quit",
       "",

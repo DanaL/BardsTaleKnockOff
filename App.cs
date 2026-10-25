@@ -28,7 +28,8 @@ unsafe class App(SDL_Window* window)
 
   // The adventure in progress, or null before one has begun.
   public GameState? GameState { get; set; }
-
+  public string CampaignName { get; set; } = "";
+  
   public Rng Rng { get; set; } = new Rng(DateTime.UtcNow.GetHashCode());
 
   public void NewGame()

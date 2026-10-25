@@ -24,7 +24,6 @@ namespace BardsTaleKnockOff;
 class CreateCharacterScreen(App app) : IScreen
 {
   const int MAX_NAME_LENGTH = 15;
-  const int DONE = 4;
 
   string _name = "";
   string _status = "";
