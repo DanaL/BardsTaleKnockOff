@@ -148,15 +148,18 @@ unsafe class ViewRenderer
   // --- Perspective, measured from the art -----------------------------------
   //
   // The art only goes as far as squares two ahead. To show a third square we
-  // generate pieces using the same perspective the artist used. Measuring the
-  // centre front faces gives: vanishing point (80, 60); the face one square
-  // ahead is 78 px wide, the face two squares ahead is 46x58. Width is
+  // generate pieces in perspective, and they have to meet the depth-2 art
+  // exactly. The vanishing point is (80, 60) and the face two squares ahead is
+  // 46x58. The centre side walls two squares ahead end at screen x 62 and 97,
+  // so the face three squares ahead spans 63..96, 34 px. Width is
   // proportional to 1/z, so with wall lines at z = CamOffset + n:
-  //   78 = Fx / (CamOffset + 1)  and  46 = Fx / (CamOffset + 2)
-  // which gives CamOffset = 0.4375 and Fx = 112.125.
+  //   46 = Fx / (CamOffset + 2)  and  34 = Fx / (CamOffset + 3)
+  // which gives CamOffset = 5/6 and Fx = 130.33. (The art isn't perfectly
+  // consistent: fitting the depth-1 and depth-2 faces instead gives 0.4375,
+  // which left a pixel gap where generated pieces met the depth-2 side walls.)
   const float CenterX = 80f;
   const float CenterY = 60f;
-  const float CamOffset = 0.4375f;
+  const float CamOffset = 10f / 12f;
   const float Fx = 46f * (CamOffset + 2);
   const float Fy = 58f * (CamOffset + 2);
 
@@ -349,6 +352,14 @@ unsafe class ViewRenderer
 
     int x0 = Round(CenterX + (left - CenterX) * s), x1 = Round(CenterX + (right - CenterX) * s);
     int y0 = Round(CenterY + (top - CenterY) * s), y1 = Round(CenterY + (bottom - CenterY) * s);
+
+    // The outer depth-2 side walls end a pixel short of where the perspective
+    // puts them, so widen the face by a pixel on its outer side. If that side
+    // wall is there it's drawn afterwards and covers the extra column.
+    if (lat < 0)
+      x0--;
+    else if (lat > 0)
+      x1++;
 
     var src = FarFaceSrc;
     var dst = new SDL_FRect { x = originX + x0, y = originY + y0, w = x1 - x0, h = y1 - y0 };
