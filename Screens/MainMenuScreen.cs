@@ -1,4 +1,4 @@
-// {BardsTaleKnockoff} - A roguelike computer RPG
+// {BardsTaleKnockoff} - A computer RPG
 // Written in 2026 by Dana Larose <ywg.dana@gmail.com>
 //
 // To the extent possible under law, the author(s) have dedicated all copyright
@@ -24,17 +24,6 @@ class MainMenuScreen(App app) : IScreen
     switch (key.key)
     {
       case SDL_Keycode.SDLK_B:
-
-        Character c = new()
-        {
-          Name = "Dana", Role = Role.Warrior, Lineage = Lineage.Gnome,
-          Str = 16, Dex = 13, Con = 13, Lore = 8, Luck = 10,
-          AC = 10, HP = 15, MaxHP = 15, MP = 0, MaxMP = 0
-        };
-        app.Roster.Add(c);
-
-
-
         app.NewGame();
         app.Screens.Replace(new GuildScreen(app));
         break;
@@ -57,8 +46,8 @@ class MainMenuScreen(App app) : IScreen
     ui.DrawTextPanel([
       "Welcome to Dana's Bard's Tale Knockoff!",
       "",
-      "B) Begin new Adventure!",
-      "L) Load saved game",
+      "B) Begin new campaign",
+      "L) Load load campaign",
       "C) Credits",
       "Q) Quit",
       "",
