@@ -11,9 +11,21 @@
 
 namespace BardsTaleKnockOff;
 
-enum Edge : byte { Open, PermWall, Wall, StoneDoor }
 enum Ceiling : byte { None, Stone }
 enum Floor : byte { Stone, Dirt }
+
+enum Edge : byte { Open, PermWall, Wall, StoneDoor }
+
+static class EdgeExt
+{
+  public static string? EdgeSheet(this Edge e) => e switch
+  {
+    Edge.PermWall => "walls.png",
+    Edge.Wall => "walls.png",
+    Edge.StoneDoor => "doors.png",
+    _ => null
+  };
+}
 
 // Something standing in the middle of a square, drawn as a sprite that fills
 // the square (e.g. a tree). Unlike edges, these belong to the square itself.
@@ -22,6 +34,12 @@ enum Feature : byte { None, Tree }
 static class FeatureExt
 {
   public static bool Blocks(this Feature f) => f == Feature.Tree;
+
+  public static string? FeatureSheet(this Feature f) => f switch
+  {
+    Feature.Tree => "tree.png",
+    _ => null
+  };
 }
 
 enum Dir { North, East, South, West }
@@ -54,6 +72,7 @@ record struct Tile(Floor Floor, Ceiling Ceiling, Feature Feature, Edge EdgeN, Ed
 // Bard's Tale levels are 22x22 and wrap. Technically BT maps were all toruses
 class Dungeon
 {
+  public bool Indoors { get; set; } = true;
   public const int Size = 22;
   readonly Tile[,] _tiles = new Tile[Size, Size];
 

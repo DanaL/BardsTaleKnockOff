@@ -35,7 +35,6 @@ unsafe class App(SDL_Window* window)
   {
     Game = new GameState
     {
-      Style = LevelStyle.Dungeon,
       Party = new Party(),
       Facing = Dir.North,
       ViewRange = 2

@@ -11,6 +11,13 @@
 
 using BardsTaleKnockOff;
 
+readonly record struct Rgb(byte R, byte G, byte B);
+
+// Indoors, far things get darker (a light source in the dark: dungeons, night).
+// Outdoors, things become see-through and melt into the sky/ground behind them
+// (haze on a bright day).
+enum DistanceFade { ToBlack, ToBackground }
+
 static class ResourcePath
 {
   public static string GetDataFilePath(string filename) => FindResourcePath("data", filename);
@@ -73,7 +80,9 @@ static class MapLoader
       }
     }
 
-    foreach (string line in File.ReadAllLines(path))
+    var lines = File.ReadAllLines(path);
+    d.Indoors = lines[0] != "outdoors";
+    foreach (string line in lines.Skip(1))
     {
       if (string.IsNullOrWhiteSpace(line))
         continue;

@@ -173,37 +173,26 @@ unsafe class ViewRenderer
   static readonly SDL_FRect FarFaceSrc = new() { x = 377, y = 31, w = 46, h = 58 };
   const float FarFaceScreenX = 57f;
 
-  public void Draw(Dungeon map, int px, int py, Dir facing, int viewRange, LevelStyle style, int originX, int originY)
+  public void Draw(GameState gs, int px, int py, Dir facing, int originX, int originY)
   {
-    viewRange = Math.Clamp(viewRange, 1, 3);
-    _fade = style.Fade;
+    Dungeon map = gs.CurrMap;
+    int viewRange = map.Indoors ? 2 : 3;
+    _fade = DistanceFade.ToBlack;
+    
     var (fx, fy) = facing.Delta();
     var (rx, ry) = facing.TurnRight().Delta();
 
     (int x, int y) Square(int lat, int depth) =>
       (px + depth * fx + lat * rx, py + depth * fy + lat * ry);
 
-    SDL_Texture* EdgeTexture(Edge edge) =>
-      style.EdgeSheets.TryGetValue(edge, out var name) ? Sheet(name) : null;
-
-    var ceilingTex = Sheet(style.CeilingSheet);
-
-    void DrawFloorAndCeiling(SDL_Texture* tex, int lat, int depth, byte light)
-    {
-      if (tex == null)
-        return;
-      if (depth <= 2 && Floors.TryGetValue((lat, depth), out var piece))
-        Blit(tex, piece, originX, originY, light);
-      else if (depth == 3 && Floors.TryGetValue((lat, 2), out var farPiece))
-        BlitScaled(tex, farPiece, Depth3Scale, originX, originY, light);
-    }
+    var ceilingTex = map.Indoors ? Sheet("ceiling.png") : null;
 
     // Generated pieces can hang off the edge of the view; keep them out of
     // whatever is drawn beside it.
     var clip = new SDL_Rect { x = originX, y = originY, w = ViewW, h = ViewH };
     SDL_SetRenderClipRect(_renderer, &clip);
 
-    DrawBackground(style, originX, originY);
+    DrawBackground(map, gs, originX, originY);
 
     var stoneFloorTexture = Sheet("floor.png");
     var dirtTexture = Sheet("dirt.png");
@@ -239,7 +228,7 @@ unsafe class ViewRenderer
               DrawFarFace(tex, lat, originX, originY, FarWallLight);
           }
         }
-
+  
         if (lat <= 0)
           DrawSide(EdgeTexture(tile.EdgeForDir(facing.TurnLeft())), lat, depth, false, originX, originY, light);
         if (lat >= 0)
@@ -256,9 +245,9 @@ unsafe class ViewRenderer
         // Features stand on the floor, so they go after it. (Tree sprites
         // include their own patch of ground.)
         var feature = tile.Feature;
-        if (feature != Feature.None && style.FeatureSheets.TryGetValue(feature, out var featureSheet))
+        if (feature != Feature.None && feature.FeatureSheet() is string name)
         {
-          var tex = Sheet(featureSheet);
+          var tex = Sheet(name);
           if (depth <= 2 && FeatureSprites.TryGetValue((lat, depth), out var sprite))
             Blit(tex, sprite, originX, originY, light);
           else if (depth == 3 && FeatureSprites.TryGetValue((lat, 2), out var farSprite))
@@ -268,19 +257,52 @@ unsafe class ViewRenderer
     }
 
     SDL_SetRenderClipRect(_renderer, null);
+
+    SDL_Texture* EdgeTexture(Edge edge)
+    {
+      string? name = edge.EdgeSheet();
+      return name is not null ? Sheet(name) : null;
+    }
+
+    void DrawFloorAndCeiling(SDL_Texture* tex, int lat, int depth, byte light)
+    {
+      if (tex == null)
+        return;
+      if (depth <= 2 && Floors.TryGetValue((lat, depth), out var piece))
+        Blit(tex, piece, originX, originY, light);
+      else if (depth == 3 && Floors.TryGetValue((lat, 2), out var farPiece))
+        BlitScaled(tex, farPiece, Depth3Scale, originX, originY, light);
+    }
   }
 
   // Sky bands from the top of the view down to the horizon, ground below it.
   // Whatever isn't covered by squares in view shows this.
-  void DrawBackground(LevelStyle style, int originX, int originY)
+  void DrawBackground(Dungeon map, GameState gs, int originX, int originY)
   {
-    int bands = style.SkyBands.Length;
-    for (int i = 0; i < bands; i++)
-    {
-      int top = (int)(CenterY * i / bands), bottom = (int)(CenterY * (i + 1) / bands);
-      FillRect(style.SkyBands[i], originX, originY + top, ViewW, bottom - top);
+    Rgb[] bands;
+    Rgb ground;
+
+    if (map.Indoors) {
+      bands = [new(0, 0, 0)];
+      ground = new(0, 0, 0);
     }
-    FillRect(style.Ground, originX, originY + (int)CenterY, ViewW, ViewH - (int)CenterY);
+    else if (gs.DayTime) 
+    {
+      bands = [new(64, 104, 184), new(86, 128, 204), new(112, 154, 220), new(146, 184, 232), new(178, 206, 238)];
+      ground = new(122, 84, 56);
+    }
+    else 
+    {
+      bands = [new(4, 6, 20), new(8, 11, 32), new(14, 18, 46), new(22, 28, 62)];
+      ground = new(0, 0, 0);
+    }
+
+    for (int i = 0; i < bands.Length; i++)
+    {
+      int top = (int)(CenterY * i / bands.Length), bottom = (int)(CenterY * (i + 1) / bands.Length);
+      FillRect(bands[i], originX, originY + top, ViewW, bottom - top);
+    }
+    FillRect(ground, originX, originY + (int)CenterY, ViewW, ViewH - (int)CenterY);
   }
 
   void FillRect(Rgb colour, int x, int y, int w, int h)

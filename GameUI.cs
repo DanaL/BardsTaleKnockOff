@@ -102,7 +102,7 @@ unsafe class GameUI
   public void DrawDungeonView(GameState state)
   {
     Frame(ViewRect);
-    _view.Draw(state.CurrMap, state.X, state.Y, state.Facing, state.ViewRange, state.Style, ViewRect.x, ViewRect.y);
+    _view.Draw(state, state.X, state.Y, state.Facing, ViewRect.x, ViewRect.y);
   }
 
   // Something other than the map in the picture area (the Guild, a shop, a

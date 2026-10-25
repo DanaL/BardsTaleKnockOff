@@ -14,7 +14,6 @@ namespace BardsTaleKnockOff;
 class GameState
 {
   public List<Dungeon> Maps { get; set; } = [];
-  public required LevelStyle Style { get; set; }
   public required Party Party { get; set; }
 
   public int CurrLevel { get; set; }
@@ -22,6 +21,7 @@ class GameState
   public int Y { get; set; }
   public Dir Facing { get; set; } = Dir.North;
   public int ViewRange { get; set; } = 2;
+  public bool DayTime { get; set;} = true; // eventually to be replaced with time of day
 
   public Dungeon CurrMap => Maps[CurrLevel];
 
