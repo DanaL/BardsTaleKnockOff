@@ -44,21 +44,17 @@ class RollStatsScreen : IScreen
       case Role.Warrior:
         _str = 8 + _app.Rng.Next(9);
         _con = 8 + _app.Rng.Next(9);
-        _hp = 11 + _app.Rng.Next(5);
+        _hp = 13 + _app.Rng.Next(6);
         break;
       case Role.Rogue:
         _dex = 8 + _app.Rng.Next(9);
         _luck = 8 + _app.Rng.Next(9);
-        _hp = 11 + _app.Rng.Next(3);
-        break;
-      case Role.Hunter:
-        _con = 8 + _app.Rng.Next(9);
         _hp = 11 + _app.Rng.Next(4);
-        break;
+        break;    
       case Role.Magician:
       case Role.Conjurer:
         _lore = 8 + _app.Rng.Next(9);
-        _hp = 11 + _app.Rng.Next(2);       
+        _hp = 10 + _app.Rng.Next(4);
         break;
     }
 
