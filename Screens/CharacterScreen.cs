@@ -66,7 +66,7 @@ class CharacterScreen(App app, int slot) : IScreen
       
       string hpLine = $"HP: {c.HP} ({c.MaxHP})".PadRight(11);
       if (c.MaxMP > 0)
-        hpLine += $"MP: {c.MP} ({c.MaxMP})";
+        hpLine += $"   MP: {c.MP} ({c.MaxMP})";
       lines.Add(hpLine);
 
       lines.Add($"Gold: {c.Gold}");
