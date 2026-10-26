@@ -25,12 +25,12 @@ class CharacterScreen(App app, int slot) : IScreen
       case SDL_Keycode.SDLK_4:
       case SDL_Keycode.SDLK_5:
       case SDL_Keycode.SDLK_6:
-        int otherSlot = (int) (key.key - SDL_Keycode.SDLK_0);
+        int otherSlot = (int) (key.key - SDL_Keycode.SDLK_1);
         if (otherSlot <= app.Roster.Count)
           app.Screens.Replace(new CharacterScreen(app, otherSlot));
         break;
       case SDL_Keycode.SDLK_I:
-        app.Screens.Push(new InventoryScreen(app, app.Roster[slot - 1]));
+        app.Screens.Push(new InventoryScreen(app, app.GameState?.Party.Members[slot]!));
         break;
       case SDL_Keycode.SDLK_ESCAPE:
         app.Screens.Pop();
@@ -40,27 +40,27 @@ class CharacterScreen(App app, int slot) : IScreen
 
   public void Draw(GameUI ui)
   {
-    Character c = app.Roster[slot - 1];
+    List<string> lines = [];
+    if (app.GameState!.Party!.Members[slot] is Character c)
+    {
+      lines.AddRange($"{c.Name}, {c.Lineage} {c.Role}");
+      lines.Add($"Str: {c.Str}".PadRight(9) + $"Dex: {c.Dex}");
+      lines.Add($"Con: {c.Con}".PadRight(9) + $"Lore: {c.Lore}");
+      lines.Add($"Luck: {c.Luck}");
+      lines.Add($"Level: {c.Level}".PadRight(12) + $"XP: {c.XP}");
+      
+      string hpLine = $"HP: {c.HP} ({c.MaxHP})".PadRight(11);
+      if (c.MaxMP > 0)
+        hpLine += $"MP: {c.MP} ({c.MaxMP})";
+      lines.Add(hpLine);
 
-    List<string> lines = [ $"{c.Name}, {c.Lineage} {c.Role}" ];
-    lines.Add($"Str: {c.Str}".PadRight(9) + $"Dex: {c.Dex}");
-    lines.Add($"Con: {c.Con}".PadRight(9) + $"Lore: {c.Lore}");
-    lines.Add($"Luck: {c.Luck}");
-    lines.Add($"Level: {c.Level}".PadRight(12) + $"XP: {c.XP}");
-    
-    string hpLine = $"HP: {c.HP} ({c.MaxHP})".PadRight(11);
-    if (c.MaxMP > 0)
-      hpLine += $"MP: {c.MP} ({c.MaxMP})";
-    lines.Add(hpLine);
-
-    lines.Add($"Gold: {c.Gold}");
-    
-    lines.AddRange("", "", "", "", "", "", "I) View inventory");
-
-    int highlight = -1;
+      lines.Add($"Gold: {c.Gold}");
+      
+      lines.AddRange("", "", "", "", "", "", "I) View inventory");
+    }
 
     ui.DrawPicture("");
-    ui.DrawTextPanel(lines, highlight);
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawTextPanel(lines);
+    ui.DrawRoster(app.GameState?.Party);
   }
 }
