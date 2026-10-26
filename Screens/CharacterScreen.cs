@@ -72,6 +72,28 @@ class CharacterScreen(App app, int slot) : IScreen
         hpLine += $"   MP: {c.MP} ({c.MaxMP})";
       lines.Add(hpLine);
 
+      if (c.Inventory[0] is InvSlot inv && inv.Equipped && ItemCatalog.Item(inv.Id).Type == ItemType.Weapon)
+      {
+        Item weapon = ItemCatalog.Item(inv.Id);
+        string s = $"In melee, {c.Name} attacks ";
+        s += c.NumOfMeleeAttacks switch
+        {
+          1 => "once ",
+          2 => "twice ",
+          _ => $"{c.NumOfMeleeAttacks}X "
+        };
+        
+        s += $"for {weapon.NumDamageDice}d{weapon.DamageDie}";
+        int dmgBonus = weapon.DamageBonus + Character.StatToMod(c.Str);
+        if (dmgBonus > 0)
+          s += $"+{dmgBonus}";
+        else if (dmgBonus < 0)
+          s += dmgBonus.ToString();
+        s += " dmg.";
+
+        lines.AddRange("", s, "");
+      }
+
       lines.Add($"Gold: {c.Gold}");
       
       lines.AddRange("", "", "", "", "", "I) View inventory", "P) Pool good");

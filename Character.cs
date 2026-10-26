@@ -56,6 +56,12 @@ class Character
     }
   } 
 
+  public int NumOfMeleeAttacks => Role switch
+  {
+    Role.Warrior or Role.Paladin or Role.Archer => Level / 5 + 1,
+    _ => 1,
+  };
+  
   public InvSlot?[] Inventory { get; init; } = new InvSlot?[INVENTORY_SLOTS];
 
   public bool AddItem(int id)
