@@ -9,8 +9,6 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-using System.ComponentModel.Design.Serialization;
-
 namespace BardsTaleKnockOff;
 
 // Bard's Tale didn't really have unique items and such so this probably 

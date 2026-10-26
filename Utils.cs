@@ -64,6 +64,23 @@ static class StringUtils
     else
       return s;
   }
+
+  public static string Pluralize(this string s)
+  {
+    if (s.Contains(" of "))
+    {
+      int space = s.IndexOf(' ');
+      s = s[..space] + 's' + s[space..];
+
+      return s;
+    }
+    else if (s == "elf")
+      return "elves";
+    else if (s.EndsWith('s') || s.EndsWith('x') || s.EndsWith("ch"))
+      return s + "es";
+    else
+      return s + "s";
+  }
 }
 
 static class ResourcePath

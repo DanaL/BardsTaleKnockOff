@@ -58,9 +58,12 @@ class CharacterScreen(App app, int slot) : IScreen
 
   public void Draw(GameUI ui)
   {
+    string caption = "";
     List<string> lines = [];
     if (app.GameState!.Party!.Members[slot] is Character c)
     {
+      caption = c.Name;
+
       lines.AddRange($"{c.Name}, {c.Lineage} {c.Role}");
       lines.Add($"Str: {c.Str}".PadRight(9) + $"Dex: {c.Dex}");
       lines.Add($"Con: {c.Con}".PadRight(9) + $"Lore: {c.Lore}");
@@ -91,7 +94,7 @@ class CharacterScreen(App app, int slot) : IScreen
           s += dmgBonus.ToString();
         s += " dmg.";
 
-        lines.AddRange("", s, "");
+        lines.AddRange("", s, "");        
       }
 
       lines.Add($"Gold: {c.Gold}");
@@ -99,7 +102,7 @@ class CharacterScreen(App app, int slot) : IScreen
       lines.AddRange("", "", "", "", "", "I) View inventory", "P) Pool good");
     }
 
-    ui.DrawPicture("");
+    ui.DrawPicture(caption);    
     ui.DrawTextPanel(lines);
     ui.DrawRoster(app.GameState?.Party);
   }  

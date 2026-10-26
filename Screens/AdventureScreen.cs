@@ -82,6 +82,24 @@ class AdventureScreen(App app) : IScreen
     {
       app.Screens.Push(new HouseScreen(app));
     }
+    else if (IsEncounter())
+    {
+      app.Screens.Replace(new EncounterScreen(app));
+    }
+  }
+
+  bool IsEncounter()
+  {
+    if (app.GameState.CurrLevel == 0 && app.GameState.DayTime)
+    {
+      return app.Rng.Next(6) == 0;
+    }
+    else if (app.GameState.CurrLevel == 0 && !app.GameState.DayTime)
+    {
+      return app.Rng.Next(4) == 0;
+    }
+
+    return false;
   }
 
   public void Draw(GameUI ui)
