@@ -30,11 +30,19 @@ class InventoryScreen(App app, Character character) : IScreen
     int highlight = -1;
     List<string> lines = [];
 
-    int count = character.Inventory.Count(i => i is not null);
-
-    if (count == 0)
+    var items = character.Inventory.OfType<InvSlot>();
+    if (!items.Any())
     {
       lines.Add($"{character.Name} is empty handed.");
+    }
+    else
+    {
+      foreach (var i in items)
+      {
+        var item = ItemCatalog.Item(i.Id);
+        lines.Add(item.Name);
+      }
+      var equipped = character.Inventory.Where(i => i is not null);
     }
 
     ui.DrawPicture("");

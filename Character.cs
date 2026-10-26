@@ -22,7 +22,7 @@ record struct InvSlot(int Id, bool Equipped);
 
 class Character
 {
-  const int INVENTORY_SLOTS = 12;
+  public const int INVENTORY_SLOTS = 12;
 
   public required string Name { get; init; }
   public required Lineage Lineage { get; init; }
@@ -43,6 +43,16 @@ class Character
   public int Level { get; set; }
 
   public InvSlot?[] Inventory { get; init; } = new InvSlot?[INVENTORY_SLOTS];
+
+  public bool AddItem(int id)
+  {
+    int slot = Array.IndexOf(Inventory, null);
+    if (slot < 0)
+      return false;
+    Inventory[slot] = new(id, false);
+
+    return true;
+  }
 
   public static int StatToMod(int stat) => (int) Math.Floor((stat - 10.0) / 2);
 }

@@ -36,29 +36,53 @@ class Item
 
 class ItemCatalog
 {
+  public const int TORCH = 0;
+
+  public const int BROADSWORD = 1;
+  public const int SHORTSWORD = 2;
+  public const int DAGGER = 5;
+  public const int HALBERD = 6;
+  public const int STAFF = 7;
+  public const int MACE = 18;
+
+  public const int ROBES = 8;
+  public const int LEATHER_ARMOUR = 9;
+  public const int CHAIN_MAIL = 10;
+  public const int SPLINT_MAIL = 11;
+  public const int PLATE_ARMOUR = 12;
+
+  public const int GAUNTLETS = 13;
+  public const int LEATHER_GLOVES = 14;
+  
+  public const int HELM = 15;
+  
+  public const int BUCKLER = 16;
+  public const int TOWER_SHIELD = 17;
+  
   const Role ALL = Role.Warrior | Role.Rogue | Role.Hunter | Role.Conjurer | Role.Magician
                       | Role.Sorcerer | Role.Wizard | Role.Trickster | Role.Archer | Role.Paladin;
   const Role NONCASTER = Role.Warrior | Role.Rogue | Role.Hunter | Role.Trickster | Role.Archer | Role.Paladin;
   const Role FIGHTER = Role.Warrior | Role.Archer | Role.Paladin;
 
-  static Item ItemByNumber(int num) => num switch
+  public static Item Item(int num) => num switch
   {
-    2 => new() { Id = num, Name = "Broadsword", Type = ItemType.Weapon, Value = 80, DamageDie = 4, NumDamageDice = 2, UseableBy = FIGHTER | Role.Hunter },
-    3 => new() { Id = num, Name = "Shortsword", Type = ItemType.Weapon, Value = 30, DamageDie = 6, NumDamageDice = 1, UseableBy = Role.Warrior | Role.Paladin | Role.Archer | Role.Hunter | Role.Rogue | Role.Trickster },
-    5 => new() { Id = num, Name = "Dagger", Type = ItemType.Weapon, Value = 20, DamageDie = 4, NumDamageDice = 1, UseableBy = ALL },
-    6 => new() { Id = num, Name = "Halbard", Type = ItemType.Weapon, Value = 200, DamageDie = 16, NumDamageDice = 1, UseableBy = FIGHTER | Role.Hunter },
-    7 => new() { Id = num, Name = "Staff", Type = ItemType.Weapon, Value = 20, DamageDie = 6, NumDamageDice = 1, UseableBy = ALL },
-    8 => new() { Id = num, Name = "Robes", Type = ItemType.Armour, Value = 40, ACMod = 1, UseableBy = ALL },
-    9 => new() { Id = num, Name = "Leather Armour", Type = ItemType.Armour, Value = 70, ACMod = 2, UseableBy = NONCASTER },
-    10 => new() { Id = num, Name = "Chain Mail", Type = ItemType.Armour, Value = 150, ACMod = 3, UseableBy = FIGHTER },
-    11 => new() { Id = num, Name = "Splint Mail", Type = ItemType.Armour, Value = 300, ACMod = 4, UseableBy = FIGHTER },
-    12 => new() { Id = num, Name = "Plate Armour", Type = ItemType.Armour, Value = 700, ACMod = 5, UseableBy = FIGHTER },
-    13 => new() { Id = num, Name = "Gauntlets", Type = ItemType.Gloves, Value = 40, ACMod = 1, UseableBy = FIGHTER },
-    14 => new() { Id = num, Name = "Leather Gloves", Type = ItemType.Gloves, Value = 80, ACMod = 1, UseableBy = NONCASTER },
-    15 => new() { Id = num, Name = "Helm", Type = ItemType.Helmet, Value = 50, ACMod = 1, UseableBy = FIGHTER },
-    16 => new() { Id = num, Name = "Buckler", Type = ItemType.Shield, Value = 40, ACMod = 1, UseableBy = NONCASTER },
-    17 => new() { Id = num, Name = "Tower Shield", Type = ItemType.Shield, Value = 100, ACMod = 2, UseableBy = FIGHTER },
-    18 => new() { Id = num, Name = "Mace", Type = ItemType.Weapon, Value = 60, DamageDie = 8, NumDamageDice = 1, UseableBy = NONCASTER },
-    _ => new() {  Id = num, Name = "Torch", Type = ItemType.Misc, Value = 5, UseableBy = ALL }
+    TORCH => new() {  Id = TORCH, Name = "Torch", Type = ItemType.Misc, Value = 5, UseableBy = ALL },
+    BROADSWORD => new() { Id = BROADSWORD, Name = "Broadsword", Type = ItemType.Weapon, Value = 80, DamageDie = 4, NumDamageDice = 2, UseableBy = FIGHTER | Role.Hunter },
+    SHORTSWORD => new() { Id = SHORTSWORD, Name = "Shortsword", Type = ItemType.Weapon, Value = 30, DamageDie = 6, NumDamageDice = 1, UseableBy = Role.Warrior | Role.Paladin | Role.Archer | Role.Hunter | Role.Rogue | Role.Trickster },
+    DAGGER => new() { Id = DAGGER, Name = "Dagger", Type = ItemType.Weapon, Value = 20, DamageDie = 4, NumDamageDice = 1, UseableBy = ALL },
+    HALBERD => new() { Id = HALBERD, Name = "Halberd", Type = ItemType.Weapon, Value = 200, DamageDie = 16, NumDamageDice = 1, UseableBy = FIGHTER | Role.Hunter },
+    STAFF => new() { Id = STAFF, Name = "Staff", Type = ItemType.Weapon, Value = 20, DamageDie = 6, NumDamageDice = 1, UseableBy = ALL },
+    ROBES => new() { Id = ROBES, Name = "Robes", Type = ItemType.Armour, Value = 40, ACMod = 1, UseableBy = ALL },
+    LEATHER_ARMOUR => new() { Id = LEATHER_ARMOUR, Name = "Leather Armour", Type = ItemType.Armour, Value = 70, ACMod = 2, UseableBy = NONCASTER },
+    CHAIN_MAIL => new() { Id = CHAIN_MAIL, Name = "Chain Mail", Type = ItemType.Armour, Value = 150, ACMod = 3, UseableBy = FIGHTER },
+    SPLINT_MAIL => new() { Id = SPLINT_MAIL, Name = "Splint Mail", Type = ItemType.Armour, Value = 300, ACMod = 4, UseableBy = FIGHTER },
+    PLATE_ARMOUR => new() { Id = PLATE_ARMOUR, Name = "Plate Armour", Type = ItemType.Armour, Value = 700, ACMod = 5, UseableBy = FIGHTER },
+    GAUNTLETS => new() { Id = GAUNTLETS, Name = "Gauntlets", Type = ItemType.Gloves, Value = 40, ACMod = 1, UseableBy = FIGHTER },
+    LEATHER_GLOVES => new() { Id = LEATHER_GLOVES, Name = "Leather Gloves", Type = ItemType.Gloves, Value = 80, ACMod = 1, UseableBy = NONCASTER },
+    HELM => new() { Id = HELM, Name = "Helm", Type = ItemType.Helmet, Value = 50, ACMod = 1, UseableBy = FIGHTER },
+    BUCKLER => new() { Id = BUCKLER, Name = "Buckler", Type = ItemType.Shield, Value = 40, ACMod = 1, UseableBy = NONCASTER },
+    TOWER_SHIELD => new() { Id = TOWER_SHIELD, Name = "Tower Shield", Type = ItemType.Shield, Value = 100, ACMod = 2, UseableBy = FIGHTER },
+    MACE => new() { Id = MACE, Name = "Mace", Type = ItemType.Weapon, Value = 60, DamageDie = 8, NumDamageDice = 1, UseableBy = NONCASTER },
+    _ => throw new Exception($"Item {num} is not defined!")
   };
 }

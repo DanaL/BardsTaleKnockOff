@@ -74,6 +74,10 @@ class AdventureScreen(App app) : IScreen
       Serialize.WriteSaveGame(app);
       app.Screens.Replace(new GuildScreen(app));
     }
+    else if (tile.Feature == Feature.Shop)
+    {
+      app.Screens.Push(new ShopScreen(app));
+    }
     else if (tile.Feature == Feature.House)
     {
       app.Screens.Push(new HouseScreen(app));

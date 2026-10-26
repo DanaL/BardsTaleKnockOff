@@ -13,14 +13,13 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-// The Adventurers' Guild: create characters, choose the party from the
-// characters on file, then leave for the town.
 class HouseScreen(App app) : IScreen
 {
   public void OnKey(SDL_KeyboardEvent key)
   {
     switch (key.key)
     {
+      case SDL_Keycode.SDLK_ESCAPE:
       case SDL_Keycode.SDLK_E:
         app.GameState!.Facing = app.GameState.Facing.Opposite();
         var (dx, dy) = app.GameState.Facing.Delta();
@@ -38,6 +37,6 @@ class HouseScreen(App app) : IScreen
 
     ui.DrawImage("empty building.png", "Empty building");
     ui.DrawTextPanel(lines, highlight);
-    //ui.DrawRoster(Party);
+    ui.DrawRoster(app.GameState!.Party);
   }
 }

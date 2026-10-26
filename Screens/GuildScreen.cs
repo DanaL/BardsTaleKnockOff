@@ -110,12 +110,6 @@ class GuildScreen(App app) : IScreen
       case SDL_Keycode.SDLK_DOWN:
         MoveCursor(1);
         break;
-      case SDL_Keycode.SDLK_PAGEUP:
-        MoveCursor(-VisibleRows);
-        break;
-      case SDL_Keycode.SDLK_PAGEDOWN:
-        MoveCursor(VisibleRows);
-        break;
       case SDL_Keycode.SDLK_RETURN:
       case SDL_Keycode.SDLK_KP_ENTER:
         var c = _choices[_cursor];
