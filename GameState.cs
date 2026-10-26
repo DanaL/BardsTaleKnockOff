@@ -14,7 +14,7 @@ namespace BardsTaleKnockOff;
 class GameState
 {
   public List<Dungeon> Maps { get; set; } = [];
-  public required Party Party { get; set; }
+  public Party Party { get; set; } = new Party();
 
   public int CurrLevel { get; set; }
   public int X { get; set; }

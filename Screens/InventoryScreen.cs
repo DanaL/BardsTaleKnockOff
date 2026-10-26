@@ -64,7 +64,7 @@ class InventoryScreen(App app, Character character) : IScreen
         var (s, other) = _items[i];
         if (other.Type == item.Type && s.Equipped)
         {
-          _items[i] = (new(other.Id, false), item);
+          _items[i] = (new(other.Id, false), other);
           break;
         }
       }

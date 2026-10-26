@@ -27,20 +27,13 @@ unsafe class App(SDL_Window* window)
   public List<Character> Roster { get; } = [];
 
   // The adventure in progress, or null before one has begun.
-  public GameState? GameState { get; set; }
+  public GameState GameState { get; set; } = new GameState();
   public string CampaignName { get; set; } = "";
   
   public Rng Rng { get; set; } = new Rng(DateTime.UtcNow.GetHashCode());
 
   public void NewGame()
   {
-    GameState = new GameState
-    {
-      Party = new Party(),
-      Facing = Dir.North,
-      ViewRange = 2
-    };
-
     string townMapPath = ResourcePath.GetDataFilePath("town.txt");
     Dungeon town = MapLoader.Load(townMapPath);
     GameState.Maps.Add(town);

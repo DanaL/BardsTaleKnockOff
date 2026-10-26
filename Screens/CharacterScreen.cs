@@ -42,7 +42,10 @@ class CharacterScreen(App app, int slot) : IScreen
   }
 
   void PoolGood()
-  {    
+  {
+    if (app.GameState.Party.Members[slot] is not Character c)
+      return;
+
     int total = 0;
     foreach (Character other in app.GameState.Party.Members.OfType<Character>())
     {
@@ -50,7 +53,7 @@ class CharacterScreen(App app, int slot) : IScreen
       other.Gold = 0;
     }
 
-    app.GameState.Party.Members[slot].Gold = total;
+    c.Gold = total;
   }
 
   public void Draw(GameUI ui)
