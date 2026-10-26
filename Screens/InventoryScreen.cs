@@ -20,7 +20,7 @@ class InventoryScreen(App app, Character character) : IScreen
   List<(InvSlot, Item)> _items = [];
 
   static readonly ItemType[] EquipOrder =
-    [ItemType.Weapon, ItemType.Armour, ItemType.Helmet, ItemType.Gloves, ItemType.Shield, ItemType.Ring];
+    [ItemType.Weapon, ItemType.Armour, ItemType.Shield, ItemType.Helmet, ItemType.Gloves, ItemType.Ring];
 
   public void OnKey(SDL_KeyboardEvent key)
   {
@@ -68,7 +68,7 @@ class InventoryScreen(App app, Character character) : IScreen
           break;
         }
       }
-      
+
       _items[_cursor] = (new(item.Id, !slot.Equipped), item);
       RecalcInventory();
     }    

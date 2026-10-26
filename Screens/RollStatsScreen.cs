@@ -102,7 +102,7 @@ class RollStatsScreen : IScreen
         {
           Name = _name, Role = _role, Lineage = _lineage,
           Str = _str, Dex = _dex, Con = _con, Lore = _lore, Luck = _luck,
-          AC = 10, HP = _hp, MaxHP = _hp, MP = _mp, MaxMP = _mp, Level = 1,
+          HP = _hp, MaxHP = _hp, MP = _mp, MaxMP = _mp, Level = 1,
           Gold = _app.Rng.Next(150, 251)
         };
         _app.Roster.Add(c);

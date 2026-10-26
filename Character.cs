@@ -26,8 +26,7 @@ class Character
 
   public required string Name { get; init; }
   public required Lineage Lineage { get; init; }
-  public required Role Role { get; init; }
-  public int AC { get; set; }
+  public required Role Role { get; init; }  
   public int HP { get; set; }
   public int MaxHP { get; set; }
   public int MP { get; set; }
@@ -41,6 +40,21 @@ class Character
   public int Gold { get; set; }
   public int XP { get; set; }
   public int Level { get; set; }
+
+  public int AC 
+  {
+    get
+    {
+      int ac = 10 - StatToMod(Dex);
+      foreach (var inv in Inventory.OfType<InvSlot>())
+      {
+        if (inv.Equipped)
+          ac -= ItemCatalog.Item(inv.Id).ACMod;
+      }
+
+      return ac;
+    }
+  } 
 
   public InvSlot?[] Inventory { get; init; } = new InvSlot?[INVENTORY_SLOTS];
 
