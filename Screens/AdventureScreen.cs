@@ -84,7 +84,7 @@ class AdventureScreen(App app) : IScreen
     }
     else if (IsEncounter())
     {
-      app.Screens.Replace(new EncounterScreen(app));
+      app.Screens.Push(new EncounterScreen(app));
     }
   }
 
