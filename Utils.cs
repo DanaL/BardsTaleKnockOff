@@ -45,6 +45,27 @@ static class Util
   }
 }
 
+static class StringUtils
+{
+  public static string DefArticle(this string s) => $"the {s}";
+
+  public static string IndefArticle(this string s) => s[0] switch
+  {
+    'A' or 'E' or 'I' or 'O' or 'U' or 'Y' or
+    'a' or 'e' or 'i' or 'o' or 'u' or 'y' => $"an {s}",
+    >= '0' and <= '9' => s,
+    _ => $"a {s}"
+  };
+
+  public static string Capitalize(this string s)
+  {
+    if (s != "" && char.IsLetter(s[0]))
+      return $"{char.ToUpper(s[0])}{s[1..]}";
+    else
+      return s;
+  }
+}
+
 static class ResourcePath
 {
   public static string GetDataFilePath(string filename) => FindResourcePath("data", filename);

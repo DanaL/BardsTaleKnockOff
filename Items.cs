@@ -71,7 +71,7 @@ class ItemCatalog
     SHORTSWORD => new() { Id = SHORTSWORD, Name = "Shortsword", Type = ItemType.Weapon, Value = 30, DamageDie = 6, NumDamageDice = 1, UseableBy = Role.Warrior | Role.Paladin | Role.Archer | Role.Hunter | Role.Rogue | Role.Trickster },
     DAGGER => new() { Id = DAGGER, Name = "Dagger", Type = ItemType.Weapon, Value = 20, DamageDie = 4, NumDamageDice = 1, UseableBy = ALL },
     HALBERD => new() { Id = HALBERD, Name = "Halberd", Type = ItemType.Weapon, Value = 200, DamageDie = 16, NumDamageDice = 1, UseableBy = FIGHTER | Role.Hunter },
-    STAFF => new() { Id = STAFF, Name = "Staff", Type = ItemType.Weapon, Value = 20, DamageDie = 6, NumDamageDice = 1, UseableBy = ALL },
+    STAFF => new() { Id = STAFF, Name = "Staff", Type = ItemType.Weapon, Value = 30, DamageDie = 6, NumDamageDice = 1, UseableBy = ALL },
     ROBES => new() { Id = ROBES, Name = "Robes", Type = ItemType.Armour, Value = 40, ACMod = 1, UseableBy = ALL },
     LEATHER_ARMOUR => new() { Id = LEATHER_ARMOUR, Name = "Leather Armour", Type = ItemType.Armour, Value = 70, ACMod = 2, UseableBy = NONCASTER },
     CHAIN_MAIL => new() { Id = CHAIN_MAIL, Name = "Chain Mail", Type = ItemType.Armour, Value = 150, ACMod = 3, UseableBy = FIGHTER },

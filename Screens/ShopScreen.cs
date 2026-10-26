@@ -15,7 +15,7 @@ namespace BardsTaleKnockOff;
 
 class PurchaseScreen(App app, Character character, List<Item> inventory) : IScreen
 {
-  const int VisibleRows = 20;
+  const int VISIBLE_ROWS = 20;
 
   string _status = "";
   int _cursor = 0;
@@ -62,9 +62,9 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
     // Scroll just enough to keep the selected row in view.
     if (_cursor < _scrollTop)
       _scrollTop = _cursor;
-    else if (_cursor >= _scrollTop + VisibleRows)
-      _scrollTop = _cursor - VisibleRows + 1;
-    _scrollTop = Math.Clamp(_scrollTop, 0, Math.Max(0, inventory.Count - VisibleRows));
+    else if (_cursor >= _scrollTop + VISIBLE_ROWS)
+      _scrollTop = _cursor - VISIBLE_ROWS + 1;
+    _scrollTop = Math.Clamp(_scrollTop, 0, Math.Max(0, inventory.Count - VISIBLE_ROWS));
   }
 
   public void Draw(GameUI ui)
