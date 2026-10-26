@@ -215,7 +215,7 @@ unsafe class GameUI
 
     DrawRosterLine("S)", party?.Special, left, y);
     y += TextRenderer.BaseLineHeight;
-    for (int i = 0; i < Party.MaxMembers; i++)
+    for (int i = 0; i < Party.MAX_PARTY_SIZE; i++)
     {
       DrawRosterLine($"{i + 1})", party?.Members[i], left, y);
       y += TextRenderer.BaseLineHeight;

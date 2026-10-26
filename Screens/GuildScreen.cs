@@ -153,7 +153,7 @@ class GuildScreen(App app) : IScreen
       return;
 
     int slot = (int)key.key - '1';
-    if (slot < 0 || slot >= Party.MaxMembers || Party.Members[slot] is null)
+    if (slot < 0 || slot >= Party.MAX_PARTY_SIZE || Party.Members[slot] is null)
     {
       _status = "There's nobody in that slot.";
       return;

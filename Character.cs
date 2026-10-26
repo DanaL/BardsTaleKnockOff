@@ -12,11 +12,18 @@
 namespace BardsTaleKnockOff;
 
 enum Lineage { Human, Orc, Dwarf, Gnome, Elf, Goblin }
-enum Role { Warrior, Rogue, Hunter, Conjurer, Magician }
 
-// Placeholder character model
+[Flags]
+enum Role { Warrior = 1 << 0, Rogue = 1 << 1, Hunter = 1 << 2, Conjurer = 1 << 3, Magician = 1 << 4, 
+            Sorcerer = 1 << 5, Wizard = 1 << 6, Trickster = 1 << 7, Archer = 1 << 8, 
+            Paladin = 1 << 9 }
+
+record struct InvSlot(int Id, bool Equipped);
+
 class Character
 {
+  const int INVENTORY_SLOTS = 12;
+
   public required string Name { get; init; }
   public required Lineage Lineage { get; init; }
   public required Role Role { get; init; }
@@ -35,19 +42,21 @@ class Character
   public int XP { get; set; }
   public int Level { get; set; }
 
+  public InvSlot?[] Inventory { get; init; } = new InvSlot?[INVENTORY_SLOTS];
+
   public static int StatToMod(int stat) => (int) Math.Floor((stat - 10.0) / 2);
 }
 
 class Party
 {
-  public const int MaxMembers = 6;
+  public const int MAX_PARTY_SIZE = 6;
 
   // The roster's "S" slot, shown above the six regular members.
   public Character? Special { get; set; }
-  public Character?[] Members { get; } = new Character?[MaxMembers];
+  public Character?[] Members { get; } = new Character?[MAX_PARTY_SIZE];
 
   public int Count => Members.Count(m => m is not null);
-  public bool IsFull => Count == MaxMembers;
+  public bool IsFull => Count == MAX_PARTY_SIZE;
   public bool Contains(Character c) => Members.Contains(c);
 
   // Add to the first empty slot. False if the party is full.
@@ -64,8 +73,8 @@ class Party
   // always fill slots 1, 2, 3... with no holes.
   public void RemoveAt(int slot)
   {
-    for (int i = slot; i < MaxMembers - 1; i++)
+    for (int i = slot; i < MAX_PARTY_SIZE - 1; i++)
       Members[i] = Members[i + 1];
-    Members[MaxMembers - 1] = null;
+    Members[MAX_PARTY_SIZE - 1] = null;
   }
 }

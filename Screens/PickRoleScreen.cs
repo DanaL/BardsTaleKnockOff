@@ -27,12 +27,9 @@ class PickRoleScreen(App app, string name, Lineage lineage) : IScreen
         role = Role.Rogue;
         break;
       case SDL_Keycode.SDLK_3:
-        role = Role.Hunter;
-        break;
-      case SDL_Keycode.SDLK_4:
         role = Role.Conjurer;
         break;
-      case SDL_Keycode.SDLK_5:
+      case SDL_Keycode.SDLK_4:
         role = Role.Magician;
         break;
       case SDL_Keycode.SDLK_ESCAPE:
@@ -52,9 +49,8 @@ class PickRoleScreen(App app, string name, Lineage lineage) : IScreen
     lines.AddRange($"{name}, {l}", "", "Choose their role:");
     lines.Add("1) Warrior");
     lines.Add("2) Rogue");
-    lines.Add("3) Hunter");
-    lines.Add("4) Conjurer");
-    lines.Add("5) Magician");
+    lines.Add("3) Conjurer");
+    lines.Add("4) Magician");
     lines.AddRange("", "Esc to cancel.");
    
     ui.DrawPicture("Adventurers' Guild");

@@ -13,8 +13,6 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-// The Adventurers' Guild: create characters, choose the party from the
-// characters on file, then leave for the town.
 class CharacterScreen(App app, int slot) : IScreen
 {
   public void OnKey(SDL_KeyboardEvent key)
@@ -27,9 +25,12 @@ class CharacterScreen(App app, int slot) : IScreen
       case SDL_Keycode.SDLK_4:
       case SDL_Keycode.SDLK_5:
       case SDL_Keycode.SDLK_6:
-        int slot = (int) (key.key - SDL_Keycode.SDLK_0);
-        if (slot <= app.Roster.Count)
-          app.Screens.Replace(new CharacterScreen(app, slot));
+        int otherSlot = (int) (key.key - SDL_Keycode.SDLK_0);
+        if (otherSlot <= app.Roster.Count)
+          app.Screens.Replace(new CharacterScreen(app, otherSlot));
+        break;
+      case SDL_Keycode.SDLK_I:
+        app.Screens.Push(new InventoryScreen(app, app.Roster[slot - 1]));
         break;
       case SDL_Keycode.SDLK_ESCAPE:
         app.Screens.Pop();
@@ -47,17 +48,19 @@ class CharacterScreen(App app, int slot) : IScreen
     lines.Add($"Luck: {c.Luck}");
     lines.Add($"Level: {c.Level}".PadRight(12) + $"XP: {c.XP}");
     
-    string hpLine = $"HP: {c.HP}({c.MaxHP})".PadRight(12);
+    string hpLine = $"HP: {c.HP} ({c.MaxHP})".PadRight(11);
     if (c.MaxMP > 0)
-      hpLine += $"MP: {c.MP}({c.MaxMP})";
+      hpLine += $"MP: {c.MP} ({c.MaxMP})";
     lines.Add(hpLine);
 
     lines.Add($"Gold: {c.Gold}");
     
+    lines.AddRange("", "", "", "", "", "", "I) View inventory");
+
     int highlight = -1;
 
     ui.DrawPicture("");
     ui.DrawTextPanel(lines, highlight);
-    //ui.DrawRoster(Party);
+    ui.DrawRoster(app.GameState.Party);
   }
 }
