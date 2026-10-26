@@ -94,6 +94,16 @@ class GuildScreen(App app) : IScreen
           app.Screens.Replace(new AdventureScreen(app));
         }
         break;
+      case SDL_Keycode.SDLK_1:
+      case SDL_Keycode.SDLK_2:
+      case SDL_Keycode.SDLK_3:
+      case SDL_Keycode.SDLK_4:
+      case SDL_Keycode.SDLK_5:
+      case SDL_Keycode.SDLK_6:
+        int slot = (int) (key.key - SDL_Keycode.SDLK_1);
+        if (slot <= app.Roster.Count)
+          app.Screens.Push(new CharacterScreen(app, slot));
+        break;
     }
   }
 
