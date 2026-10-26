@@ -32,10 +32,25 @@ class CharacterScreen(App app, int slot) : IScreen
       case SDL_Keycode.SDLK_I:
         app.Screens.Push(new InventoryScreen(app, app.GameState?.Party.Members[slot]!));
         break;
+      case SDL_Keycode.SDLK_P:
+        PoolGood();
+        break;
       case SDL_Keycode.SDLK_ESCAPE:
         app.Screens.Pop();
         break;
     }
+  }
+
+  void PoolGood()
+  {    
+    int total = 0;
+    foreach (Character other in app.GameState.Party.Members.OfType<Character>())
+    {
+      total += other.Gold;
+      other.Gold = 0;
+    }
+
+    app.GameState.Party.Members[slot].Gold = total;
   }
 
   public void Draw(GameUI ui)
@@ -56,11 +71,11 @@ class CharacterScreen(App app, int slot) : IScreen
 
       lines.Add($"Gold: {c.Gold}");
       
-      lines.AddRange("", "", "", "", "", "", "I) View inventory");
+      lines.AddRange("", "", "", "", "", "I) View inventory", "P) Pool good");
     }
 
     ui.DrawPicture("");
     ui.DrawTextPanel(lines);
     ui.DrawRoster(app.GameState?.Party);
-  }
+  }  
 }
