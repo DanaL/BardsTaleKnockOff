@@ -5,4 +5,8 @@ I am using Daniel Linssen's m5x7 font (https://managore.itch.io/m5x7), which is 
 
 The art assets I am using (ceiling.png, doors.png, floor.png, floorceiling.png, grass.png, tree.png, walls.png) are CC-BY-SA 3.0 by OptimusGnu (https://opengameart.org/content/first-person-dungeon-crawl-more-tilesets)
 
-Skeleton image is created by Stephen Challener (Redshrike), artisticdude, & Jordan Irwin (AntumDeluge). Hosted by OpenGameArt.org. (https://opengameart.org/content/elder-skeleton)
+Skeleton image is created by Stephen Challener (Redshrike), artisticdude, & Jordan Irwin (AntumDeluge). Hosted by OpenGameArt.org. (https://opengameart.org/content/elder-skeleton) (CC-BY 3.0/4.0)
+For the caster images, I used this image: https://opengameart.org/content/enemy-sprite-0 (CC0)
+I am using the wolf image from here: https://opengameart.org/content/lpc-wolf-animation (CC-BY 3.0/4.0)
+Goblin and orcs from: https://opengameart.org/content/animated-orc-goblin-16bit (CC-BY-SA 4.0)
+
