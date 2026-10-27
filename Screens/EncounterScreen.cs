@@ -213,6 +213,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
 
   void PostRound()
   {
+    ++app.GameState.Turn;
     if (app.GameState.Party.Alive == 0)
     {
       // Uh-oh, TPK   

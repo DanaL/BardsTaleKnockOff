@@ -15,7 +15,7 @@ namespace BardsTaleKnockOff;
 
 record struct PartyInfo(int Slot, string Name);
 record SaveFileInfo(string CampaignName, string Path);
-record SaveGameInfo(List<Character> Roster, List<PartyInfo> Party);
+record SaveGameInfo(List<Character> Roster, List<PartyInfo> Party, ulong Turn);
 
 internal class Serialize
 {
@@ -28,7 +28,7 @@ internal class Serialize
         party.Add(new PartyInfo(s, app.GameState.Party.Members[s].Name));
     }
 
-    SaveGameInfo sgi = new(app.Roster, party);
+    SaveGameInfo sgi = new(app.Roster, party, app.GameState.Turn);
     var bytes = JsonSerializer.SerializeToUtf8Bytes(sgi, new JsonSerializerOptions { WriteIndented = false, IncludeFields = true });
 
     DirectoryInfo saveDir = new(Util.SavePath);
@@ -70,6 +70,8 @@ internal class Serialize
     {
       Character c = app.Roster.First(ch => ch.Name == pi.Name);
       app.GameState!.Party.Add(c);
-    }      
+    }
+
+    app.GameState.Turn = sgi.Turn;
   }  
 } 

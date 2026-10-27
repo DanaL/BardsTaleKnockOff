@@ -22,6 +22,7 @@ class GameState
   public Dir Facing { get; set; } = Dir.North;
   public int ViewRange { get; set; } = 2;
   public bool DayTime { get; set;} = true; // eventually to be replaced with time of day
+  public ulong Turn { get; set; } = 0;
 
   public Dungeon CurrMap => Maps[CurrLevel];
 

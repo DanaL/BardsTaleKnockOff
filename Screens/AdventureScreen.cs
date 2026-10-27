@@ -33,17 +33,21 @@ class AdventureScreen(App app) : IScreen
         break;
       case SDL_Scancode.SDL_SCANCODE_DOWN:
       case SDL_Scancode.SDL_SCANCODE_S:
+        ++GS.Turn;
         GS.Facing = GS.Facing.Opposite();
         break;
       case SDL_Scancode.SDL_SCANCODE_LEFT:
       case SDL_Scancode.SDL_SCANCODE_A:
+        ++GS.Turn;
         GS.Facing = GS.Facing.TurnLeft();
         break;
       case SDL_Scancode.SDL_SCANCODE_RIGHT:
       case SDL_Scancode.SDL_SCANCODE_D:
+        ++GS.Turn;
         GS.Facing = GS.Facing.TurnRight();
         break;
       case SDL_Scancode.SDL_SCANCODE_L:
+        ++GS.Turn;
         GS.Say($"Loc: {GS.X}, {GS.Y}");
         break;
       case SDL_Scancode.SDL_SCANCODE_1:
@@ -68,6 +72,7 @@ class AdventureScreen(App app) : IScreen
 
   void ResolveMove()
   {
+    ++GS.Turn;
     Tile tile = GS.CurrMap.TileAt(GS.X, GS.Y);
     if (tile.Feature == Feature.Guild)
     {
