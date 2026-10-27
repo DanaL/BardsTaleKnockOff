@@ -42,6 +42,9 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
   readonly string _image = foes[0][0].Image;
   readonly string _caption = foes[0][0].Name;
 
+  int _xpWon = 0;
+  int _goldWon = 0;
+
   void Reset()
   {
     _choices.Clear();
@@ -276,6 +279,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     if (dmg >= foes[monsterGroup][monsterHit].HP)
     {
       _messageQ.Enqueue($"{target.Name.DefArticle().ToLower().Capitalize()} is killed!");
+      _xpWon += target.XP;
+      _goldWon += app.Rng.Next(target.Gold) + 1;
       foes[monsterGroup].RemoveAt(monsterHit);
     }
     else if (dmg > 0)
