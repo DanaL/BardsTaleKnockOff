@@ -228,9 +228,10 @@ unsafe class GameUI
     if (c is null)
       return;
 
+    int currHP = int.Max(0, c.HP);
     _text.Draw(c.Name, left + ColName, y, RosterText);
     _text.Draw(c.AC.ToString(), left + ColAC, y, RosterText);
-    _text.Draw($"{c.HP}/{c.MaxHP}", left + ColHP, y, RosterText);
+    _text.Draw($"{currHP}/{c.MaxHP}", left + ColHP, y, RosterText);
     _text.Draw(c.MaxMP > 0 ? $"{c.MP}/{c.MaxMP}" : "-", left + ColMP, y, RosterText);
     _text.Draw(c.Condition, left + ColConditions, y, RosterText);
     _text.Draw(c.Role.ToString(), left + ColClass, y, RosterText);

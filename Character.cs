@@ -32,6 +32,7 @@ class Character
   public int MP { get; set; }
   public int MaxMP { get; set; }
   public string Condition { get; set; } = "";
+
   public int Str { get; set; }
   public int Dex { get; set; }
   public int Con { get; set; }
@@ -41,6 +42,9 @@ class Character
   public int XP { get; set; }
   public int Level { get; set; }
 
+  // Conditions that take a character out of action. Add STONED etc. here.
+  public bool Incapacitated => Condition is "DEAD";
+  
   public int THAC0 => Role switch
   {
     Role.Warrior or Role.Paladin or Role.Archer => int.Max(1, 20 - Level),
@@ -106,7 +110,7 @@ class Party
   public Character?[] Members { get; } = new Character?[MAX_PARTY_SIZE];
 
   public int Count => Members.Count(m => m is not null);
-  public int Alive => Members.Count(m => m is not null && m.HP > 0);
+  public int Alive => Members.Count(m => m is not null && !m.Incapacitated);
 
   public bool IsFull => Count == MAX_PARTY_SIZE;
   public bool Contains(Character c) => Members.Contains(c);
@@ -128,5 +132,17 @@ class Party
     for (int i = slot; i < MAX_PARTY_SIZE - 1; i++)
       Members[i] = Members[i + 1];
     Members[MAX_PARTY_SIZE - 1] = null;
+  }
+
+  // Shuffle incapacitated members to the back, keeping everyone's relative
+  // order otherwise. Empty slots stay at the end.
+  public void MoveIncapacitatedToBack()
+  {
+    List<Character> active = [.. Members.OfType<Character>().Where(c => !c.Incapacitated)];
+    List<Character> downed = [.. Members.OfType<Character>().Where(c => c.Incapacitated)];
+    List<Character> ordered = [.. active, .. downed];
+
+    for (int i = 0; i < MAX_PARTY_SIZE; i++)
+      Members[i] = i < ordered.Count ? ordered[i] : null;
   }
 }

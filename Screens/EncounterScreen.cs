@@ -9,7 +9,6 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-using System.Linq.Expressions;
 using SDL;
 
 namespace BardsTaleKnockOff;
@@ -27,6 +26,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
   const int CONFIRM = 1;
   const int SHOW_RESULTS = 2;
   const int END_OF_ROUND = 3;
+  const int VICTORY = 4;
+  const int PICK_MELEE_GROUP = 5;
 
   ulong _nextMsgAt = 0;
   const ulong MsgDelayMS = 600;
@@ -39,14 +40,15 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
 
   List<BattleChoice> _choices = [];
 
-  readonly string _image = foes[0][0].Image;
-  readonly string _caption = foes[0][0].Name;
+  string _image = foes[0][0].Image;
+  string _caption = foes[0][0].Name;
 
   int _xpWon = 0;
   int _goldWon = 0;
 
   void Reset()
   {
+    app.GameState.Messages.Clear();
     _choices.Clear();
     _slot = 0;
     _state = PICK_ACTION;
@@ -59,13 +61,47 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       if (!_availableActions.Contains(key.scancode))
         return;
 
+      bool next = false;
       switch (key.scancode)
       {
-        case SDL_Scancode.SDL_SCANCODE_A:          
-          _choices.Add(new(_slot, BattleAction.MeleeAttack, 0));
+        case SDL_Scancode.SDL_SCANCODE_A:
+          if (foes.Count == 1) 
+          {
+            _choices.Add(new(_slot, BattleAction.MeleeAttack, 0));
+            next = true;
+          }
+          else
+          {
+            _state = PICK_MELEE_GROUP;
+            _availableActions = [];
+          }
           break;
         case SDL_Scancode.SDL_SCANCODE_D:
+          next = true;
           _choices.Add(new(_slot, BattleAction.Defend, 0));
+          break;
+      }
+
+      if (next)
+      {
+        ++_slot;
+        _availableActions = [];
+        if (_slot >= app.GameState.Party.Alive)
+          _state = CONFIRM;
+      }
+    }
+    else if (_state == PICK_MELEE_GROUP)
+    {
+      if (!_availableActions.Contains(key.scancode))
+        return;
+
+      switch (key.scancode)
+      {
+        case SDL_Scancode.SDL_SCANCODE_A:
+          _choices.Add(new(_slot, BattleAction.MeleeAttack, 0));
+          break;
+        case SDL_Scancode.SDL_SCANCODE_B:
+          _choices.Add(new(_slot, BattleAction.MeleeAttack, 1));
           break;
       }
 
@@ -73,13 +109,15 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       _availableActions = [];
       if (_slot >= app.GameState.Party.Alive)
         _state = CONFIRM;
+      else
+        _state = PICK_ACTION;
     }
     else if (_state == CONFIRM)
     {
       switch (key.scancode)
       {
         case SDL_Scancode.SDL_SCANCODE_Y:
-          CombatRound();
+          CombatRound();          
           _state = SHOW_RESULTS;
           break;
         case SDL_Scancode.SDL_SCANCODE_N:
@@ -94,6 +132,12 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     else if (_state == END_OF_ROUND && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
       Reset();
+      PostRound();      
+    }
+    else if (_state == VICTORY && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
+    {
+      app.GameState.Messages.Clear();
+      app.Screens.Pop();
     }
   }
 
@@ -105,6 +149,10 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     {
       case PICK_ACTION:
         lines = PickAction();
+        ui.DrawTextPanel(lines);
+        break;
+      case PICK_MELEE_GROUP:
+        lines = PickMeleeGroup();
         ui.DrawTextPanel(lines);
         break;
       case CONFIRM:
@@ -122,6 +170,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
           _state = END_OF_ROUND;
         ui.DrawTextPanel(app.GameState.Messages);
         break;
+      case VICTORY:
       case END_OF_ROUND:
         ui.DrawTextPanel(app.GameState.Messages);        
         break;
@@ -129,6 +178,63 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
 
     ui.DrawImage(_image, _caption);
     ui.DrawRoster(app.GameState.Party);
+  }
+
+  void PostRound()
+  {
+    if (app.GameState.Party.Alive == 0)
+    {
+      // Uh-oh, TPK   
+    }
+
+    app.GameState.Party.MoveIncapacitatedToBack();
+
+    List<List<Monster>> remainingFoes = [];
+    foreach (var group in foes)
+    {
+      if (group.Count > 0)
+        remainingFoes.Add(group);
+    }
+
+    if (remainingFoes.Count == 0)
+    {
+      Victory();
+      _state = VICTORY;
+    }
+    else
+    {
+      foes = remainingFoes;
+    
+    _image = foes[0][0].Image;
+    _caption = foes[0][0].Name;  
+    }    
+  }
+
+  // Eventually, I need to add finding the occasional item!
+  void Victory()
+  {
+    // If gold given is less than the # of alive characters, I'm giving a
+    // little extra gold but who cares...
+    int goldPerChar = int.Max(_goldWon / app.GameState.Party.Alive, 1);
+    int xpPerChar = int.Max(_xpWon / app.GameState.Party.Alive, 1);
+
+    app.GameState.Messages.Clear();
+    app.GameState.Say("You emerge victorious from battle!");
+    app.GameState.Say("");
+    string gp = goldPerChar == 1 ? "a single gold piece" : "{goldPerChar} gold pieces";
+    app.GameState.Say($"Each survivor receive {xpPerChar} XP and {gp}!");
+
+    for (int j = 0; j < app.GameState.Party.Count; j++)
+    {
+      if (app.GameState.Party.Members[j] is Character c && !c.Incapacitated)
+      {
+        c.XP += xpPerChar;
+        c.Gold += goldPerChar;
+      }
+    }
+
+    _image = "treasure.png";
+    _caption = "Victory!";
   }
 
   void CombatRound()
@@ -210,6 +316,12 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
           int dmg = app.Rng.Next(m.DmgLow, m.DmgHigh + 1);
           _messageQ.Enqueue($"{n} {m.Verb} {target.Name} and hits for {dmg} hp!");
           target.HP -= dmg;
+
+          if (target.HP < 1)
+          {
+            _messageQ.Enqueue($"{target.Name} is killed!");
+            target.Condition = "DEAD";
+          }
         }
         else
         {
@@ -336,6 +448,24 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     return lines;
   }
 
+  // A rogue hiding in shadows should be able to hit any group
+  List<string> PickMeleeGroup()
+  {
+    List<string> lines = [ "Attack which group:", ""];
+
+    int n = foes[0].Count;
+    string m = n == 1 ? foes[0][0].Name : foes[0][0].Name.Pluralize();
+    lines.Add($"a) {n} {m}");
+
+    n = foes[1].Count;
+    m = n == 1 ? foes[1][1].Name : foes[1][1].Name.Pluralize();
+    lines.Add($"b) {n} {m}");
+
+    _availableActions = [ SDL_Scancode.SDL_SCANCODE_A, SDL_Scancode.SDL_SCANCODE_B ];
+
+    return lines;
+  }
+
   List<string> PickAction()
   {
     List<string> lines = [];
@@ -354,7 +484,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     }
     
     return lines;
-  }
+  }  
 }
 
 class EncounterScreen : IScreen
@@ -379,6 +509,7 @@ class EncounterScreen : IScreen
   public EncounterScreen(App app)
   {
     _app = app;
+    _app.GameState.Messages.Clear();
 
     _groups.Add(MonsterCatalog.GroupForLevel(app.GameState.CurrLevel, app.Rng));
     if (app.GameState.CurrLevel == 0 && app.Rng.Next(4) == 0)
