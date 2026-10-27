@@ -41,6 +41,26 @@ class Character
   public int XP { get; set; }
   public int Level { get; set; }
 
+  public int THAC0 => Role switch
+  {
+    Role.Warrior or Role.Paladin or Role.Archer => int.Max(1, 20 - Level),
+    Role.Rogue or Role.Trickster => int.Max(1, 20 - Level / 2),
+    Role.Hunter => int.Max(1, 17 - Level / 2),
+    Role.Conjurer or Role.Magician or Role.Sorcerer or Role.Wizard => int.Max(1, 20 - Level / 3),
+    _ => throw new Exception($"Unknown role: {Role}!"),
+  };
+
+  public Item? ReadiedWeapon
+  {
+    get
+    {
+      if (Inventory[0] is InvSlot slot && slot.Equipped && ItemCatalog.Item(slot.Id) is Item item && item.Type == ItemType.Weapon)
+        return item;
+      else
+        return null;
+    }  
+  }
+
   public int AC 
   {
     get
@@ -86,6 +106,8 @@ class Party
   public Character?[] Members { get; } = new Character?[MAX_PARTY_SIZE];
 
   public int Count => Members.Count(m => m is not null);
+  public int Alive => Members.Count(m => m is not null && m.HP > 0);
+
   public bool IsFull => Count == MAX_PARTY_SIZE;
   public bool Contains(Character c) => Members.Contains(c);
 

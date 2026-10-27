@@ -45,6 +45,20 @@ static class Util
   }
 }
 
+static class ListUtils
+{
+  public static void Shuffle<T>(this IList<T> list, Rng rng)
+  {
+    int n = list.Count;
+    while (n > 1)
+    {
+      int k = rng.Next(n);
+      n--;
+      (list[n], list[k]) = (list[k], list[n]);
+    }
+  }
+}
+
 static class StringUtils
 {
   public static string DefArticle(this string s) => $"the {s}";
