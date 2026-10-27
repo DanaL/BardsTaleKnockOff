@@ -196,7 +196,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
         break;
     }
 
-    ui.DrawImage(_image, _caption);
+    ui.DrawImage(_image, _caption, app.GameState);
     ui.DrawRoster(app.GameState.Party);
   }
 
@@ -602,7 +602,7 @@ class EncounterScreen : IScreen
     string image = _groups[0][0].Image;
     string monsterName = _groups[0][0].Name;
 
-    ui.DrawImage(image, monsterName);
+    ui.DrawImage(image, monsterName, _app.GameState);
     ui.DrawTextPanel(lines);
     ui.DrawRoster(_app.GameState.Party);
   }

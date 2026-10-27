@@ -117,11 +117,15 @@ unsafe class GameUI
 
   // A picture from assets/ in the picture area, with a caption along the
   // bottom like Bard's Tale's location names. Anything the image doesn't
-  // cover (or transparent parts of it) shows the picture background.
-  public void DrawImage(string fileName, string caption)
+  // cover (or transparent parts of it) shows the picture background, or the
+  // dungeon view if a GameState is given (eg., monsters standing in the maze).
+  public void DrawImage(string fileName, string caption, GameState? backdrop = null)
   {
     Frame(ViewRect);
-    FillRect(PictureBackground, ViewRect);
+    if (backdrop is not null)
+      _view.Draw(backdrop, backdrop.X, backdrop.Y, backdrop.Facing, ViewRect.x, ViewRect.y);
+    else
+      FillRect(PictureBackground, ViewRect);
     _view.DrawImage(fileName, ViewRect.x, ViewRect.y);
 
     var band = new SDL_Rect { x = ViewRect.x, y = ViewRect.y + ViewRect.h - CaptionBandH, w = ViewRect.w, h = CaptionBandH };
