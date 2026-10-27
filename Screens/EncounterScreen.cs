@@ -24,7 +24,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
 
   const int PICK_ACTION = 0;
   const int CONFIRM = 1;
-  const int SHOW_RESULTS = 2;
+  const int RESOLVING_COMBAT = 2;
   const int END_OF_ROUND = 3;
   const int VICTORY = 4;
   const int PICK_MELEE_GROUP = 5;
@@ -39,6 +39,14 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
   HashSet<SDL_Scancode> _availableActions = [];
 
   List<BattleChoice> _choices = [];
+
+  // The round's pending actions, resolved one at a time as messages are shown
+  // so the roster never gets ahead of the text.
+  readonly PriorityQueue<BattleChoice, int> _actions = new();
+  int _actingGroup = -1;
+  int _actingMonster = 0;
+
+  bool RoundOver => _actions.Count == 0 && _actingGroup < 0;
 
   string _image = foes[0][0].Image;
   string _caption = foes[0][0].Name;
@@ -117,15 +125,15 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       switch (key.scancode)
       {
         case SDL_Scancode.SDL_SCANCODE_Y:
-          CombatRound();          
-          _state = SHOW_RESULTS;
+          StartRound();
+          _state = RESOLVING_COMBAT;
           break;
         case SDL_Scancode.SDL_SCANCODE_N:
           Reset();
           break;
       }
     }
-    else if (_state == SHOW_RESULTS && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
+    else if (_state == RESOLVING_COMBAT && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
       _nextMsgAt = 0;
     }
@@ -159,15 +167,27 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
         lines = Confirm();
         ui.DrawTextPanel(lines);
         break;
-      case SHOW_RESULTS:
+      case RESOLVING_COMBAT:
         ulong now = SDL3.SDL_GetTicks();
-        if (_messageQ.Count > 0 && now >= _nextMsgAt)
+        if (now >= _nextMsgAt)
         {
-          app.GameState.Say(_messageQ.Dequeue());
-          _nextMsgAt = now + MsgDelayMS;
+          // Some actions produce no messages (eg., the attacker died earlier
+          // in the round), so keep going until one does.
+          while (_messageQ.Count == 0 && !RoundOver)
+            ResolveNextAction();
+
+          if (_messageQ.Count > 0)
+          {
+            app.GameState.Say(_messageQ.Dequeue());
+            _nextMsgAt = now + MsgDelayMS;
+          }
+          else
+          {
+            app.GameState.Say("");
+            app.GameState.Say("- space to continue -");
+            _state = END_OF_ROUND;
+          }
         }
-        if (_messageQ.Count == 0)
-          _state = END_OF_ROUND;
         ui.DrawTextPanel(app.GameState.Messages);
         break;
       case VICTORY:
@@ -237,9 +257,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     _caption = "Victory!";
   }
 
-  void CombatRound()
+  void StartRound()
   {
-    PriorityQueue<BattleChoice, int> actions = new();
     Dictionary<int, BattleChoice> characters = [];
     
     foreach (var choice in _choices)
@@ -251,90 +270,98 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       if (choice.Action == BattleAction.Defend)
         _messageQ.Enqueue($"{c.Name} defends.");      
       else if (choice.Action == BattleAction.MeleeAttack)
-        actions.Enqueue(choice, Initiative(c));      
+        _actions.Enqueue(choice, Initiative(c));
     }
-   
+
     for (int n = 0; n < foes.Count; n++)
     {
       int roll = app.Rng.Next(1, 24);
       BattleChoice monsterChoice = new(n, BattleAction.MonsterAction, n);
-      actions.Enqueue(monsterChoice, -roll);
-    }  
+      _actions.Enqueue(monsterChoice, -roll);
+    }
 
-    do
+    _state = RESOLVING_COMBAT;
+  }
+
+  // Resolve a single attack. When a monster group's turn comes up, each
+  // monster in it attacks on its own step. Nothing else acts until the
+  // whole group has gone, so the indexes into the group stay valid.
+  void ResolveNextAction()
+  {
+    if (_actingGroup >= 0)
     {
-      var choice = actions.Dequeue();
-      if (choice.Action == BattleAction.MonsterAction)
+      List<Monster> group = foes[_actingGroup];
+      if (_actingMonster < group.Count)
       {
-        MonsterAction(choice.Group);
+        MonsterAction(group[_actingMonster++], _actingGroup);
+        return;
       }
-      else
-      {
-        if (app.GameState.Party.Members[choice.Slot] is not Character c || c.Incapacitated)
-          continue;
+      _actingGroup = -1;
+    }
 
-        if (choice.Action == BattleAction.MeleeAttack)     
-        {
-          PlayerMeleeAttack(c, choice.Group);
-        }
+    if (_actions.Count == 0)
+      return;
+
+    var choice = _actions.Dequeue();
+    if (choice.Action == BattleAction.MonsterAction)
+    {
+      _actingGroup = choice.Group;
+      _actingMonster = 0;
+    }
+    else
+    {
+      if (app.GameState.Party.Members[choice.Slot] is not Character c || c.Incapacitated)
+        return;
+
+      if (choice.Action == BattleAction.MeleeAttack)
+      {
+        PlayerMeleeAttack(c, choice.Group);
       }
     }
-    while (actions.Count > 0);
-    
-    _messageQ.Enqueue("");
-    _messageQ.Enqueue("- space to continue -");
-
-    _state = SHOW_RESULTS;
   }
 
   // Only monsters in the first 2 ranks can engage in melee
   // Not sure what rate they should do their special attacks at yet
-  void MonsterAction(int group)
+  void MonsterAction(Monster m, int group)
   {
-    if (foes[group].Count == 0)
+    // eventually check for special abilities
+    if (group > 1)
       return;
 
-    foreach (Monster m in foes[group])
+    // also have to take into account the Special slot eventually
+    List<int> targets = [];
+    for (int j = 0; j < 3; j++)
     {
-      // eventually check for special abilities
-      if (group > 1)
-        continue;
-      
-      // also have to take into account the Special slot eventually
-      List<int> targets = [];
-      for (int j = 0; j < 3; j++)
+      if (app.GameState.Party.Members[j] is Character c && !c.Incapacitated)
+        targets.Add(j);
+    }
+
+    if (targets.Count == 0)
+      return;
+
+    int s = targets[app.Rng.Next(targets.Count)];
+    if (app.GameState.Party.Members[s] is Character target)
+    {
+      string n = m.Name.ToLower().DefArticle().Capitalize();
+      int roll = app.Rng.Next(1, 21);
+      int targetAC = m.THAC0 - target.AC;
+      if (roll > targetAC)
       {
-        if (app.GameState.Party.Members[j] is Character c && c.HP > 0)
-          targets.Add(j);
-      }
+        int dmg = app.Rng.Next(m.DmgLow, m.DmgHigh + 1);
+        _messageQ.Enqueue($"{n} {m.Verb} {target.Name} and hits for {dmg} hp!");
+        target.HP -= dmg;
 
-      if (targets.Count == 0)
-        continue;
-
-      int s = targets[app.Rng.Next(targets.Count)];
-      if (app.GameState.Party.Members[s] is Character target)
-      {
-        string n = m.Name.ToLower().DefArticle().Capitalize();
-        int roll = app.Rng.Next(1, 21);
-        int targetAC = m.THAC0 - target.AC;
-        if (roll > targetAC)
+        if (target.HP < 1)
         {
-          int dmg = app.Rng.Next(m.DmgLow, m.DmgHigh + 1);
-          _messageQ.Enqueue($"{n} {m.Verb} {target.Name} and hits for {dmg} hp!");
-          target.HP -= dmg;
-
-          if (target.HP < 1)
-          {
-            _messageQ.Enqueue($"{target.Name} is killed!");
-            target.Condition = "DEAD";
-          }
-        }
-        else
-        {
-          _messageQ.Enqueue($"{n} {m.Verb} {target.Name} and misses!");
+          _messageQ.Enqueue($"{target.Name} is killed!");
+          target.Condition = "DEAD";
         }
       }
-    }  
+      else
+      {
+        _messageQ.Enqueue($"{n} {m.Verb} {target.Name} and misses!");
+      }
+    }
   }
 
   void PlayerMeleeAttack(Character c, int monsterGroup)
