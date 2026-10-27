@@ -221,8 +221,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     app.GameState.Messages.Clear();
     app.GameState.Say("You emerge victorious from battle!");
     app.GameState.Say("");
-    string gp = goldPerChar == 1 ? "a single gold piece" : "{goldPerChar} gold pieces";
-    app.GameState.Say($"Each survivor receive {xpPerChar} XP and {gp}!");
+    string gp = goldPerChar == 1 ? "a single gold piece" : $"{goldPerChar} gold pieces";
+    app.GameState.Say($"Each survivor receives {xpPerChar} XP and {gp}!");
 
     for (int j = 0; j < app.GameState.Party.Count; j++)
     {
@@ -244,7 +244,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     
     foreach (var choice in _choices)
     {
-      if (app.GameState.Party.Members[choice.Slot] is not Character c)
+      if (app.GameState.Party.Members[choice.Slot] is not Character c || c.Incapacitated)
         continue;
 
       characters[choice.Slot] = choice;
@@ -268,9 +268,15 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       {
         MonsterAction(choice.Group);
       }
-      else if (choice.Action == BattleAction.MeleeAttack)
+      else
       {
-        PlayerMeleeAttack(choice.Slot, choice.Group);
+        if (app.GameState.Party.Members[choice.Slot] is not Character c || c.Incapacitated)
+          continue;
+
+        if (choice.Action == BattleAction.MeleeAttack)     
+        {
+          PlayerMeleeAttack(c, choice.Group);
+        }
       }
     }
     while (actions.Count > 0);
@@ -331,12 +337,9 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     }  
   }
 
-  void PlayerMeleeAttack(int playerSlot, int monsterGroup)
-  {    
-    if (app.GameState.Party.Members[playerSlot] is not Character c)
-      return;
-
-    // I need to check what happens in BT if a group you've targetted
+  void PlayerMeleeAttack(Character c, int monsterGroup)
+  {        
+    // I need to check what happens in BT if a group you've targeted
     // is eliminated before you act...
     if (foes[monsterGroup].Count == 0)
       return;
@@ -458,7 +461,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     lines.Add($"a) {n} {m}");
 
     n = foes[1].Count;
-    m = n == 1 ? foes[1][1].Name : foes[1][1].Name.Pluralize();
+    m = n == 1 ? foes[1][0].Name : foes[1][0].Name.Pluralize();
     lines.Add($"b) {n} {m}");
 
     _availableActions = [ SDL_Scancode.SDL_SCANCODE_A, SDL_Scancode.SDL_SCANCODE_B ];
