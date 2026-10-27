@@ -9,7 +9,6 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-using System.Text.RegularExpressions;
 using SDL;
 
 namespace BardsTaleKnockOff;
@@ -219,6 +218,11 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       // Uh-oh, TPK   
     }
 
+    foreach (Character member in app.GameState.Party.Members.OfType<Character>())
+    {
+      member.Buffs = [.. member.Buffs.Where(b => b.ExpiresOn > app.GameState.Turn)];
+    }
+
     app.GameState.Party.MoveIncapacitatedToBack();
 
     List<List<Monster>> remainingFoes = [];
@@ -236,9 +240,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     else
     {
       foes = remainingFoes;
-    
-    _image = foes[0][0].Image;
-    _caption = foes[0][0].Name;  
+      _image = foes[0][0].Image;
+      _caption = foes[0][0].Name;  
     }    
   }
 
@@ -270,19 +273,21 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
   }
 
   void StartRound()
-  {
-    Dictionary<int, BattleChoice> characters = [];
-    
+  {    
     foreach (var choice in _choices)
     {
       if (app.GameState.Party.Members[choice.Slot] is not Character c || c.Incapacitated)
         continue;
 
-      characters[choice.Slot] = choice;
       if (choice.Action == BattleAction.Defend)
-        _messageQ.Enqueue($"{c.Name} defends.");      
-      else if (choice.Action == BattleAction.MeleeAttack)
+      {
+        c.Buffs.Add(new TempBuff(Buff.Defending, app.GameState.Turn));
+        _messageQ.Enqueue($"{c.Name} defends.");
+      }        
+      else if (choice.Action == BattleAction.MeleeAttack) 
+      {
         _actions.Enqueue(choice, Initiative(c));
+      }
     }
 
     for (int n = 0; n < foes.Count; n++)
@@ -308,6 +313,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
         MonsterAction(group[_actingMonster++], _actingGroup);
         return;
       }
+
       _actingGroup = -1;
     }
 
@@ -357,6 +363,9 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       string n = m.Name.ToLower().DefArticle().Capitalize();
       int roll = app.Rng.Next(1, 21);
       int targetAC = m.THAC0 - target.AC;
+      if (target.Buffs.Any(b => b.Buff == Buff.Defending))
+        targetAC += 5; // Not sure what BT1 did, but -5 is roughly equip to Disadvantage in 5e
+                       // and what you get for taking the Dodge action
       if (roll > targetAC)
       {
         int dmg = app.Rng.Next(m.DmgLow, m.DmgHigh + 1);
