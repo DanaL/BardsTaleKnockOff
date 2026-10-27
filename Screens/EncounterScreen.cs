@@ -9,6 +9,7 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.Linq.Expressions;
 using SDL;
 
 namespace BardsTaleKnockOff;
@@ -24,8 +25,11 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
 
   const int PICK_ACTION = 0;
   const int CONFIRM = 1;
-  
+  const int SHOW_RESULTS = 2;
   const int END_OF_ROUND = 3;
+
+  ulong _nextMsgAt = 0;
+  const ulong MsgDelayMS = 600;
 
   readonly Queue<string> _messageQ = new();
 
@@ -73,12 +77,20 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       {
         case SDL_Scancode.SDL_SCANCODE_Y:
           CombatRound();
-          _state = END_OF_ROUND;
+          _state = SHOW_RESULTS;
           break;
         case SDL_Scancode.SDL_SCANCODE_N:
           Reset();
           break;
       }
+    }
+    else if (_state == SHOW_RESULTS && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
+    {
+      _nextMsgAt = 0;
+    }
+    else if (_state == END_OF_ROUND && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
+    {
+      Reset();
     }
   }
 
@@ -95,6 +107,17 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       case CONFIRM:
         lines = Confirm();
         ui.DrawTextPanel(lines);
+        break;
+      case SHOW_RESULTS:
+        ulong now = SDL3.SDL_GetTicks();
+        if (_messageQ.Count > 0 && now >= _nextMsgAt)
+        {
+          app.GameState.Say(_messageQ.Dequeue());
+          _nextMsgAt = now + MsgDelayMS;
+        }
+        if (_messageQ.Count == 0)
+          _state = END_OF_ROUND;
+        ui.DrawTextPanel(app.GameState.Messages);
         break;
       case END_OF_ROUND:
         ui.DrawTextPanel(app.GameState.Messages);        
@@ -143,7 +166,10 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     }
     while (actions.Count > 0);
     
-    _state = END_OF_ROUND;
+    _messageQ.Enqueue("");
+    _messageQ.Enqueue("- space to continue -");
+
+    _state = SHOW_RESULTS;
   }
 
   void PlayerMeleeAttack(int playerSlot, int monsterGroup)
@@ -267,7 +293,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
 
     if (app.GameState.Party.Members[_slot] is Character c)
     {
-      lines.AddRange($"{c.Name} can do these actions:", "", "", "", "", "");
+      lines.AddRange($"{c.Name} has these actions available:", "", "", "", "", "");
 
       if (_slot < 3) 
       {
