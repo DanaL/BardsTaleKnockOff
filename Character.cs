@@ -42,8 +42,8 @@ class Character
   public int XP { get; set; }
   public int Level { get; set; }
 
-  public List<TempBuff> Buffs = [];
-  
+  public List<TempBuff> Buffs { get; set;} = [];
+
   // Conditions that take a character out of action. Add STONED etc. here.
   public bool Incapacitated => Condition is "DEAD";
   
