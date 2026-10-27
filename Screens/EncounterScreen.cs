@@ -9,6 +9,7 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.Text.RegularExpressions;
 using SDL;
 
 namespace BardsTaleKnockOff;
@@ -184,6 +185,16 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
           else
           {
             app.GameState.Say("");
+            if (foes.Any(g => g.Count > 0))
+            {
+              app.GameState.Say("You still face:");
+              foreach (var group in foes.Where(g => g.Count > 0))
+              {
+                string gn = group.Count == 1 ? group[0].Name : group[0].Name.Pluralize();
+                app.GameState.Say($"{group.Count} {gn}");
+              }
+              app.GameState.Say("");
+            }
             app.GameState.Say("- space to continue -");
             _state = END_OF_ROUND;
           }
