@@ -157,7 +157,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       var choice = actions.Dequeue();
       if (choice.Action == BattleAction.MonsterAction)
       {
-        // monster action
+        MonsterAction(choice.Group);
       }
       else if (choice.Action == BattleAction.MeleeAttack)
       {
@@ -170,6 +170,50 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     _messageQ.Enqueue("- space to continue -");
 
     _state = SHOW_RESULTS;
+  }
+
+  // Only monsters in the first 2 ranks can engage in melee
+  // Not sure what rate they should do their special attacks at yet
+  void MonsterAction(int group)
+  {
+    if (foes[group].Count == 0)
+      return;
+
+    foreach (Monster m in foes[group])
+    {
+      // eventually check for special abilities
+      if (group > 1)
+        continue;
+      
+      // also have to take into account the Special slot eventually
+      List<int> targets = [];
+      for (int j = 0; j < 3; j++)
+      {
+        if (app.GameState.Party.Members[j] is Character c && c.HP > 0)
+          targets.Add(j);
+      }
+
+      if (targets.Count == 0)
+        continue;
+
+      int s = targets[app.Rng.Next(targets.Count)];
+      if (app.GameState.Party.Members[s] is Character target)
+      {
+        string n = m.Name.ToLower().DefArticle().Capitalize();
+        int roll = app.Rng.Next(1, 21);
+        int targetAC = m.THAC0 - target.AC;
+        if (roll > targetAC)
+        {
+          int dmg = app.Rng.Next(m.DmgLow, m.DmgHigh + 1);
+          _messageQ.Enqueue($"{n} {m.Verb} {target.Name} and hits for {dmg} hp!");
+          target.HP -= dmg;
+        }
+        else
+        {
+          _messageQ.Enqueue($"{n} {m.Verb} {target.Name} and misses!");
+        }
+      }
+    }  
   }
 
   void PlayerMeleeAttack(int playerSlot, int monsterGroup)
