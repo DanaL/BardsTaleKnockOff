@@ -26,6 +26,16 @@ static class Util
   const string GameFolder = "DanasBardsTale";
   public static double ToDouble(string s) => double.Parse(s, System.Globalization.CultureInfo.InvariantCulture);
 
+  // This shows up in a couple places and I suspect it will eventually get
+  // more complicated  
+  // Maybe eventually items or having particular classes in your party
+  // or some items will increase your chance to flee?  
+  public static bool TryToFlee(Rng rng)
+  {
+    const int ODDS_TO_FLEE = 75; 
+    return rng.Next(100) < ODDS_TO_FLEE;    
+  }
+
   public static string SavePath
   {
     get

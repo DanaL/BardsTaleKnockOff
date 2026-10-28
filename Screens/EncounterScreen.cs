@@ -29,6 +29,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
   const int END_OF_ROUND = 3;
   const int VICTORY = 4;
   const int PICK_MELEE_GROUP = 5;
+  const int FLED = 6;
+  const int FAILED_TO_FLEE = 7;
 
   ulong _nextMsgAt = 0;
   const ulong MsgDelayMS = 600;
@@ -142,15 +144,29 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     {
       _nextMsgAt = 0;
     }
-    else if (_state == END_OF_ROUND && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
+    else if (_state == END_OF_ROUND && key.scancode == SDL_Scancode.SDL_SCANCODE_F)
     {
       Reset();
-      PostRound();      
+    }
+    else if (_state == END_OF_ROUND && key.scancode == SDL_Scancode.SDL_SCANCODE_R)
+    {
+      _state = Util.TryToFlee(app.Rng) ? FLED : FAILED_TO_FLEE;      
     }
     else if (_state == VICTORY && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
+      ClearBuffs();
       app.GameState.Messages.Clear();
       app.Screens.Pop();
+    }
+    else if (_state == FLED && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
+    {
+      ClearBuffs();
+      app.GameState.Messages.Clear();
+      app.Screens.Pop();
+    }
+    else if (_state == FAILED_TO_FLEE && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
+    {
+      Reset();
     }
   }
 
@@ -199,17 +215,23 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
               }
               app.GameState.Say("");
             }
-            app.GameState.Say("- space to continue -");
-            _state = END_OF_ROUND;
+
+            _state = PostRound();
           }
         }
         ui.DrawTextPanel(app.GameState.Messages);
         break;
       case END_OF_ROUND:
-        ui.DrawTextPanel(app.GameState.Messages);
+        ui.DrawTextPanel([.. app.GameState.Messages,"F)ight", "R)un away"]);
         break;
       case VICTORY:
-        ui.DrawTextPanel(app.GameState.Messages);
+        ui.DrawTextPanel([.. app.GameState.Messages,"- press space to continue -"]);
+        break;
+      case FLED:
+        ui.DrawTextPanel(["You flee the battle!", "", "- press space to continue -"]);
+        break;
+      case FAILED_TO_FLEE:
+        ui.DrawTextPanel(["You are unable to escape!", "", "- press space to continue -"]);
         break;
     }
 
@@ -217,7 +239,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     ui.DrawRoster(app.GameState.Party);
   }
 
-  void PostRound()
+  int PostRound()
   {
     ++app.GameState.Turn;
     if (app.GameState.Party.Alive == 0)
@@ -239,17 +261,20 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
         remainingFoes.Add(group);
     }
 
+    int nextState = END_OF_ROUND;
     if (remainingFoes.Count == 0)
     {
       Victory();
-      _state = VICTORY;
+      nextState = VICTORY;
     }
     else
     {
       foes = remainingFoes;
       _image = foes[0][0].Image;
-      _caption = foes[0][0].Name;  
-    }    
+      _caption = foes[0][0].Name;
+    }
+
+    return nextState;
   }
 
   // Eventually, I need to add finding the occasional item!
@@ -260,7 +285,6 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     int goldPerChar = int.Max(_goldWon / app.GameState.Party.Alive, 1);
     int xpPerChar = int.Max(_xpWon / app.GameState.Party.Alive, 1);
 
-    app.GameState.Messages.Clear();
     app.GameState.Say("You emerge victorious from battle!");
     app.GameState.Say("");
     string gp = goldPerChar == 1 ? "a single gold piece" : $"{goldPerChar} gold pieces";
@@ -277,8 +301,6 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
 
     _image = "treasure.png";
     _caption = "Victory!";
-
-    ClearBuffs();
   }
 
   // Clear out any buffs that only last for the duration of combat
@@ -630,10 +652,6 @@ class EncounterScreen : IScreen
 {
   readonly App _app;
 
-  // Not actually sure what your chances of successfully fleeing in BT1
-  // but it worked most of the time, iirc
-  const int ODDS_TO_FLEE = 75;
-
   const int PRELUDE = 0;
   const int PARTY_SURPRISED = 1;
   const int MONSTERS_SURPRISED = 2;
@@ -676,16 +694,7 @@ class EncounterScreen : IScreen
   {    
     if (_state == PRELUDE && key.scancode == SDL_Scancode.SDL_SCANCODE_R)
     {
-      // Maybe eventually items or having particular classes in your party
-      // or some items will increase your chance to flee?
-      if (_app.Rng.Next(100) < ODDS_TO_FLEE)
-      {
-        _state = FLED;
-      }
-      else
-      {
-        _state = FAILED_TO_FLEE;
-      }
+      _state = Util.TryToFlee(_app.Rng) ? FLED : FAILED_TO_FLEE;
     }
     else if (_state == FLED)
     {

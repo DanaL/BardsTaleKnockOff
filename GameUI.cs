@@ -159,9 +159,9 @@ unsafe class GameUI
     int maxLines = (int)((InfoRect.h - 2 * InfoPadding + 1) / _smallText.LineHeight);
 
     // Remember which paragraph each wrapped line came from, for highlighting.
-    var lines = paragraphs
-      .SelectMany((p, index) => _smallText.Wrap(p, width).Select(line => (line, index)))
-      .ToList();
+    List<(string line, int index)> lines = [.. paragraphs
+      .SelectMany((p, index) => _smallText.Wrap(p, width).Select(line => (line, index)))];
+
     int first = Math.Max(0, lines.Count - maxLines);
     float y = InfoRect.y + InfoPadding;
     for (int i = first; i < lines.Count; i++)
