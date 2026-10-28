@@ -102,7 +102,7 @@ class Character
             score += 10;
           if (Dex > 16)
             score += 10;
-          return int.Min(99, score) + 1000;
+          return int.Min(99, score);
         default:
           return 0;
       }

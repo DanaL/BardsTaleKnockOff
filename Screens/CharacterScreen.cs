@@ -94,11 +94,12 @@ class CharacterScreen(App app, int slot) : IScreen
           s += dmgBonus.ToString();
         s += " dmg.";
 
-        lines.AddRange("", s, "");        
+        lines.AddRange("", s);
       }
+      if (c.HideInShadows > 0)
+        lines.AddRange($"Hide in shadows: {c.HideInShadows}%");
 
-      lines.Add($"Gold: {c.Gold}");
-      
+      lines.AddRange("", $"Gold: {c.Gold}");
       lines.AddRange("", "", "", "", "", "I) View inventory", "P) Pool good");
     }
 

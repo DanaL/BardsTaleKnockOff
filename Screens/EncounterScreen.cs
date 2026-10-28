@@ -205,9 +205,11 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
         }
         ui.DrawTextPanel(app.GameState.Messages);
         break;
-      case VICTORY:
       case END_OF_ROUND:
-        ui.DrawTextPanel(app.GameState.Messages);        
+        ui.DrawTextPanel(app.GameState.Messages);
+        break;
+      case VICTORY:
+        ui.DrawTextPanel(app.GameState.Messages);
         break;
     }
 
