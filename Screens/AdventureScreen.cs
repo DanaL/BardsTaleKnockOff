@@ -87,6 +87,10 @@ class AdventureScreen(App app) : IScreen
     {
       app.Screens.Push(new HouseScreen(app));
     }
+    else if (tile.Feature == Feature.Temple)
+    {
+      app.Screens.Push(new TempleScreen(app));
+    }
     else if (IsEncounter())
     {
       app.Screens.Push(new EncounterScreen(app));
