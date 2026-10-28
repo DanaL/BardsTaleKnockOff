@@ -515,14 +515,14 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     if (hiding && hits > 0)
     {
       _xpWon += target.XP;
-      _goldWon += app.Rng.Next(target.Gold) + 1;
+      _goldWon += target.Gold;
       foes[monsterGroup].RemoveAt(monsterHit);      
     }
     else if (dmg >= foes[monsterGroup][monsterHit].HP)
     {
       _messageQ.Enqueue($"{targetName.Capitalize()} is killed!");
       _xpWon += target.XP;
-      _goldWon += app.Rng.Next(target.Gold) + 1;
+      _goldWon += target.Gold;
       foes[monsterGroup].RemoveAt(monsterHit);
     }
     else if (dmg > 0)
