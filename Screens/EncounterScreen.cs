@@ -13,7 +13,7 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-enum BattleAction { MeleeAttack, Defend, MonsterAction }
+enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows }
 
 record struct BattleChoice(int Slot, BattleAction Action,  int Group);
 
@@ -21,6 +21,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
 {
   const SDL_Scancode ATTACK_KEY = SDL_Scancode.SDL_SCANCODE_A;
   const SDL_Scancode DEFEND_KEY = SDL_Scancode.SDL_SCANCODE_D;
+  const SDL_Scancode HIDE_KEY = SDL_Scancode.SDL_SCANCODE_H;
 
   const int PICK_ACTION = 0;
   const int CONFIRM = 1;
@@ -72,7 +73,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       bool next = false;
       switch (key.scancode)
       {
-        case SDL_Scancode.SDL_SCANCODE_A:
+        case ATTACK_KEY:
           if (foes.Count == 1) 
           {
             _choices.Add(new(_slot, BattleAction.MeleeAttack, 0));
@@ -84,9 +85,13 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
             _availableActions = [];
           }
           break;
-        case SDL_Scancode.SDL_SCANCODE_D:
+        case DEFEND_KEY:
           next = true;
           _choices.Add(new(_slot, BattleAction.Defend, 0));
+          break;
+        case HIDE_KEY:
+          next = true;
+          _choices.Add(new(_slot, BattleAction.HideInShadows, 0));
           break;
       }
 
@@ -270,6 +275,18 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
 
     _image = "treasure.png";
     _caption = "Victory!";
+
+    ClearBuffs();
+  }
+
+  // Clear out any buffs that only last for the duration of combat
+  void ClearBuffs()
+  {
+    for (int j = 0; j < app.GameState.Party.Count; j++)
+    {
+      if (app.GameState.Party.Members[j] is Character c)
+        c.Buffs = [.. c.Buffs.Where(b => !b.CombatOnly)];
+    }
   }
 
   void StartRound()
@@ -281,12 +298,17 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
 
       if (choice.Action == BattleAction.Defend)
       {
-        c.Buffs.Add(new TempBuff(Buff.Defending, app.GameState.Turn));
+        c.Buffs.Add(new TempBuff(Buff.Defending, app.GameState.Turn, true));
         _messageQ.Enqueue($"{c.Name} defends.");
       }        
       else if (choice.Action == BattleAction.MeleeAttack) 
       {
         _actions.Enqueue(choice, Initiative(c));
+      }
+      else if (choice.Action == BattleAction.HideInShadows)
+      {
+        // Hide in shadows should happen before other actions
+        _actions.Enqueue(choice, -int.MaxValue);
       }
     }
 
@@ -331,9 +353,24 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       if (app.GameState.Party.Members[choice.Slot] is not Character c || c.Incapacitated)
         return;
 
-      if (choice.Action == BattleAction.MeleeAttack)
+      switch (choice.Action)
       {
-        PlayerMeleeAttack(c, choice.Group);
+        case BattleAction.MeleeAttack:
+          PlayerMeleeAttack(c, choice.Group);
+          break;
+        case BattleAction.HideInShadows:
+          int roll = app.Rng.Next(0, 100) + 1;
+          if (roll <= c.HideInShadows)
+          {
+            _messageQ.Enqueue($"{c.Name} slips into the shadows!");
+            c.Buffs.Add(new TempBuff(Buff.Hiding, ulong.MaxValue, true));
+          }
+          else
+          {
+            _messageQ.Enqueue($"{c.Name} fails to hide!");
+            c.Buffs = [.. c.Buffs.Where(b => b.Buff != Buff.Hiding )];
+          }
+          break;
       }
     }
   }
@@ -350,7 +387,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     List<int> targets = [];
     for (int j = 0; j < 3; j++)
     {
-      if (app.GameState.Party.Members[j] is Character c && !c.Incapacitated)
+      if (app.GameState.Party.Members[j] is Character c && !c.Incapacitated && !c.Buffs.Any(b => b.Buff == Buff.Hiding))
         targets.Add(j);
     }
 
@@ -404,6 +441,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     
     int hits = 0;
     int dmg = 0;
+    bool hiding = c.Buffs.Any(b => b.Buff == Buff.Hiding);
     
     for (int j = 0; j < c.NumOfMeleeAttacks; j++)
     {
@@ -411,6 +449,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       if (weapon is not null)
         roll += weapon.AttackBonus;
 
+      if (hiding)
+        roll += 5;
       // Eventually there will be other buffs?
 
       int targetAC = c.THAC0 - target.AC;
@@ -429,8 +469,14 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       }      
     } 
 
+    if (hiding)
+      s = $"{c.Name} leaps from the shadows";
+
+    string targetName = target.Name.DefArticle().ToLower();
     if (hits == 0)
-      s += " and misses!";
+      s += " but misses!";
+    else if (hiding)
+      s += $" and strikes {targetName}, killing it instantly!";
     else if (hits == 1)
       s+= $" and hits for {dmg} dmg!";
     else 
@@ -438,10 +484,19 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
 
     _messageQ.Enqueue(s);
 
+    // If you attack from hiding, you are no longer hiding
+    c.Buffs = [.. c.Buffs.Where(b => b.Buff != Buff.Hiding)];
+
     int monsterHit = app.Rng.Next(foes[monsterGroup].Count);
-    if (dmg >= foes[monsterGroup][monsterHit].HP)
+    if (hiding && hits > 0)
     {
-      _messageQ.Enqueue($"{target.Name.DefArticle().ToLower().Capitalize()} is killed!");
+      _xpWon += target.XP;
+      _goldWon += app.Rng.Next(target.Gold) + 1;
+      foes[monsterGroup].RemoveAt(monsterHit);      
+    }
+    else if (dmg >= foes[monsterGroup][monsterHit].HP)
+    {
+      _messageQ.Enqueue($"{targetName.Capitalize()} is killed!");
       _xpWon += target.XP;
       _goldWon += app.Rng.Next(target.Gold) + 1;
       foes[monsterGroup].RemoveAt(monsterHit);
@@ -482,6 +537,9 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
         case BattleAction.Defend:
           lines.Add($"{c.Name} defends.");
           break;
+        case BattleAction.HideInShadows:
+          lines.Add($"{c.Name} hides in the shadows.");
+          break;
         case BattleAction.MeleeAttack:
           var group = foes[choice.Group];
           string monster = group[0].Name.ToLower();
@@ -502,6 +560,9 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
   // A rogue hiding in shadows should be able to hit any group
   List<string> PickMeleeGroup()
   {
+    if (app.GameState.Party.Members[_slot] is not Character c)
+      return [];
+
     List<string> lines = [ "Attack which group:", ""];
 
     int n = foes[0].Count;
@@ -514,6 +575,24 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
 
     _availableActions = [ SDL_Scancode.SDL_SCANCODE_A, SDL_Scancode.SDL_SCANCODE_B ];
 
+    if (c.Buffs.Any(b => b.Buff == Buff.Hiding))
+    {
+      if (foes.Count > 2)
+      {
+        n = foes[2].Count;
+        m = n == 1 ? foes[2][0].Name : foes[2][0].Name.Pluralize();
+        lines.Add($"c) {n} {m}");
+        _availableActions.Add(SDL_Scancode.SDL_SCANCODE_C);
+      }
+      if (foes.Count > 3) 
+      {
+        n = foes[3].Count;
+        m = n == 1 ? foes[3][0].Name : foes[3][0].Name.Pluralize();
+        lines.Add($"d) {n} {m}");
+        _availableActions.Add(SDL_Scancode.SDL_SCANCODE_D);
+      }
+    }
+
     return lines;
   }
 
@@ -525,11 +604,18 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     {
       lines.AddRange($"{c.Name} has these actions available:", "", "", "", "", "");
 
-      if (_slot < 3) 
+      if (_slot < 3 || c.Buffs.Any(b => b.Buff == Buff.Hiding)) 
       {
         _availableActions.Add(ATTACK_KEY);
         lines.AddRange("A)ttack foes");
       }
+
+      if (c.HideInShadows > 0)
+      {
+        lines.AddRange($"H)ide in shadows ({c.HideInShadows}% chance)");
+        _availableActions.Add(HIDE_KEY);
+      }
+
       lines.AddRange("D)efend");
       _availableActions.Add(DEFEND_KEY);
     }

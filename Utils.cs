@@ -11,8 +11,8 @@
 
 using BardsTaleKnockOff;
 
-enum Buff { Defending, SneakAttack }
-record struct TempBuff(Buff Buff, ulong ExpiresOn);
+enum Buff { Defending, Hiding }
+record struct TempBuff(Buff Buff, ulong ExpiresOn, bool CombatOnly);
 
 readonly record struct Rgb(byte R, byte G, byte B);
 

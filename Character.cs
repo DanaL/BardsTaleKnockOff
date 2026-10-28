@@ -88,6 +88,27 @@ class Character
     _ => 1,
   };
   
+  public int HideInShadows
+  {
+    get
+    {
+      switch (Role)
+      {
+        case Role.Rogue:
+        case Role.Hunter:
+        case Role.Trickster:
+          int score = 15 + 5 * Level;
+          if (Lineage == Lineage.Gnome || Lineage == Lineage.Goblin)
+            score += 10;
+          if (Dex > 16)
+            score += 10;
+          return int.Min(99, score) + 1000;
+        default:
+          return 0;
+      }
+    }
+  }
+
   public InvSlot?[] Inventory { get; init; } = new InvSlot?[INVENTORY_SLOTS];
 
   public bool AddItem(int id)
