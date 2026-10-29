@@ -68,9 +68,16 @@ class HealingScreen(App app, Character c, int slot) : IScreen
 
     if (_state == MAIN)
     {
-      // Eventually we'll need to check for status effects like poisoned
-      // or dead
-      if (c.HP < c.MaxHP)
+      if (c.Condition == "DEAD" && c.Level < 4)
+      {
+        lines.AddRange($"Sadly, the spirit of someone merely of level {c.Level} is too weak to be returned from the Beyond.", "");
+      }
+      else if (c.Condition == "DEAD")
+      {
+        lines.Add($"{c.Name} is indeed in dire straits! But if the gods are willing, they may restored for the modest donation of {Invoice()} gold pieces.");
+        lines.AddRange("", $"{c.Name} has {c.Gold} gp.", "", $"H)eal {c.Name}");
+      }
+      else if (c.HP < c.MaxHP)
       {
         lines.Add($"{c.Name} is indeed in need of healing! They can be made well for the small donation of {Invoice()} gold pieces.");
         lines.AddRange("", $"{c.Name} has {c.Gold} gp.", "", $"H)eal {c.Name}");
@@ -103,6 +110,12 @@ class HealingScreen(App app, Character c, int slot) : IScreen
     {
       _state = BROKE;
     }
+    else if (c.Condition == "DEAD")
+    {
+      c.Gold -= Invoice();
+      c.Condition = "";
+      c.HP = 1;
+    }
     else
     {
       c.Gold -= Invoice();
@@ -117,11 +130,17 @@ class HealingScreen(App app, Character c, int slot) : IScreen
 
   int Invoice()
   {
-    int invoice = (c.MaxHP - c.HP) * 10;
+    if (c.Condition == "DEAD")
+    {
+      return int.Min(900 * c.Level, 11_700);
+    }
+    else 
+    {
+      // Eventually statuses like POISONED will add to your bill
+      int invoice = (c.MaxHP - c.HP) * 10;
 
-    // Eventually poisoning, stoned, dead will add to the cheque
-
-    return invoice;
+      return invoice;
+    }
   }
 }
 
