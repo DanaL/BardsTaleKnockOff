@@ -33,27 +33,12 @@ class CharacterScreen(App app, int slot) : IScreen
         app.Screens.Push(new InventoryScreen(app, app.GameState?.Party.Members[slot]!));
         break;
       case SDL_Keycode.SDLK_P:
-        PoolGood();
+        app.GameState.Party.PoolGold(slot);
         break;
       case SDL_Keycode.SDLK_ESCAPE:
         app.Screens.Pop();
         break;
     }
-  }
-
-  void PoolGood()
-  {
-    if (app.GameState.Party.Members[slot] is not Character c)
-      return;
-
-    int total = 0;
-    foreach (Character other in app.GameState.Party.Members.OfType<Character>())
-    {
-      total += other.Gold;
-      other.Gold = 0;
-    }
-
-    c.Gold = total;
   }
 
   public void Draw(GameUI ui)

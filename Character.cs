@@ -148,6 +148,21 @@ class Party
     return true;
   }
 
+  public void PoolGold(int slot)
+  {
+    if (Members[slot] is not Character c)
+      return;
+
+    int total = 0;
+    foreach (Character other in Members.OfType<Character>())
+    {
+      total += other.Gold;
+      other.Gold = 0;
+    }
+
+    c.Gold = total;
+  }
+
   // Remove the member in a slot (0-based) and close the gap, so members
   // always fill slots 1, 2, 3... with no holes.
   public void RemoveAt(int slot)
