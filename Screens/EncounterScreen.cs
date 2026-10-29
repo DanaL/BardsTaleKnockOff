@@ -22,6 +22,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
   const SDL_Scancode ATTACK_KEY = SDL_Scancode.SDL_SCANCODE_A;
   const SDL_Scancode DEFEND_KEY = SDL_Scancode.SDL_SCANCODE_D;
   const SDL_Scancode HIDE_KEY = SDL_Scancode.SDL_SCANCODE_H;
+  const SDL_Scancode CAST_SPELL_KEY = SDL_Scancode.SDL_SCANCODE_C;
 
   const int PICK_ACTION = 0;
   const int CONFIRM = 1;
@@ -31,6 +32,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
   const int PICK_MELEE_GROUP = 5;
   const int FLED = 6;
   const int FAILED_TO_FLEE = 7;
+  const int PICK_SPELL = 8;
 
   ulong _nextMsgAt = 0;
   const ulong MsgDelayMS = 600;
@@ -39,6 +41,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
 
   int _slot = 0;
   int _state = PICK_ACTION;
+  int _cursor = -1;
   HashSet<SDL_Scancode> _availableActions = [];
 
   List<BattleChoice> _choices = [];
@@ -94,6 +97,11 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
         case HIDE_KEY:
           next = true;
           _choices.Add(new(_slot, BattleAction.HideInShadows, 0));
+          break;
+        case CAST_SPELL_KEY:
+          _state = PICK_SPELL;
+          _availableActions = [];
+          _cursor = 2;
           break;
       }
 
@@ -177,12 +185,16 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     switch (_state)
     {
       case PICK_ACTION:
-        lines = PickAction();
+        lines = PickActionMenu();
         ui.DrawTextPanel(lines);
         break;
       case PICK_MELEE_GROUP:
         lines = PickMeleeGroup();
         ui.DrawTextPanel(lines);
+        break;
+      case PICK_SPELL:
+        lines = ChooseSpell();
+        ui.DrawTextPanel(lines, _cursor);
         break;
       case CONFIRM:
         lines = Confirm();
@@ -581,6 +593,22 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     return lines;
   }
 
+  List<string> ChooseSpell()
+  {
+    if (app.GameState.Party.Members[_slot] is not Character c)
+      return [];
+
+    List<string> lines = [ "Cast which: ", ""];
+
+    var spells = Spells.SpellsFor(c).Where(s => s.Combat);
+    foreach (var spell in spells)
+    {
+      lines.Add(spell.Code);
+    }
+
+    return lines;
+  }
+
   // A rogue hiding in shadows should be able to hit any group
   List<string> PickMeleeGroup()
   {
@@ -620,7 +648,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     return lines;
   }
 
-  List<string> PickAction()
+  List<string> PickActionMenu()
   {
     List<string> lines = [];
 
@@ -631,7 +659,13 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       if (_slot < 3 || c.Buffs.Any(b => b.Buff == Buff.Hiding)) 
       {
         _availableActions.Add(ATTACK_KEY);
-        lines.AddRange("A)ttack foes");
+        lines.Add("A)ttack foes");
+      }
+
+      if (c.MaxMP > 0)
+      {
+        _availableActions.Add(CAST_SPELL_KEY);
+        lines.Add("C)ast spell");
       }
 
       if (c.HideInShadows > 0)

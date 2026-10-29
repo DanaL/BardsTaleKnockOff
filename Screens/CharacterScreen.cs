@@ -82,9 +82,21 @@ class CharacterScreen(App app, int slot) : IScreen
         lines.AddRange("", s);
       }
       if (c.HideInShadows > 0)
-        lines.AddRange($"Hide in shadows: {c.HideInShadows}%");
+        lines.Add($"Hide in shadows: {c.HideInShadows}%");
 
       lines.AddRange("", $"Gold: {c.Gold}");
+
+      if (c.MaxMP > 0)
+      {
+        lines.AddRange("", "Spells:");
+        lines.Add($"Conjurer: {c.ConjurerSpellLevel}   Magician: {c.MagicianSpellLevel}");
+        lines.Add($"Sorcerer: {c.SorcererSpellLevel}   Wizard: {c.WizardSpellLevel}");
+      }
+      else
+      {
+        lines.AddRange("", "", "", "");
+      }
+
       lines.AddRange("", "", "", "", "", "I) View inventory", "P) Pool good");
     }
 

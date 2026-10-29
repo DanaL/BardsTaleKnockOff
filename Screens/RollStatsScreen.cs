@@ -105,6 +105,12 @@ class RollStatsScreen : IScreen
           HP = _hp, MaxHP = _hp, MP = _mp, MaxMP = _mp, Level = 1,
           Gold = _app.Rng.Next(150, 251)
         };
+
+        if (_role == Role.Conjurer)
+          c.ConjurerSpellLevel = 1;
+        else if (_role == Role.Magician)
+          c.MagicianSpellLevel = 1;
+          
         _app.Roster.Add(c);
         Serialize.WriteSaveGame(_app);
         while (_app.Screens.Top is not GuildScreen)

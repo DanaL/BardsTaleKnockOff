@@ -42,6 +42,11 @@ class Character
   public int XP { get; set; }
   public int Level { get; set; }
 
+  public int ConjurerSpellLevel { get; set; } = 0;
+  public int MagicianSpellLevel { get; set; } = 0;
+  public int SorcererSpellLevel { get; set; } = 0;
+  public int WizardSpellLevel { get; set; } = 0;
+
   public int Resurrections { get; set; } = 0;
   public bool PermanentlyDead { get; set; } = false;
 
@@ -133,7 +138,7 @@ class Character
       HP = 1;
       ++Resurrections;
       Condition = "";
-      
+
       return true;
     }
     else
