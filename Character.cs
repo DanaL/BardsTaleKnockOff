@@ -42,6 +42,9 @@ class Character
   public int XP { get; set; }
   public int Level { get; set; }
 
+  public int Resurrections { get; set; } = 0;
+  public bool PermanentlyDead { get; set; } = false;
+
   public List<TempBuff> Buffs { get; set;} = [];
 
   // Conditions that take a character out of action. Add STONED etc. here.
@@ -122,6 +125,23 @@ class Character
   }
 
   public static int StatToMod(int stat) => (int) Math.Floor((stat - 10.0) / 2);
+
+  public bool Resurrect(Rng rng)
+  {
+    if (rng.Next(100) >= Resurrections * 2)
+    {
+      HP = 1;
+      ++Resurrections;
+      Condition = "";
+      
+      return true;
+    }
+    else
+    {
+      PermanentlyDead = true;
+      return false;
+    }
+  }
 }
 
 class Party

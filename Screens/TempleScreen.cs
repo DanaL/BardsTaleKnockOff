@@ -18,7 +18,8 @@ class HealingScreen(App app, Character c, int slot) : IScreen
   const int MAIN = 0;
   const int BROKE = 1;
   const int HEALED = 2;
-
+  const int RES_FAILED = 3;
+  
   int _state = MAIN;
   
   public void OnKey(SDL_KeyboardEvent key)
@@ -60,6 +61,10 @@ class HealingScreen(App app, Character c, int slot) : IScreen
     {
       _state = MAIN;
     }
+    else if (_state == RES_FAILED && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
+    {
+      _state = MAIN;
+    }
   }
   
   public void Draw(GameUI ui)
@@ -71,6 +76,10 @@ class HealingScreen(App app, Character c, int slot) : IScreen
       if (c.Condition == "DEAD" && c.Level < 4)
       {
         lines.AddRange($"Sadly, the spirit of someone merely of level {c.Level} is too weak to be returned from the Beyond.", "");
+      }
+      else if (c.PermanentlyDead)
+      {
+        lines.AddRange($"Alas, there is nothing more to be done for {c.Name}. Their spirit is too far gone.", "");
       }
       else if (c.Condition == "DEAD")
       {
@@ -98,6 +107,10 @@ class HealingScreen(App app, Character c, int slot) : IScreen
     {
       lines.AddRange($"{c.Name} is healed!", "", "- space to continue -", "");
     }
+    else if (_state == RES_FAILED)
+    {
+      lines.AddRange($"I'm afraid the resurrection has failed. {c.Name} is permanently dead, and beyond our help.", "", "- space to continue -", "");
+    }
 
     ui.DrawPicture("Temple");
     ui.DrawTextPanel(lines);
@@ -113,8 +126,8 @@ class HealingScreen(App app, Character c, int slot) : IScreen
     else if (c.Condition == "DEAD")
     {
       c.Gold -= Invoice();
-      c.Condition = "";
-      c.HP = 1;
+      bool successful = c.Resurrect(app.Rng);
+      _state = successful ? HEALED : RES_FAILED;      
     }
     else
     {
