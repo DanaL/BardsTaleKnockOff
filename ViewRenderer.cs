@@ -183,6 +183,14 @@ unsafe class ViewRenderer
     var tex = Sheet(name);
     float w, h;
     SDL_GetTextureSize(tex, &w, &h);
+
+    // Double-resolution art (320x240) is shrunk to fit the view
+    if (w == ViewW * 2 && h == ViewH * 2)
+    {
+      w = ViewW;
+      h = ViewH;
+    }
+
     var dst = new SDL_FRect
     {
       x = originX + MathF.Floor((ViewW - w) / 2),
