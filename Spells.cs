@@ -12,21 +12,22 @@
 namespace BardsTaleKnockOff;
 
 enum SpellDuration { NA, Short, Medium, Long, Combat }
+enum SpellTarget { None, Self, Party, Monsters }
 
-record SpellInfo(string Code, string Name, int Level, int Cost, int Range, SpellDuration Duration, bool Combat, Role Role);
+record SpellInfo(string Code, string Name, int Level, int Cost, int Range, SpellDuration Duration, bool Combat, Role Role, SpellTarget Target);
 
 class Spells
 {
   static List<SpellInfo> _spells = [
-    new SpellInfo("MAFL","Mage Flame", 1, 2, 0, SpellDuration.Medium, false, Role.Conjurer),
-    new SpellInfo("ARFI","Arc Fire", 1, 3, 0, SpellDuration.NA, true, Role.Conjurer),
-    new SpellInfo("SOSH","Sorcerer Shield", 1, 3, 0, SpellDuration.Combat, true, Role.Conjurer),
-    new SpellInfo("TRZP","Trap Zap", 1, 2, 3, SpellDuration.NA, false, Role.Conjurer),
+    new SpellInfo("MAFL","Mage Flame", 1, 2, 0, SpellDuration.Medium, false, Role.Conjurer, SpellTarget.None),
+    new SpellInfo("ARFI","Arc Fire", 1, 3, 0, SpellDuration.NA, true, Role.Conjurer, SpellTarget.Monsters),
+    new SpellInfo("SOSH","Sorcerer Shield", 1, 3, 0, SpellDuration.Combat, true, Role.Conjurer, SpellTarget.Self),
+    new SpellInfo("TRZP","Trap Zap", 1, 2, 3, SpellDuration.NA, false, Role.Conjurer, SpellTarget.None),
 
-    new SpellInfo("VOPL","Vorpal Plating", 1, 3, 0, SpellDuration.Combat, true, Role.Magician),
-    new SpellInfo("AIAR","Air Armour", 1, 3, 0, SpellDuration.Combat, true, Role.Magician),
-    new SpellInfo("STLI","Steel Light", 1, 2, 2, SpellDuration.Short, false, Role.Magician),
-    new SpellInfo("SCSI","Scry Site", 1, 2, 0, SpellDuration.NA, false, Role.Magician)
+    new SpellInfo("VOPL","Vorpal Plating", 1, 3, 0, SpellDuration.Combat, true, Role.Magician, SpellTarget.Party),
+    new SpellInfo("AIAR","Air Armour", 1, 3, 0, SpellDuration.Combat, true, Role.Magician, SpellTarget.Self),
+    new SpellInfo("STLI","Steel Light", 1, 2, 2, SpellDuration.Short, false, Role.Magician, SpellTarget.None),
+    new SpellInfo("SCSI","Scry Site", 1, 2, 0, SpellDuration.NA, false, Role.Magician, SpellTarget.None)
   ];
 
   public static List<SpellInfo> SpellsFor(Character c)

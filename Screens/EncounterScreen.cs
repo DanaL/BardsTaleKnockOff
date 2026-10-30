@@ -9,15 +9,17 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using Microsoft.VisualBasic;
 using SDL;
 
 namespace BardsTaleKnockOff;
 
-enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows }
+// Use Item not implemented yet...
+enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell }
 
-record struct BattleChoice(int Slot, BattleAction Action,  int Group);
+record struct BattleChoice(int Slot, BattleAction Action,  int Group, int PartySlot, SpellInfo? Spell = null);
 
-class BattleScreen(App app, List<List<Monster>> foes) : IScreen
+class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickScreen
 {
   const SDL_Scancode ATTACK_KEY = SDL_Scancode.SDL_SCANCODE_A;
   const SDL_Scancode DEFEND_KEY = SDL_Scancode.SDL_SCANCODE_D;
@@ -29,7 +31,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
   const int RESOLVING_COMBAT = 2;
   const int END_OF_ROUND = 3;
   const int VICTORY = 4;
-  const int PICK_MELEE_GROUP = 5;
+  const int PICK_GROUP = 5;
   const int FLED = 6;
   const int FAILED_TO_FLEE = 7;
   const int PICK_SPELL = 8;
@@ -40,11 +42,12 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
   readonly Queue<string> _messageQ = new();
 
   int _slot = 0;
-  int _state = PICK_ACTION;
-  int _cursor = -1;
+  int _state = PICK_ACTION;  
   HashSet<SDL_Scancode> _availableActions = [];
 
   List<BattleChoice> _choices = [];
+  BattleAction _pendingAction = BattleAction.Defend;
+  SpellInfo? _pendingSpell = null;
 
   // The round's pending actions, resolved one at a time as messages are shown
   // so the roster never gets ahead of the text.
@@ -63,7 +66,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
   void Reset()
   {
     app.GameState.Messages.Clear();
-    _choices.Clear();
+    _choices.Clear();    
     _slot = 0;
     _state = PICK_ACTION;
   }
@@ -81,27 +84,30 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
         case ATTACK_KEY:
           if (foes.Count == 1) 
           {
-            _choices.Add(new(_slot, BattleAction.MeleeAttack, 0));
+            _choices.Add(new(_slot, BattleAction.MeleeAttack, 0, -1));
             next = true;
           }
-          else
+          else if (app.GameState.Party.Members[_slot] is Character mc)
           {
-            _state = PICK_MELEE_GROUP;
-            _availableActions = [];
+            app.Screens.Push(new ChooseMonsterGroupScreen(app, mc, foes, this) { Caption = _caption, Image = _image });
+            _pendingAction = BattleAction.MeleeAttack;
           }
           break;
         case DEFEND_KEY:
           next = true;
-          _choices.Add(new(_slot, BattleAction.Defend, 0));
+          _choices.Add(new(_slot, BattleAction.Defend, 0, -1));
           break;
         case HIDE_KEY:
           next = true;
-          _choices.Add(new(_slot, BattleAction.HideInShadows, 0));
+          _choices.Add(new(_slot, BattleAction.HideInShadows, 0, -1));
           break;
         case CAST_SPELL_KEY:
-          _state = PICK_SPELL;
+          if (app.GameState.Party.Members[_slot] is Character c) 
+          {
+            _pendingAction = BattleAction.CastSpell;
+            app.Screens.Push(new ChooseSpellScreen(app, c, true, this) { Caption = _caption, Image = _image });
+          }
           _availableActions = [];
-          _cursor = 2;
           break;
       }
 
@@ -112,28 +118,6 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
         if (_slot >= app.GameState.Party.Alive)
           _state = CONFIRM;
       }
-    }
-    else if (_state == PICK_MELEE_GROUP)
-    {
-      if (!_availableActions.Contains(key.scancode))
-        return;
-
-      switch (key.scancode)
-      {
-        case SDL_Scancode.SDL_SCANCODE_A:
-          _choices.Add(new(_slot, BattleAction.MeleeAttack, 0));
-          break;
-        case SDL_Scancode.SDL_SCANCODE_B:
-          _choices.Add(new(_slot, BattleAction.MeleeAttack, 1));
-          break;
-      }
-
-      ++_slot;
-      _availableActions = [];
-      if (_slot >= app.GameState.Party.Alive)
-        _state = CONFIRM;
-      else
-        _state = PICK_ACTION;
     }
     else if (_state == CONFIRM)
     {
@@ -187,14 +171,6 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       case PICK_ACTION:
         lines = PickActionMenu();
         ui.DrawTextPanel(lines);
-        break;
-      case PICK_MELEE_GROUP:
-        lines = PickMeleeGroup();
-        ui.DrawTextPanel(lines);
-        break;
-      case PICK_SPELL:
-        lines = ChooseSpell();
-        ui.DrawTextPanel(lines, _cursor);
         break;
       case CONFIRM:
         lines = Confirm();
@@ -351,7 +327,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     for (int n = 0; n < foes.Count; n++)
     {
       int roll = app.Rng.Next(1, 24);
-      BattleChoice monsterChoice = new(n, BattleAction.MonsterAction, n);
+      BattleChoice monsterChoice = new(n, BattleAction.MonsterAction, n, -1);
       _actions.Enqueue(monsterChoice, -roll);
     }
 
@@ -568,6 +544,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
       if (app.GameState.Party.Members[choice.Slot] is not Character c)
         continue;
 
+      string monster;
+      List<Monster> group;
       switch (choice.Action)
       {
         case BattleAction.Defend:
@@ -577,73 +555,37 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
           lines.Add($"{c.Name} hides in the shadows.");
           break;
         case BattleAction.MeleeAttack:
-          var group = foes[choice.Group];
-          string monster = group[0].Name.ToLower();
+          group = foes[choice.Group];
+          monster = group[0].Name.ToLower();
           if (group.Count == 0)
             monster = monster.IndefArticle();
           else
             monster = $"the {monster.Pluralize()}";
           lines.Add($"{c.Name} attacks {monster}.");          
           break;
+        case BattleAction.CastSpell:
+          if (choice.Spell is not null)
+          {
+            string s = $"{c.Name} casts {choice.Spell.Code}";
+            if (choice.Spell.Target == SpellTarget.Monsters)
+            {
+              group = foes[choice.Group];
+              monster = group[0].Name.ToLower();
+              monster = $" on the {monster.Pluralize()}";
+              s += monster;
+            }
+            else if (choice.Spell.Target == SpellTarget.Party && app.GameState.Party.Members[choice.PartySlot] is Character target)
+            {
+              s += $" on {target.Name}";
+            }
+            s += ".";
+            lines.Add(s);
+          }            
+          break;
       }
     }
 
     lines.AddRange("", "", "", "Y)es", "N)o");
-
-    return lines;
-  }
-
-  List<string> ChooseSpell()
-  {
-    if (app.GameState.Party.Members[_slot] is not Character c)
-      return [];
-
-    List<string> lines = [ "Cast which: ", ""];
-
-    var spells = Spells.SpellsFor(c).Where(s => s.Combat);
-    foreach (var spell in spells)
-    {
-      lines.Add(spell.Code);
-    }
-
-    return lines;
-  }
-
-  // A rogue hiding in shadows should be able to hit any group
-  List<string> PickMeleeGroup()
-  {
-    if (app.GameState.Party.Members[_slot] is not Character c)
-      return [];
-
-    List<string> lines = [ "Attack which group:", ""];
-
-    int n = foes[0].Count;
-    string m = n == 1 ? foes[0][0].Name : foes[0][0].Name.Pluralize();
-    lines.Add($"a) {n} {m}");
-
-    n = foes[1].Count;
-    m = n == 1 ? foes[1][0].Name : foes[1][0].Name.Pluralize();
-    lines.Add($"b) {n} {m}");
-
-    _availableActions = [ SDL_Scancode.SDL_SCANCODE_A, SDL_Scancode.SDL_SCANCODE_B ];
-
-    if (c.Buffs.Any(b => b.Buff == Buff.Hiding))
-    {
-      if (foes.Count > 2)
-      {
-        n = foes[2].Count;
-        m = n == 1 ? foes[2][0].Name : foes[2][0].Name.Pluralize();
-        lines.Add($"c) {n} {m}");
-        _availableActions.Add(SDL_Scancode.SDL_SCANCODE_C);
-      }
-      if (foes.Count > 3) 
-      {
-        n = foes[3].Count;
-        m = n == 1 ? foes[3][0].Name : foes[3][0].Name.Pluralize();
-        lines.Add($"d) {n} {m}");
-        _availableActions.Add(SDL_Scancode.SDL_SCANCODE_D);
-      }
-    }
 
     return lines;
   }
@@ -679,7 +621,63 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen
     }
     
     return lines;
-  }  
+  }
+
+  public void ActionChosen()
+  {
+    ++_slot;
+    _availableActions = [];
+    _pendingSpell = null;
+    if (_slot >= app.GameState.Party.Alive)
+      _state = CONFIRM;
+    else
+      _state = PICK_ACTION;
+  }
+
+  public void SpellChosen(SpellInfo spell)
+  {
+    switch (spell.Target)
+    {
+      case SpellTarget.Party:
+        _pendingAction = BattleAction.CastSpell;
+        _pendingSpell = spell;
+        app.Screens.Push(new ChoosePartyMemberScreen(app, this) { Caption = _caption, Image = _image });
+        break;
+      case SpellTarget.Monsters:
+        if (app.GameState.Party.Members[_slot] is Character c)
+        {
+          if (foes.Count == 1)
+          {
+            _choices.Add(new(_slot, BattleAction.CastSpell, 0, -1, spell));
+            ActionChosen();
+          }
+          else
+          {
+            _pendingAction = BattleAction.CastSpell;
+            _pendingSpell = spell;
+            app.Screens.Push(new ChooseMonsterGroupScreen(app, c, foes, this) { Caption = _caption, Image = _image, AllGroups = true });          
+          }          
+        }
+        
+        break;
+      default:
+        _choices.Add(new(_slot, _pendingAction, -1, -1, spell));
+        ActionChosen();
+        break;
+    }
+  }
+
+  public void MonsterGroupChosen(int monsterGroup)
+  {
+    _choices.Add(new(_slot, _pendingAction, monsterGroup, -1, _pendingSpell));
+    ActionChosen();
+  }
+
+  public void CharacterChosen(int partySlot)
+  {
+    _choices.Add(new(_slot, _pendingAction, -1, partySlot, _pendingSpell));
+    ActionChosen();
+  }
 }
 
 class EncounterScreen : IScreen
