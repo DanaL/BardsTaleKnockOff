@@ -23,6 +23,13 @@ class ChooseMonsterGroupScreen(App app, Character c, List<List<Monster>> foes, I
 
   public void OnKey(SDL_KeyboardEvent key)
   {
+    if (key.scancode == SDL_Scancode.SDL_SCANCODE_ESCAPE)
+    {
+      src.AbortSelection();
+      app.Screens.Pop();
+      return;
+    }
+
     if (!_groups.Contains(key.scancode))
         return;
 

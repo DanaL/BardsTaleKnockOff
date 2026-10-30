@@ -40,6 +40,7 @@ interface ICastSpellScreen
 interface IMonsterPickScreen
 {
   void MonsterGroupChosen(int groupNum);
+  void AbortSelection();
 }
 
 // A screen for picking a party member as a target; the method that receives
