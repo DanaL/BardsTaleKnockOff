@@ -124,10 +124,15 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         case BattleAction.CastSpell:
           if (choice.Spell is SpellInfo spell)
           {
-            Messages.Enqueue($"{c.Name} casts {spell.Code}!");
-
+            Character? partyTarget = choice.PartySlot >= 0 ? gs.Party.Members[choice.PartySlot] : null;
+            string s = $"{c.Name} casts {spell.Code}";
+            if (choice.Spell.Target == SpellTarget.Party && partyTarget is not null)
+              s += $" on {partyTarget.Name}";
+            s += ".";
+            Messages.Enqueue(s);
             SpellResolver sr = new(Foes, this);
-            sr.Cast(choice.Spell, c, rng, choice.Group, null);
+            
+            sr.Cast(choice.Spell, c, rng, choice.Group, partyTarget);
           }
           break;
       }
@@ -242,7 +247,15 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
     int hits = 0;
     int dmg = 0;
-    bool hiding = c.Buffs.Any(b => b.Buff == Buff.Hiding);
+    bool hiding = false;
+    bool vorpalPlating = false;
+    foreach (var buff in c.Buffs)
+    {
+      if (buff.Buff == Buff.Hiding)
+        hiding = true;
+      else if (buff.Buff == Buff.VorpalPlating)
+        vorpalPlating = true;
+    }
 
     for (int j = 0; j < c.NumOfMeleeAttacks; j++)
     {
@@ -259,6 +272,10 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       {
         ++hits;
         dmg += strMod;
+
+        if (vorpalPlating)
+          dmg += rng.Next(2, 9);
+
         if (weapon is null)
           dmg += 1;
         else

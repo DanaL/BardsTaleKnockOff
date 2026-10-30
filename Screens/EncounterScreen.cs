@@ -27,10 +27,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
   const int RESOLVING_COMBAT = 2;
   const int END_OF_ROUND = 3;
   const int VICTORY = 4;
-  const int PICK_GROUP = 5;
   const int FLED = 6;
   const int FAILED_TO_FLEE = 7;
-  const int PICK_SPELL = 8;
 
   ulong _nextMsgAt = 0;
   const ulong MsgDelayMS = 600;

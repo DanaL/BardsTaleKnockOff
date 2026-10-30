@@ -45,7 +45,6 @@ class Spells
 
 class SpellResolver(List<List<Monster>> foes, Battle battle)
 {
-  
   public void Cast(SpellInfo spell, Character? caster, Rng rng, int monsterGroup, Character? target)
   {
     switch (spell.Code)
@@ -53,9 +52,19 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
       case "ARFI":
         Arfi(caster, monsterGroup, target, spell.Cost, rng);
         break;
+      case "VOPL":
+        if (caster is Character vc && target is Character vt)
+          Vopl(vc, vt, spell.Cost);
+        break;
       default:
         throw new Exception($"Unknown spell: {spell.Code}!");
     }
+  }
+
+  public void Vopl(Character caster, Character target, int cost)
+  {
+    caster.MP -= cost;
+    target.Buffs.Add(new TempBuff(Buff.VorpalPlating, ulong.MaxValue, true));
   }
 
   public void Arfi(Character? caster, int monsterGroup, Character? target, int cost, Rng rng)
