@@ -169,16 +169,6 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     return (xpPerChar, goldPerChar);
   }
 
-  // Clear out any buffs that only last for the duration of combat
-  public void ClearCombatBuffs()
-  {
-    for (int j = 0; j < gs.Party.Count; j++)
-    {
-      if (gs.Party.Members[j] is Character c)
-        c.Buffs = [.. c.Buffs.Where(b => !b.CombatOnly)];
-    }
-  }
-
   // Only monsters in the first 2 ranks can engage in melee
   // Not sure what rate they should do their special attacks at yet
   void MonsterAction(Monster m, int group)

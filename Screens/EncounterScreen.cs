@@ -9,7 +9,6 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-using Microsoft.VisualBasic;
 using SDL;
 
 namespace BardsTaleKnockOff;
@@ -132,13 +131,13 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
     }
     else if (_state == VICTORY && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
-      _battle.ClearCombatBuffs();
+      app.GameState.Party.ClearCombatBuffs();
       app.GameState.Messages.Clear();
       app.Screens.Pop();
     }
     else if (_state == FLED && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
-      _battle.ClearCombatBuffs();
+      app.GameState.Party.ClearCombatBuffs();
       app.GameState.Messages.Clear();
       app.Screens.Pop();
     }

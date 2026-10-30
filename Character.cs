@@ -173,6 +173,15 @@ class Party
     return true;
   }
 
+  public void ClearCombatBuffs()
+  {
+    for (int j = 0; j < Count; j++)
+    {
+      if (Members[j] is Character c)
+        c.Buffs = [.. c.Buffs.Where(b => !b.CombatOnly)];
+    }
+  }
+
   public void PoolGold(int slot)
   {
     if (Members[slot] is not Character c)
