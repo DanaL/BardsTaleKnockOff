@@ -53,18 +53,31 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         Arfi(caster, monsterGroup, target, spell.Cost, rng);
         break;
       case "VOPL":
-        if (caster is Character vc && target is Character vt)
-          Vopl(vc, vt, spell.Cost);
+        if (caster is not null && target is not null)
+        {
+          caster.MP -= spell.Cost;
+          target.Buffs.Add(new TempBuff(Buff.VorpalPlating, ulong.MaxValue, true));
+        }
+        break;
+      case "AIAR":
+        if (caster is not null)
+        {
+          caster.MP -= spell.Cost;
+          if (!caster.Buffs.Any(b => b.Buff == Buff.AirArmour))
+            caster.Buffs.Add(new TempBuff(Buff.AirArmour, ulong.MaxValue, true));
+        }
+        break;
+      case "SOSH":
+        if (caster is not null)
+        {
+          caster.MP -= spell.Cost;
+          if (!caster.Buffs.Any(b => b.Buff == Buff.SorcShield))
+            caster.Buffs.Add(new TempBuff(Buff.SorcShield, ulong.MaxValue, true));
+        }
         break;
       default:
         throw new Exception($"Unknown spell: {spell.Code}!");
     }
-  }
-
-  public void Vopl(Character caster, Character target, int cost)
-  {
-    caster.MP -= cost;
-    target.Buffs.Add(new TempBuff(Buff.VorpalPlating, ulong.MaxValue, true));
   }
 
   public void Arfi(Character? caster, int monsterGroup, Character? target, int cost, Rng rng)

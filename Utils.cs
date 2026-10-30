@@ -11,7 +11,7 @@
 
 using BardsTaleKnockOff;
 
-enum Buff { Defending, Hiding, VorpalPlating }
+enum Buff { Defending, Hiding, VorpalPlating, AirArmour, SorcShield }
 record struct TempBuff(Buff Buff, ulong ExpiresOn, bool CombatOnly);
 
 readonly record struct Rgb(byte R, byte G, byte B);

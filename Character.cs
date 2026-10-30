@@ -86,6 +86,14 @@ class Character
           ac -= ItemCatalog.Item(inv.Id).ACMod;
       }
 
+      foreach (var buff in Buffs)
+      {
+        if (buff.Buff == Buff.AirArmour)
+          ac -= 2;
+        else if (buff.Buff == Buff.SorcShield)
+          ac -= 1;
+      }
+
       return ac;
     }
   } 
