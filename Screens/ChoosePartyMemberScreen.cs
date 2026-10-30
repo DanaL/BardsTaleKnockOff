@@ -13,7 +13,7 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-class ChoosePartyMemberScreen(App app, IPartyPickScreen src) : IScreen
+class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt) : IScreen
 {
   public string Image { get; set; } = "";
   public string Caption { get; set; } = "";
@@ -39,7 +39,7 @@ class ChoosePartyMemberScreen(App app, IPartyPickScreen src) : IScreen
   public void Draw(GameUI ui)
   {
     ui.DrawImage(Image, Caption, app.GameState);
-    ui.DrawTextPanel([$"Target which party member: {1}-{app.GameState.Party.Count}"]);
+    ui.DrawTextPanel([$"{prompt}: {1}-{app.GameState.Party.Count}"]);
     ui.DrawRoster(app.GameState.Party);
   }
 }

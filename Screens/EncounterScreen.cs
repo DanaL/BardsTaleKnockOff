@@ -343,7 +343,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
       case SpellTarget.Party:
         _pendingAction = BattleAction.CastSpell;
         _pendingSpell = spell;
-        app.Screens.Push(new ChoosePartyMemberScreen(app, this) { Caption = _caption, Image = _image });
+        app.Screens.Push(new ChoosePartyMemberScreen(app, this, $"Cast {spell.Code} on whom") { Caption = _caption, Image = _image });
         break;
       case SpellTarget.Monsters:
         if (app.GameState.Party.Members[_slot] is Character c)
