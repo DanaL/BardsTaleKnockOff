@@ -380,6 +380,12 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
     _choices.Add(new(_slot, _pendingAction, -1, partySlot, _pendingSpell));
     ActionChosen();
   }
+
+  public void AbortSelection()
+  {
+    _state = PICK_ACTION;
+    _pendingSpell = null;
+  }
 }
 
 class EncounterScreen : IScreen

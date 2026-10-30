@@ -20,11 +20,19 @@ class ChoosePartyMemberScreen(App app, IPartyPickScreen src) : IScreen
 
   public void OnKey(SDL_KeyboardEvent key)
   {
-    int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
-    if (slot >= 0 && slot < app.GameState.Party.Count)
+    if (key.scancode == SDL_Scancode.SDL_SCANCODE_ESCAPE)
     {
-      src.CharacterChosen(slot);
+      src.AbortSelection();
       app.Screens.Pop();
+    }
+    else
+    {
+      int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
+      if (slot >= 0 && slot < app.GameState.Party.Count)
+      {
+        src.CharacterChosen(slot);
+        app.Screens.Pop();
+      }
     }
   }
 
