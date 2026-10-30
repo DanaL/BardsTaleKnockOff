@@ -42,3 +42,38 @@ class Spells
     return [.. spells.OrderBy(s => s.Level).ThenBy(s => s.Name)];
   }
 }
+
+class SpellResolver(List<List<Monster>> foes, Battle battle)
+{
+  
+  public void Cast(SpellInfo spell, Character? caster, Rng rng, int monsterGroup, Character? target)
+  {
+    switch (spell.Code)
+    {
+      case "ARFI":
+        Arfi(caster, monsterGroup, target, spell.Cost, rng);
+        break;
+      default:
+        throw new Exception($"Unknown spell: {spell.Code}!");
+    }
+  }
+
+  public void Arfi(Character? caster, int monsterGroup, Character? target, int cost, Rng rng)
+  {
+    if (caster is not null)
+    {
+      caster.MP -= cost;
+
+      if (foes[monsterGroup].Count > 0)
+      {
+        int targetNum = rng.Next(foes[monsterGroup].Count);
+        int dmg = rng.Next(1, 5) * caster.Level;
+        battle.DamageMonster(monsterGroup, targetNum, dmg);
+      }
+    }
+    else
+    {
+      // I'll indicate a monster casting a spell with a null caster
+    }
+  }
+}

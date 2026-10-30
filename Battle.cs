@@ -53,7 +53,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         c.Buffs.Add(new TempBuff(Buff.Defending, gs.Turn, true));
         Messages.Enqueue($"{c.Name} defends.");
       }
-      else if (choice.Action == BattleAction.MeleeAttack)
+      else if (choice.Action == BattleAction.MeleeAttack || choice.Action == BattleAction.CastSpell)
       {
         _actions.Enqueue(choice, Initiative(c));
       }
@@ -119,6 +119,15 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
           {
             Messages.Enqueue($"{c.Name} fails to hide!");
             c.Buffs = [.. c.Buffs.Where(b => b.Buff != Buff.Hiding )];
+          }
+          break;
+        case BattleAction.CastSpell:
+          if (choice.Spell is SpellInfo spell)
+          {
+            Messages.Enqueue($"{c.Name} casts {spell.Code}!");
+
+            SpellResolver sr = new(Foes, this);
+            sr.Cast(choice.Spell, c, rng, choice.Group, null);
           }
           break;
       }
@@ -249,7 +258,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       if (roll > targetAC)
       {
         ++hits;
-        dmg = strMod;
+        dmg += strMod;
         if (weapon is null)
           dmg += 1;
         else
@@ -281,23 +290,35 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
     int monsterHit = rng.Next(Foes[monsterGroup].Count);
     if (hiding && hits > 0)
+      KillMonster(monsterGroup, monsterHit);
+    else
+      DamageMonster(monsterGroup, monsterHit, dmg);
+  }
+
+  // Killing a monster shifts the indexes of the ones after it in the group,
+  // so when damaging a whole group, loop from the back.
+  public bool DamageMonster(int group, int targetNum, int dmg)
+  {
+    Monster m = Foes[group][targetNum];
+    if (dmg >= m.HP)
     {
-      _xpWon += target.XP;
-      _goldWon += target.Gold;
-      Foes[monsterGroup].RemoveAt(monsterHit);
+      Messages.Enqueue($"{m.Name.DefArticle().ToLower().Capitalize()} is killed!");
+      KillMonster(group, targetNum);
+      return true;
     }
-    else if (dmg >= Foes[monsterGroup][monsterHit].HP)
-    {
-      Messages.Enqueue($"{targetName.Capitalize()} is killed!");
-      _xpWon += target.XP;
-      _goldWon += target.Gold;
-      Foes[monsterGroup].RemoveAt(monsterHit);
-    }
-    else if (dmg > 0)
-    {
-      Monster m = Foes[monsterGroup][monsterHit];
-      Foes[monsterGroup][monsterHit] = m with { HP = m.HP - dmg };
-    }
+
+    if (dmg > 0)
+      Foes[group][targetNum] = m with { HP = m.HP - dmg };
+
+    return false;
+  }
+
+  public void KillMonster(int group, int index)
+  {
+    Monster m = Foes[group][index];
+    _xpWon += m.XP;
+    _goldWon += m.Gold;
+    Foes[group].RemoveAt(index);
   }
 
   int Initiative(Character c)
