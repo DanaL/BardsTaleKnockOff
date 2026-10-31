@@ -298,7 +298,10 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
 
     if (app.GameState.Party.Members[_slot] is Character c)
     {
-      lines.AddRange($"{c.Name} has these actions available:", "", "", "", "", "");
+      string n = c.Name;
+      if (c.Buffs.Any(b => b.Buff == Buff.Hiding))
+        n += " (hiding)";
+      lines.AddRange($"{n} has these actions available:", "", "", "", "", "");
 
       if (_slot < 3 || c.Buffs.Any(b => b.Buff == Buff.Hiding)) 
       {
