@@ -127,7 +127,16 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
             Character? partyTarget = choice.PartySlot >= 0 ? gs.Party.Members[choice.PartySlot] : null;
             string s = $"{c.Name} casts {spell.Code}";
             if (choice.Spell.Target == SpellTarget.Party && partyTarget is not null)
+            {
               s += $" on {partyTarget.Name}";
+            }
+            else if (choice.Spell.Target == SpellTarget.Monsters && Foes[choice.Group].Count > 0)
+            {
+              var g = Foes[choice.Group];
+              string mn = g.Count == 1 ? g[0].Name.DefArticle() : $"some {g[0].Name.Pluralize()}";
+              s += $" on {mn}";
+            }
+              
             s += ".";
             Messages.Enqueue(s);
             SpellResolver sr = new(Foes, this);
