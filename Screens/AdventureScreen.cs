@@ -113,7 +113,14 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     if (spell.Target == SpellTarget.None && _caster is not null)
     {
       app.GameState.Say($"{_caster.Name} casts {spell.Code}.");
-      sr.Cast(spell, _caster, app.Rng, -1, null, app.GameState);
+      if (_caster.MP < spell.Cost) 
+      {
+        app.GameState.Say($"But they have insufficient Magic Points!");
+      }
+      else
+      {
+        sr.Cast(spell, _caster, app.Rng, -1, null, app.GameState);
+      }
     }
   }
 
