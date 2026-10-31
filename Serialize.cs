@@ -24,8 +24,8 @@ internal class Serialize
     List<PartyInfo> party = [];
     for (int s = 0; s < app.GameState.Party.Members.Length; s++)
     {
-      if (app.GameState.Party.Members[s] is not null)
-        party.Add(new PartyInfo(s, app.GameState.Party.Members[s].Name));
+      if (app.GameState.Party.Members[s] is Character c)
+        party.Add(new PartyInfo(s, c.Name));
     }
 
     SaveGameInfo sgi = new(app.Roster, party, app.GameState.Turn);

@@ -23,13 +23,10 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
   const int EXPLORE = 0;
   const int CAST_SPELL = 1;
 
-  int _state = EXPLORE;
   Character? _caster = null;
 
   public void OnKey(SDL_KeyboardEvent key)
   {
-    // Movement uses scancodes (physical key positions) so WASD stays in the
-    // same place on any keyboard layout.
     switch (key.scancode)
     {
       case SDL_Scancode.SDL_SCANCODE_UP:
@@ -67,13 +64,11 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
           app.Screens.Push(new CharacterScreen(app, slot));
         break;
       case SDL_Scancode.SDL_SCANCODE_C:
-        _state = CAST_SPELL;
         app.Screens.Push(new ChoosePartyMemberScreen(app, this, "Who will cast a spell"));
         break;
       case SDL_Scancode.SDL_SCANCODE_ESCAPE:
         app.Screens.Push(new ConfirmScreen(app, "Abandon this adventure and return to the main menu?", () =>
         {
-          app.GameState = null;
           app.Screens.Replace(new MainMenuScreen(app));
         }));
         break;
@@ -138,11 +133,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     }
   }
 
-  public void AbortSelection()
-  {
-    _caster = null;
-    _state = EXPLORE;
-  } 
+  public void AbortSelection() => _caster = null;
 
   bool IsEncounter()
   {
