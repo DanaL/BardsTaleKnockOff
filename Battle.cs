@@ -12,7 +12,7 @@
 namespace BardsTaleKnockOff;
 
 // Use Item not implemented yet...
-enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell }
+enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell, Advance }
 
 record struct BattleChoice(int Slot, BattleAction Action,  int Group, int PartySlot, SpellInfo? Spell = null);
 
@@ -64,11 +64,32 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       }
     }
 
+    int advInitiative = 1000; // groups advancing always happens after everyone else has acted
     for (int n = 0; n < Foes.Count; n++)
     {
-      int roll = rng.Next(1, 24);
-      BattleChoice monsterChoice = new(n, BattleAction.MonsterAction, n, -1);
-      _actions.Enqueue(monsterChoice, -roll);
+      if (n < 2 || Foes[n][0].Ranged)
+      {
+        int roll = rng.Next(1, 24);
+        _actions.Enqueue(new(n, BattleAction.MonsterAction, n, -1), -roll);        
+      }
+      else if (GroupsToPass(n, Foes[n].Count))
+      {
+        _actions.Enqueue(new(n, BattleAction.Advance, n, -1), advInitiative++);
+      }      
+    }
+
+    bool GroupsToPass(int n, int size)
+    {
+      if (Foes[n-1].Count < size)
+        return true;
+
+      for (int j = 0; j < n; j++)
+      {
+        if (Foes[j][0].Ranged)
+          return true;
+      }
+      
+      return false;
     }
   }
 
@@ -97,6 +118,10 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     {
       _actingGroup = choice.Group;
       _actingMonster = 0;
+    }
+    else if (choice.Action == BattleAction.Advance)
+    {
+      AdvanceGroup(choice.Group);
     }
     else
     {
@@ -197,6 +222,16 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     }
 
     return (xpPerChar, goldPerChar);
+  }
+
+  void AdvanceGroup(int groupNum)
+  {
+    var group = Foes[groupNum];
+    string s = group.Count > 1 ? group[0].Name.Pluralize() : group[0].Name;
+
+    (Foes[groupNum], Foes[groupNum - 1]) = (Foes[groupNum - 1], Foes[groupNum]);
+    
+    Messages.Enqueue($"{s.DefArticle().Capitalize()} advance!");
   }
 
   // Only monsters in the first 2 ranks can engage in melee

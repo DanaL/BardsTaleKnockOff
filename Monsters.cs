@@ -12,30 +12,30 @@
 namespace BardsTaleKnockOff;
 
 record struct MonsterDef(int Id, int GroupSize);
-record Monster(string Name, int AC, int HP, int THAC0, int DmgLow, int DmgHigh, int XP, int Gold, string Special, string Verb, string Image);
+record Monster(string Name, int AC, int HP, int THAC0, int DmgLow, int DmgHigh, int XP, int Gold, string Special, string Verb, string Image, bool Ranged);
 
 class MonsterCatalog
 {
-  const int GOBLIN = 0;
-  const int ORC = 1;
-  const int SKELETON = 2;
-  const int CONJURER_0 = 3;
-  const int MAGICIAN_0 = 4;
-  const int FERAL_DOG = 5;
+  public const int GOBLIN = 0;
+  public const int ORC = 1;
+  public const int SKELETON = 2;
+  public const int CONJURER_0 = 3;
+  public const int MAGICIAN_0 = 4;
+  public const int FERAL_DOG = 5;
 
   static readonly Dictionary<int, List<MonsterDef>> _monsterTable = new()
   {
     [0] = [ new(GOBLIN, 8), new(ORC, 8), new(SKELETON, 4), new(FERAL_DOG, 8), new(CONJURER_0, 4), new(MAGICIAN_0, 4) ],
   };
-
-  static Monster Get(int id, Rng rng) => id switch
+  
+  public static Monster Get(int id, Rng rng) => id switch
   {    
-    GOBLIN => new Monster("Goblin", 10, rng.Next(3, 7) + 1, 19, 1, 4, 60, rng.Next(10, 20) + 1, "", "attacks", "goblin.png"),
-    ORC => new Monster("Orc", 8, rng.Next(3, 11) + 1, 18, 2, 8, 90, rng.Next(10, 40) + 1, "", "attacks", "orc.png"),
-    SKELETON => new Monster("Skeleton", 6, rng.Next(7, 15) + 1, 18, 3, 12, 110, rng.Next(10, 40) + 1, "", "claws at", "skeleton.png"),
-    FERAL_DOG => new Monster("Feral dog", 7, rng.Next(3, 11) + 1, 18, 2, 8, 90, rng.Next(10, 20) + 1, "", "bites", "canine.png"),
-    CONJURER_0 => new Monster("Conjurer", 9, rng.Next(1, 9) + 1, 18, 1, 4, 100, rng.Next(25, 45) + 1, "ARFI", "attacks", "conjurer.png"),
-    MAGICIAN_0 => new Monster("Magician", 9, rng.Next(1, 9) + 1, 18, 1, 4, 100, rng.Next(25, 45) + 1, "WIST", "attacks", "conjurer.png"),
+    GOBLIN => new Monster("Goblin", 10, rng.Next(3, 7) + 1, 19, 1, 4, 60, rng.Next(10, 20) + 1, "", "attacks", "goblin.png", false),
+    ORC => new Monster("Orc", 8, rng.Next(3, 11) + 1, 18, 2, 8, 90, rng.Next(10, 40) + 1, "", "attacks", "orc.png", false),
+    SKELETON => new Monster("Skeleton", 6, rng.Next(7, 15) + 1, 18, 3, 12, 110, rng.Next(10, 40) + 1, "", "claws at", "skeleton.png", false),
+    FERAL_DOG => new Monster("Feral dog", 7, rng.Next(3, 11) + 1, 18, 2, 8, 90, rng.Next(10, 20) + 1, "", "bites", "canine.png", false),
+    CONJURER_0 => new Monster("Conjurer", 9, rng.Next(1, 9) + 1, 18, 1, 4, 100, rng.Next(25, 45) + 1, "ARFI", "attacks", "conjurer.png", true),
+    MAGICIAN_0 => new Monster("Magician", 9, rng.Next(1, 9) + 1, 18, 1, 4, 100, rng.Next(25, 45) + 1, "WIST", "attacks", "conjurer.png", true),
     _ => throw new Exception($"Unknown monster id {id}")  
   };
 

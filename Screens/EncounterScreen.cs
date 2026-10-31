@@ -414,7 +414,7 @@ class EncounterScreen : IScreen
     _groups.Add(MonsterCatalog.GroupForLevel(app.GameState.CurrLevel, app.Rng));
     if (app.GameState.CurrLevel == 0 && app.Rng.Next(4) == 0)
       _groups.Add(MonsterCatalog.GroupForLevel(app.GameState.CurrLevel, app.Rng));
-
+    
      List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g[0].Name : g[0].Name.Pluralize())}")];
     string desc = summaries.Count switch
     {
