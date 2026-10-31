@@ -39,7 +39,7 @@ class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt) : IS
   public void Draw(GameUI ui)
   {
     if (Image != "")
-      ui.DrawImage(Image, Caption, app.GameState);
+      ui.DrawImage(Image, Caption, null);
     else
       ui.DrawDungeonView(app.GameState);
     ui.DrawTextPanel([$"{prompt}: {1}-{app.GameState.Party.Count}"]);

@@ -128,7 +128,7 @@ class ChooseSpellScreen(App app, Character c, bool combatSpells, ICastSpellScree
     }
     
     if (Image != "")
-      ui.DrawImage(Image, Caption, app.GameState);
+      ui.DrawImage(Image, Caption, null);
     else
       ui.DrawDungeonView(app.GameState);
     ui.DrawTextPanel(lines, offsetCursor);

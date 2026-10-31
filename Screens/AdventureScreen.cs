@@ -103,6 +103,8 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     else if (tile.Feature == Feature.House)
     {
       app.Screens.Push(new HouseScreen(app));
+      if (app.Rng.Next(2) == 0)
+        app.Screens.Push(new EncounterScreen(app));
     }
     else if (tile.Feature == Feature.Temple)
     {
