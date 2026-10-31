@@ -24,9 +24,8 @@ interface IScreen
 
   void Draw(GameUI ui);
 
-  // An overlay (e.g. a yes/no question) is drawn on top of the screen
-  // beneath it rather than replacing it.
   bool IsOverlay => false;
+  void Update(ulong elapsedMs) { }
 }
 
 // A screen for picking a spell; this is the method that receives the selection

@@ -78,6 +78,7 @@ unsafe class Program
     var app = new App(window);    
     app.Screens.Push(new MainMenuScreen(app));
 
+    ulong lastTick = SDL_GetTicks();
     while (!app.Screens.IsEmpty)
     {
       SDL_Event e;
@@ -99,6 +100,10 @@ unsafe class Program
       if (app.Screens.IsEmpty)
         break;
 
+      ulong now = SDL_GetTicks();
+      app.Screens.Update(Math.Min(now - lastTick, 250));
+      lastTick = now;
+      
       SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
       SDL_RenderClear(renderer);
       app.Screens.Draw(ui);

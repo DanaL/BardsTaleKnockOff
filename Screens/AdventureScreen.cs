@@ -24,7 +24,8 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
   const int CAST_SPELL = 1;
 
   Character? _caster = null;
-
+  ulong _idleTime = 0;
+  
   public void OnKey(SDL_KeyboardEvent key)
   {
     switch (key.scancode)
@@ -32,26 +33,22 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case SDL_Scancode.SDL_SCANCODE_UP:
       case SDL_Scancode.SDL_SCANCODE_W:
         GS.TryMove(GS.Facing);
-        ResolveMove();
+        ResolveTurn();
         break;
       case SDL_Scancode.SDL_SCANCODE_DOWN:
-      case SDL_Scancode.SDL_SCANCODE_S:
-        ++GS.Turn;
+      case SDL_Scancode.SDL_SCANCODE_S:        
         GS.Facing = GS.Facing.Opposite();
+        ResolveTurn();
         break;
       case SDL_Scancode.SDL_SCANCODE_LEFT:
       case SDL_Scancode.SDL_SCANCODE_A:
-        ++GS.Turn;
         GS.Facing = GS.Facing.TurnLeft();
+        ResolveTurn();
         break;
       case SDL_Scancode.SDL_SCANCODE_RIGHT:
       case SDL_Scancode.SDL_SCANCODE_D:
-        ++GS.Turn;
         GS.Facing = GS.Facing.TurnRight();
-        break;
-      case SDL_Scancode.SDL_SCANCODE_L:
-        ++GS.Turn;
-        GS.Say($"Loc: {GS.X}, {GS.Y}");
+        ResolveTurn();
         break;
       case SDL_Scancode.SDL_SCANCODE_1:
       case SDL_Scancode.SDL_SCANCODE_2:
@@ -75,9 +72,24 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     }
   }
 
-  void ResolveMove()
+  void ResolveTurn()
   {
+    // I feel like in OG Bard's Tale you didn't regenerate spell points when
+    // moving, only when you were idle but I'm going to do it every 10 turns
+    // in town (during daytime). Easier to code and track and makes more sense
+    // to me?
+    if (app.GameState.DayTime && app.GameState.CurrLevel == 0 && (_idleTime > 10_000 || GS.Turn % 10 == 0))
+    {
+      foreach (var character in app.GameState.Party.Members.OfType<Character>())
+      {
+        if (character.MaxMP > 0 && character.MP < character.MaxMP)
+          ++character.MP;
+      }
+    }
+
+    _idleTime = 0;
     ++GS.Turn;
+
     Tile tile = GS.CurrMap.TileAt(GS.X, GS.Y);
     if (tile.Feature == Feature.Guild)
     {
@@ -115,6 +127,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       else
       {
         sr.Cast(spell, _caster, app.Rng, -1, null, app.GameState);
+        ResolveTurn();
       }
     }
   }
@@ -154,5 +167,14 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     ui.DrawDungeonView(GS);
     ui.DrawTextPanel(GS.Messages);
     ui.DrawRoster(GS.Party);
+  }
+
+  public void Update(ulong elapsedMs)
+  {
+    _idleTime += elapsedMs;
+    if (_idleTime >= 10_000) 
+    {    
+      ResolveTurn();
+    }
   }
 }

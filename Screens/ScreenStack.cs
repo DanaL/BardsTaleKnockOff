@@ -66,4 +66,6 @@ class ScreenStack
     for (int i = first; i < _screens.Count; i++)
       _screens[i].Draw(ui);
   }
+
+  public void Update(ulong elapsedMs) => Top?.Update(elapsedMs);
 }
