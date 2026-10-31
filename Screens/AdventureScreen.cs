@@ -16,9 +16,15 @@ namespace BardsTaleKnockOff;
 // Walking around the map. This is where the main adventuring loop lives:
 // exploring now; random encounters (push a combat screen, pop it when the
 // fight ends), shops and so on later.
-class AdventureScreen(App app) : IScreen
+class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 {
   GameState GS => app.GameState!;
+
+  const int EXPLORE = 0;
+  const int CAST_SPELL = 1;
+
+  int _state = EXPLORE;
+  Character? _caster = null;
 
   public void OnKey(SDL_KeyboardEvent key)
   {
@@ -60,6 +66,10 @@ class AdventureScreen(App app) : IScreen
         if (slot <= app.Roster.Count)
           app.Screens.Push(new CharacterScreen(app, slot));
         break;
+      case SDL_Scancode.SDL_SCANCODE_C:
+        _state = CAST_SPELL;
+        app.Screens.Push(new ChoosePartyMemberScreen(app, this, "Who will cast a spell"));
+        break;
       case SDL_Scancode.SDL_SCANCODE_ESCAPE:
         app.Screens.Push(new ConfirmScreen(app, "Abandon this adventure and return to the main menu?", () =>
         {
@@ -96,6 +106,36 @@ class AdventureScreen(App app) : IScreen
       app.Screens.Push(new EncounterScreen(app));
     }
   }
+
+  public void SpellChosen(SpellInfo spell)
+  {
+    SpellResolver sr = new([], new Battle(app.GameState, app.Rng, []));
+    if (spell.Target == SpellTarget.None && _caster is not null)
+    {
+      app.GameState.Say($"{_caster.Name} casts {spell.Code}.");
+      sr.Cast(spell, _caster, app.Rng, -1, null, app.GameState);
+    }
+  }
+
+  public void CharacterChosen(int partySlot)
+  {
+    if (app.GameState.Party.Members[partySlot] is Character c)
+    {
+      if (c.MaxMP == 0)
+        app.GameState.Say($"{c.Name} cannot work magic!");
+      else
+      {
+        _caster = c;
+        app.Screens.Push(new ChooseSpellScreen(app, c, false, this));
+      }
+    }
+  }
+
+  public void AbortSelection()
+  {
+    _caster = null;
+    _state = EXPLORE;
+  } 
 
   bool IsEncounter()
   {

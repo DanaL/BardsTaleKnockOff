@@ -132,7 +132,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
             Messages.Enqueue(s);
             SpellResolver sr = new(Foes, this);
             
-            sr.Cast(choice.Spell, c, rng, choice.Group, partyTarget);
+            sr.Cast(choice.Spell, c, rng, choice.Group, partyTarget, gs);
           }
           break;
       }

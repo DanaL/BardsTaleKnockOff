@@ -30,15 +30,18 @@ class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt) : IS
       int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
       if (slot >= 0 && slot < app.GameState.Party.Count)
       {
-        src.CharacterChosen(slot);
         app.Screens.Pop();
+        src.CharacterChosen(slot);       
       }
     }
   }
 
   public void Draw(GameUI ui)
   {
-    ui.DrawImage(Image, Caption, app.GameState);
+    if (Image != "")
+      ui.DrawImage(Image, Caption, app.GameState);
+    else
+      ui.DrawDungeonView(app.GameState);
     ui.DrawTextPanel([$"{prompt}: {1}-{app.GameState.Party.Count}"]);
     ui.DrawRoster(app.GameState.Party);
   }

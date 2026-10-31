@@ -33,6 +33,7 @@ interface IScreen
 interface ICastSpellScreen
 {
   void SpellChosen(SpellInfo spell);
+  void AbortSelection();
 }
 
 // A screen for picking a group of monsters; this is the method that receives

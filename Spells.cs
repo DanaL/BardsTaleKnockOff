@@ -45,20 +45,13 @@ class Spells
 
 class SpellResolver(List<List<Monster>> foes, Battle battle)
 {
-  public void Cast(SpellInfo spell, Character? caster, Rng rng, int monsterGroup, Character? target)
+  public void Cast(SpellInfo spell, Character? caster, Rng rng, int monsterGroup, Character? target, GameState gs)
   {
     switch (spell.Code)
     {
       case "ARFI":
         Arfi(caster, monsterGroup, target, spell.Cost, rng);
-        break;
-      case "VOPL":
-        if (caster is not null && target is not null)
-        {
-          caster.MP -= spell.Cost;
-          target.Buffs.Add(new TempBuff(Buff.VorpalPlating, ulong.MaxValue, true));
-        }
-        break;
+        break;      
       case "AIAR":
         if (caster is not null)
         {
@@ -67,12 +60,32 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
             caster.Buffs.Add(new TempBuff(Buff.AirArmour, ulong.MaxValue, true));
         }
         break;
+      case "SCSI":
+        if (caster is not null)
+        {
+          caster.MP -= spell.Cost;
+          string s = "You are ";
+          if (gs.CurrLevel == 0)
+            s += $"in town at X {gs.X}, Y {gs.Y}. ";
+          else
+            s += $"on level {gs.CurrLevel} at X {gs.X}, Y {gs.Y}. ";
+          s += $"You face {gs.Facing}.";
+          gs.Say(s);
+        }
+        break;
       case "SOSH":
         if (caster is not null)
         {
           caster.MP -= spell.Cost;
           if (!caster.Buffs.Any(b => b.Buff == Buff.SorcShield))
             caster.Buffs.Add(new TempBuff(Buff.SorcShield, ulong.MaxValue, true));
+        }
+        break;
+      case "VOPL":
+        if (caster is not null && target is not null)
+        {
+          caster.MP -= spell.Cost;
+          target.Buffs.Add(new TempBuff(Buff.VorpalPlating, ulong.MaxValue, true));
         }
         break;
       default:

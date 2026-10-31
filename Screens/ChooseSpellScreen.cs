@@ -65,6 +65,11 @@ class ChooseSpellScreen(App app, Character c, bool combatSpells, ICastSpellScree
       case SDL_Keycode.SDLK_ESCAPE:
         if (_filter.Length > 0)
           _filter = "";
+        else
+        {
+          src.AbortSelection();
+          app.Screens.Pop();
+        }
         break;
     }
   }
@@ -122,7 +127,10 @@ class ChooseSpellScreen(App app, Character c, bool combatSpells, ICastSpellScree
       offsetCursor = -1;
     }
     
-    ui.DrawImage(Image, Caption, app.GameState);
+    if (Image != "")
+      ui.DrawImage(Image, Caption, app.GameState);
+    else
+      ui.DrawDungeonView(app.GameState);
     ui.DrawTextPanel(lines, offsetCursor);
     ui.DrawRoster(app.GameState.Party);
   }
