@@ -39,10 +39,25 @@ unsafe class Program
       return 1;
     }
 
+    // If the window won't fit on the display, the OS shrinks it, and the
+    // integer scaling then leaves black borders. So pick the largest scale
+    // that fits, leaving some room for the title bar.
+    int scale = WindowScale;
+    SDL_Rect usable;
+    if (SDL_GetDisplayUsableBounds(SDL_GetPrimaryDisplay(), &usable))
+    {
+      const int DecorationAllowance = 64;
+      int fit = Math.Min(usable.w / GameUI.ScreenW, (usable.h - DecorationAllowance) / GameUI.ScreenH);
+      scale = Math.Clamp(fit, 1, WindowScale);
+    }
+
+    // High pixel density gives us the full Retina resolution on macOS. Window
+    // sizes are in points there, so each point is 2x2 pixels, and the scale
+    // in pixels stays even, which the half-size text needs to look sharp.
     SDL_Window* window;
     SDL_Renderer* renderer;
-    if (!SDL_CreateWindowAndRenderer("Bard's Tale Knock-Off", GameUI.ScreenW * WindowScale, GameUI.ScreenH * WindowScale,
-          SDL_WindowFlags.SDL_WINDOW_RESIZABLE, &window, &renderer))
+    if (!SDL_CreateWindowAndRenderer("Bard's Tale Knock-Off", GameUI.ScreenW * scale, GameUI.ScreenH * scale,
+          SDL_WindowFlags.SDL_WINDOW_RESIZABLE | SDL_WindowFlags.SDL_WINDOW_HIGH_PIXEL_DENSITY, &window, &renderer))
     {
       Console.Error.WriteLine($"Couldn't create window: {SDL_GetError()}");
       SDL_Quit();
