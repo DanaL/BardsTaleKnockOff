@@ -238,13 +238,11 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
   // Not sure what rate they should do their special attacks at yet
   void MonsterAction(Monster m, int group)
   {
-    // eventually check for special abilities
-    if (group > 1)
-      return;
+    // Need to check available actions and available targets
 
     // also have to take into account the Special slot eventually
-    List<int> targets = [];
-    for (int j = 0; j < 3; j++)
+    List<int> targets = [];    
+    for (int j = 0; j < gs.Party.Count; j++)
     {
       if (gs.Party.Members[j] is Character c && !c.Incapacitated && !c.Buffs.Any(b => b.Buff == Buff.Hiding))
         targets.Add(j);
@@ -253,31 +251,76 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     if (targets.Count == 0)
       return;
 
-    int s = targets[rng.Next(targets.Count)];
-    if (gs.Party.Members[s] is Character target)
-    {
-      string n = m.Name.ToLower().DefArticle().Capitalize();
-      int roll = rng.Next(1, 21);
-      int targetAC = m.THAC0 - target.AC;
-      if (target.Buffs.Any(b => b.Buff == Buff.Defending))
-        targetAC += 5; // Not sure what BT1 did, but -5 is roughly equip to Disadvantage in 5e
-                       // and what you get for taking the Dodge action
-      if (roll > targetAC)
-      {
-        int dmg = rng.Next(m.DmgLow, m.DmgHigh + 1);
-        Messages.Enqueue($"{n} {m.Verb} {target.Name} and hits for {dmg} hp!");
-        target.HP -= dmg;
+    List<int> meleeTargets = [.. targets.Where(n => n < 3)];
 
-        if (target.HP < 1)
-        {
-          Messages.Enqueue($"{target.Name} is killed!");
-          target.Condition = "DEAD";
-        }
-      }
-      else
+    List<(string Action, int Target)> options = [];
+    if (group < 2)
+    {
+      options.Add(("melee", meleeTargets[rng.Next(meleeTargets.Count)]));
+    }
+    
+    if (m.Special == "ARFI_1")
+    {
+      options.Add(("ARFI_1", targets[rng.Next(targets.Count)]));
+    }
+
+    if (options.Count == 0)
+      return;
+
+    (string action, int targetNum) = options[rng.Next(options.Count)];
+    if (gs.Party.Members[targetNum] is not Character target)
+      return;
+
+    switch (action)
+    {
+      case "melee":
+        MonsterMeleeAttack(m, target);
+        break;
+      case "ARFI_1":
+        MonsterArcFire(m, target, 1);
+        break;
+    }
+  }
+
+  // It's a little redundant to duplicate a bunch of the spell cast, but
+  // monsters don't really have that many abilities and this keeps the
+  // methods pretty simple
+  void MonsterArcFire(Monster m, Character target, int level)
+  {
+    int dmg = rng.Next(1, 5) * level;
+    
+    Messages.Enqueue($"{m.Name.IndefArticle().Capitalize() } casts Arc Fire on {target.Name} for {dmg} hp!");
+    target.HP -= dmg;
+    if (target.HP < 1)
+    {
+      Messages.Enqueue($"{target.Name} is killed!");
+      target.Condition = "DEAD";
+    }
+  }
+
+  void MonsterMeleeAttack(Monster m, Character target)
+  {
+    string n = m.Name.ToLower().DefArticle().Capitalize();
+    int roll = rng.Next(1, 21);
+    int targetAC = m.THAC0 - target.AC;
+    if (target.Buffs.Any(b => b.Buff == Buff.Defending))
+      targetAC += 5; // Not sure what BT1 did, but -5 is roughly equip to Disadvantage in 5e
+                      // and what you get for taking the Dodge action
+    if (roll > targetAC)
+    {
+      int dmg = rng.Next(m.DmgLow, m.DmgHigh + 1);
+      Messages.Enqueue($"{n} {m.Verb} {target.Name} and hits for {dmg} hp!");
+      target.HP -= dmg;
+
+      if (target.HP < 1)
       {
-        Messages.Enqueue($"{n} {m.Verb} {target.Name} and misses!");
+        Messages.Enqueue($"{target.Name} is killed!");
+        target.Condition = "DEAD";
       }
+    }
+    else
+    {
+      Messages.Enqueue($"{n} {m.Verb} {target.Name} and misses!");
     }
   }
 

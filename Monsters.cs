@@ -34,7 +34,7 @@ class MonsterCatalog
     ORC => new Monster("Orc", 8, rng.Next(3, 11) + 1, 18, 2, 8, 90, rng.Next(10, 40) + 1, "", "attacks", "orc.png", false),
     SKELETON => new Monster("Skeleton", 6, rng.Next(7, 15) + 1, 18, 3, 12, 110, rng.Next(10, 40) + 1, "", "claws at", "skeleton.png", false),
     FERAL_DOG => new Monster("Feral dog", 7, rng.Next(3, 11) + 1, 18, 2, 8, 90, rng.Next(10, 20) + 1, "", "bites", "canine.png", false),
-    CONJURER_0 => new Monster("Conjurer", 9, rng.Next(1, 9) + 1, 18, 1, 4, 100, rng.Next(25, 45) + 1, "ARFI", "attacks", "conjurer.png", true),
+    CONJURER_0 => new Monster("Conjurer", 9, rng.Next(1, 9) + 1, 18, 1, 4, 100, rng.Next(25, 45) + 1, "ARFI_1", "attacks", "conjurer.png", true),
     MAGICIAN_0 => new Monster("Magician", 9, rng.Next(1, 9) + 1, 18, 1, 4, 100, rng.Next(25, 45) + 1, "WIST", "attacks", "conjurer.png", true),
     _ => throw new Exception($"Unknown monster id {id}")  
   };

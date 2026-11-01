@@ -411,10 +411,14 @@ class EncounterScreen : IScreen
     _app = app;
     _app.GameState.Messages.Clear();
 
-    _groups.Add(MonsterCatalog.GroupForLevel(app.GameState.CurrLevel, app.Rng));
-    if (app.GameState.CurrLevel == 0 && app.Rng.Next(4) == 0)
-      _groups.Add(MonsterCatalog.GroupForLevel(app.GameState.CurrLevel, app.Rng));
-    
+    // _groups.Add(MonsterCatalog.GroupForLevel(app.GameState.CurrLevel, app.Rng));
+    // if (app.GameState.CurrLevel == 0 && app.Rng.Next(4) == 0)
+    //   _groups.Add(MonsterCatalog.GroupForLevel(app.GameState.CurrLevel, app.Rng));
+    _groups.Add([MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng)]);
+    _groups.Add([MonsterCatalog.Get(MonsterCatalog.CONJURER_0, app.Rng)]);
+    _groups.Add([MonsterCatalog.Get(MonsterCatalog.FERAL_DOG, app.Rng), MonsterCatalog.Get(MonsterCatalog.FERAL_DOG, app.Rng)]);
+    _groups.Add([MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng)]);
+
      List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g[0].Name : g[0].Name.Pluralize())}")];
     string desc = summaries.Count switch
     {
