@@ -406,20 +406,31 @@ class EncounterScreen : IScreen
   readonly List<List<Monster>> _groups = [];
   readonly string _blurb;
 
+  // Monster tables
+  static readonly Dictionary<int, List<(int, int)>> _monsterTable = new()
+  {
+    [0] = [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), 
+                (MonsterCatalog.FERAL_DOG, 8), (MonsterCatalog.CONJURER_0, 4) ],
+  };
+
   public EncounterScreen(App app)
   {
     _app = app;
     _app.GameState.Messages.Clear();
 
-    // _groups.Add(MonsterCatalog.GroupForLevel(app.GameState.CurrLevel, app.Rng));
-    // if (app.GameState.CurrLevel == 0 && app.Rng.Next(4) == 0)
-    //   _groups.Add(MonsterCatalog.GroupForLevel(app.GameState.CurrLevel, app.Rng));
-    _groups.Add([MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng)]);
-    _groups.Add([MonsterCatalog.Get(MonsterCatalog.CONJURER_0, app.Rng)]);
-    _groups.Add([MonsterCatalog.Get(MonsterCatalog.FERAL_DOG, app.Rng), MonsterCatalog.Get(MonsterCatalog.FERAL_DOG, app.Rng)]);
-    _groups.Add([MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng)]);
-
-     List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g[0].Name : g[0].Name.Pluralize())}")];
+    List<(int, int)> monsterOptions = [.. _monsterTable[app.GameState.CurrLevel]];
+    if (app.GameState.CurrLevel == 0 && !app.GameState.DayTime)
+      monsterOptions.AddRange((MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4));
+    else if (_app.GameState.CurrTile.Feature == Feature.House)
+      monsterOptions.Add((MonsterCatalog.SPIDER, 4));
+    
+    List<Monster> monsterGroup = [];
+    (int monsterId, int count) = monsterOptions[app.Rng.Next(monsterOptions.Count)];
+    _groups.Add(GenGroup(monsterId, count, app.Rng));
+    if (app.GameState.CurrLevel == 0 && app.Rng.Next(4) == 0)
+      _groups.Add(GenGroup(monsterId, count, app.Rng));
+    
+    List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g[0].Name : g[0].Name.Pluralize())}")];
     string desc = summaries.Count switch
     {
       0 => "",
@@ -435,6 +446,16 @@ class EncounterScreen : IScreen
       2 => $"You curse as monsters charge you. You face {desc}!",
       _ => $"The denizens of this foul place assault you! You face {desc}!"
     };
+  }
+
+  static List<Monster> GenGroup(int monsterId, int num, Rng rng)
+  {
+    List<Monster> monsters = [];
+    int count = rng.Next(num) + 1;
+    for (int j = 0; j < count; j++)
+      monsters.Add(MonsterCatalog.Get(monsterId, rng));
+
+    return monsters;
   }
 
   public void OnKey(SDL_KeyboardEvent key)

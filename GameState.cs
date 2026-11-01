@@ -25,7 +25,8 @@ class GameState
   public ulong Turn { get; set; } = 0;
 
   public Dungeon CurrMap => Maps[CurrLevel];
-
+  public Tile CurrTile => Maps[CurrLevel].TileAt(X, Y);
+  
   // Text for the info panel, oldest first. The panel shows as many of the
   // most recent lines as fit.
   public List<string> Messages { get; } = [];
