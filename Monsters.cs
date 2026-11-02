@@ -26,13 +26,13 @@ class MonsterCatalog
   
   public static Monster Get(int id, Rng rng) => id switch
   {    
-    GOBLIN => new Monster("Goblin", 10, rng.Next(3, 7) + 1, 19, 1, 4, 60, rng.Next(10, 20) + 1, MonsterScript.Melee, "attacks", "goblin.png", false),
-    ORC => new Monster("Orc", 8, rng.Next(3, 11) + 1, 18, 2, 8, 90, rng.Next(10, 40) + 1, MonsterScript.Melee, "attacks", "orc.png", false),
-    SKELETON => new Monster("Skeleton", 6, rng.Next(7, 15) + 1, 18, 3, 12, 110, rng.Next(10, 40) + 1, MonsterScript.Melee, "claws at", "skeleton.png", false),
-    FERAL_DOG => new Monster("Feral dog", 7, rng.Next(3, 11) + 1, 18, 2, 8, 90, rng.Next(10, 20) + 1, MonsterScript.Melee, "bites", "canine.png", false),
-    CONJURER_0 => new Monster("Conjurer", 9, rng.Next(1, 9) + 1, 18, 1, 4, 100, rng.Next(25, 45) + 1, MonsterScript.Conjuror0, "attacks", "conjurer.png", true),
-    MAGICIAN_0 => new Monster("Magician", 9, rng.Next(1, 9) + 1, 18, 1, 4, 100, rng.Next(25, 45) + 1, MonsterScript.Magician0, "attacks", "conjurer.png", true),
-    SPIDER => new Monster("Spider", 6, rng.Next(5, 12), 17, 3, 12, 120, rng.Next(10, 31), MonsterScript.Melee, "bites", "spider.png", false),
+    GOBLIN => new Monster("Goblin", 10, rng.Next(3, 7) + 1, 19, 1, 4, 60, rng.Next(20, 51), MonsterScript.Melee, "attacks", "goblin.png", false),
+    ORC => new Monster("Orc", 8, rng.Next(3, 11) + 1, 18, 2, 8, 90, rng.Next(20, 81), MonsterScript.Melee, "attacks", "orc.png", false),
+    SKELETON => new Monster("Skeleton", 6, rng.Next(7, 15) + 1, 18, 3, 12, 110, rng.Next(20, 81), MonsterScript.Melee, "claws at", "skeleton.png", false),
+    FERAL_DOG => new Monster("Feral dog", 7, rng.Next(3, 11) + 1, 18, 2, 8, 90, rng.Next(20, 41), MonsterScript.Melee, "bites", "canine.png", false),
+    CONJURER_0 => new Monster("Conjurer", 9, rng.Next(1, 9) + 1, 18, 1, 4, 100, rng.Next(25, 61), MonsterScript.Conjuror0, "attacks", "conjurer.png", true),
+    MAGICIAN_0 => new Monster("Magician", 9, rng.Next(1, 9) + 1, 18, 1, 4, 100, rng.Next(25, 61), MonsterScript.Magician0, "attacks", "conjurer.png", true),
+    SPIDER => new Monster("Spider", 6, rng.Next(5, 12), 17, 3, 12, 120, rng.Next(20, 51), MonsterScript.Melee, "bites", "spider.png", false),
     _ => throw new Exception($"Unknown monster id {id}")  
   };
 }
