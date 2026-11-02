@@ -38,9 +38,34 @@ class InventoryScreen(App app, Character character) : IScreen
       case SDL_Keycode.SDLK_KP_ENTER:
         ToggleGear();
         break;
+      case SDL_Keycode.SDLK_D:
+        var (slot, item) = _items[_cursor];
+        app.Screens.Push(new ConfirmScreen(app, $"Discard the {item.Name}?", () =>
+        {
+          DiscardItem(slot, item);
+        }));
+        break;
       case SDL_Keycode.SDLK_ESCAPE:
         app.Screens.Pop();
         break;
+    }
+  }
+
+  void DiscardItem(InvSlot slot, Item item)
+  {
+    if (slot.Equipped) 
+    {
+      app.Screens.Push(new PopupScreen(app, "You cannot drop something that is equipped."));
+    }
+    else
+    {
+      character.Inventory[_cursor] = null;
+      GetInv();
+      RecalcInventory();
+      app.Screens.Push(new PopupScreen(app, $"You discard the {item.Name}."));
+
+      if (_cursor >= _items.Count)
+        _cursor = _items.Count - 1;
     }
   }
 
@@ -100,11 +125,13 @@ class InventoryScreen(App app, Character character) : IScreen
       _cursor = _items.Count - 1;
   }
 
+  void GetInv() => _items = [.. character.Inventory.OfType<InvSlot>().Select(iv => (iv, ItemCatalog.Item(iv.Id)))];
   public void Draw(GameUI ui)
   {
     int highlight = -1;
     List<string> lines = [];
-    _items = [.. character.Inventory.OfType<InvSlot>().Select(iv => (iv, ItemCatalog.Item(iv.Id)))];
+
+    GetInv();  
 
     if (_items.Count == 0)
     {

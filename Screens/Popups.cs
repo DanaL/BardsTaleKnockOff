@@ -13,6 +13,14 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
+class PopupScreen(App app, string text) : IScreen
+{
+  public bool IsOverlay => true;
+
+  public void OnKey(SDL_KeyboardEvent key) => app.Screens.Pop();
+  public void Draw(GameUI ui) => ui.DrawPrompt([text]);
+}
+
 // A yes/no question drawn on top of the current screen. Y runs onYes; N or
 // Esc just closes the question.
 class ConfirmScreen(App app, string question, Action onYes) : IScreen
