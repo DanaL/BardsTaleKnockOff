@@ -45,7 +45,7 @@ class Spells
 
 class SpellResolver(List<List<Monster>> foes, Battle battle)
 {
-  public void Cast(SpellInfo spell, Character? caster, Rng rng, int monsterGroup, Character? target, GameState gs)
+  public void Cast(SpellInfo spell, Character caster, Rng rng, int monsterGroup, Character? target, GameState gs)
   {
     switch (spell.Code)
     {
@@ -53,44 +53,64 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         Arfi(caster, monsterGroup, target, spell.Cost, rng);
         break;      
       case "AIAR":
-        if (caster is not null)
-        {
-          caster.MP -= spell.Cost;
-          if (!caster.Buffs.Any(b => b.Buff == Buff.AirArmour))
-            caster.Buffs.Add(new TempBuff(Buff.AirArmour, ulong.MaxValue, true));
-        }
+        caster.MP -= spell.Cost;
+        if (!caster.Buffs.Any(b => b.Buff == Buff.AirArmour))
+          caster.Buffs.Add(new TempBuff(Buff.AirArmour, ulong.MaxValue, true));
+        break;
+      case "MAFL":
+        Mafl(caster, gs, spell.Cost);
         break;
       case "SCSI":
-        if (caster is not null)
-        {
-          caster.MP -= spell.Cost;
-          string s = "You are ";
-          if (gs.CurrLevel == 0)
-            s += $"in town at X {gs.X}, Y {gs.Y}. ";
-          else
-            s += $"on level {gs.CurrLevel} at X {gs.X}, Y {gs.Y}. ";
-          s += $"You face {gs.Facing}.";
-          gs.Say(s);
-        }
+        caster.MP -= spell.Cost;
+        string s = "You are ";
+        if (gs.CurrLevel == 0)
+          s += $"in town at X {gs.X}, Y {gs.Y}. ";
+        else
+          s += $"on level {gs.CurrLevel} at X {gs.X}, Y {gs.Y}. ";
+        s += $"You face {gs.Facing}.";
+        gs.Say(s);
         break;
       case "SOSH":
-        if (caster is not null)
-        {
-          caster.MP -= spell.Cost;
-          if (!caster.Buffs.Any(b => b.Buff == Buff.SorcShield))
-            caster.Buffs.Add(new TempBuff(Buff.SorcShield, ulong.MaxValue, true));
-        }
+        caster.MP -= spell.Cost;
+        if (!caster.Buffs.Any(b => b.Buff == Buff.SorcShield))
+          caster.Buffs.Add(new TempBuff(Buff.SorcShield, ulong.MaxValue, true));
+        break;
+      case "STLI":
+        Stli(caster, gs, spell.Cost);
         break;
       case "VOPL":
-        if (caster is not null && target is not null)
+        if (target is not null)
         {
           caster.MP -= spell.Cost;
-          target.Buffs.Add(new TempBuff(Buff.VorpalPlating, ulong.MaxValue, true));
+          if (!caster.Buffs.Any(b => b.Buff == Buff.VorpalPlating))
+            target.Buffs.Add(new TempBuff(Buff.VorpalPlating, ulong.MaxValue, true));
         }
         break;
       default:
         throw new Exception($"Unknown spell: {spell.Code}!");
     }
+  }
+
+  static void ClearLightSources(Party party)
+  {
+    party.Buffs = [.. party.Buffs.Where(b => b.Buff != Buff.MageFlame && b.Buff != Buff.SteelLight)];
+  }
+
+  public static void Mafl(Character caster, GameState gs, int cost)
+  {
+    // Casting a light spell replaces an existing light
+    ClearLightSources(gs.Party);
+
+    caster.MP -= cost;
+    gs.Party.Buffs.Add(new TempBuff(Buff.MageFlame, gs.Turn + 2000, false));
+  }
+
+  public static void Stli(Character caster, GameState gs, int cost)
+  {
+    ClearLightSources(gs.Party);
+
+    caster.MP -= cost;
+    gs.Party.Buffs.Add(new TempBuff(Buff.SteelLight, gs.Turn + 1000, false));
   }
 
   public void Arfi(Character? caster, int monsterGroup, Character? target, int cost, Rng rng)

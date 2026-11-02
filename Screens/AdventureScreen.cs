@@ -114,6 +114,8 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     {
       app.Screens.Push(new EncounterScreen(app));
     }
+
+    GS.Party.Buffs = [.. GS.Party.Buffs.Where(b => b.ExpiresOn > GS.Turn)];
   }
 
   public void SpellChosen(SpellInfo spell)
@@ -121,7 +123,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     SpellResolver sr = new([], new Battle(app.GameState, app.Rng, []));
     if (spell.Target == SpellTarget.None && _caster is not null)
     {
-      app.GameState.Say($"{_caster.Name} casts {spell.Code}.");
+      app.GameState.Say($"{_caster.Name} casts {spell.Name}.");
       if (_caster.MP < spell.Cost) 
       {
         app.GameState.Say($"But they have insufficient Magic Points!");
@@ -167,7 +169,6 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
   public void Draw(GameUI ui)
   {
     ui.DrawDungeonView(GS);
-    ui.DrawStatusIcons(flame: true);
     ui.DrawTextPanel(GS.Messages);
     ui.DrawRoster(GS.Party);
   }

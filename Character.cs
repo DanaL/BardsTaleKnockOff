@@ -391,13 +391,15 @@ class Party
   public bool IsFull => Count == MAX_PARTY_SIZE;
   public bool Contains(Character c) => Members.Contains(c);
 
-  // Add to the first empty slot. False if the party is full.
+  public List<TempBuff> Buffs = [];
+
   public bool Add(Character c)
   {
     int slot = Array.IndexOf(Members, null);
     if (slot < 0)
       return false;
     Members[slot] = c;
+    
     return true;
   }
 
@@ -425,8 +427,6 @@ class Party
     c.Gold = total;
   }
 
-  // Remove the member in a slot (0-based) and close the gap, so members
-  // always fill slots 1, 2, 3... with no holes.
   public void RemoveAt(int slot)
   {
     for (int i = slot; i < MAX_PARTY_SIZE - 1; i++)
@@ -434,8 +434,6 @@ class Party
     Members[MAX_PARTY_SIZE - 1] = null;
   }
 
-  // Shuffle incapacitated members to the back, keeping everyone's relative
-  // order otherwise. Empty slots stay at the end.
   public void MoveIncapacitatedToBack()
   {
     List<Character> active = [.. Members.OfType<Character>().Where(c => !c.Incapacitated)];

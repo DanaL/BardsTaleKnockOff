@@ -246,6 +246,11 @@ unsafe class GameUI
       DrawRosterLine($"{i + 1})", party?.Members[i], left, y);
       y += TextRenderer.BaseLineHeight;
     }
+
+    if (party is not null && party.Buffs.Any(b => b.Buff == Buff.MageFlame || b.Buff == Buff.SteelLight))
+    {
+      DrawStatusIcons(flame: true);
+    }
   }
 
   void DrawRosterLine(string slot, Character? c, int left, int y)

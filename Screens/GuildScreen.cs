@@ -13,7 +13,7 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-class GuildScreen(App app) : IScreen
+class GuildScreen : IScreen
 {
   enum Mode { Menu, ChoosingToAdd, ChoosingToRemove }
 
@@ -24,14 +24,21 @@ class GuildScreen(App app) : IScreen
   // party) in alphabetical order, which one is selected, and which is the
   // first of the rows currently scrolled into view.
   const int VisibleRows = 10;
+  private readonly App _app;
   List<Character> _choices = [];
   int _cursor;
   int _scrollTop;
 
-  Party Party => app.GameState!.Party;
+  public GuildScreen(App app)
+  {
+    _app = app;
+    _app.GameState.Party.Buffs.Clear();
+  }
+
+  Party Party => _app.GameState.Party;
 
   List<Character> AddableCharacters() =>
-    [.. app.Roster
+    [.. _app.Roster
       .Where(c => !Party.Contains(c))
       .OrderBy(c => c.Name, StringComparer.CurrentCultureIgnoreCase)];
 
@@ -57,17 +64,17 @@ class GuildScreen(App app) : IScreen
     switch (key.key)
     {
       case SDL_Keycode.SDLK_Q:
-        app.Screens.Replace(new MainMenuScreen(app));
+        _app.Screens.Replace(new MainMenuScreen(_app));
         break;
       case SDL_Keycode.SDLK_C:
-        app.Screens.Push(new CreateCharacterScreen(app));
+        _app.Screens.Push(new CreateCharacterScreen(_app));
         break;
       case SDL_Keycode.SDLK_A:
         if (Party.IsFull)
           _status = "Your party is full.";
-        else if (app.Roster.Count == 0)
+        else if (_app.Roster.Count == 0)
           _status = "You have not created any characters yet!";
-        else if (!app.Roster.Any(c => !Party.Contains(c)))
+        else if (!_app.Roster.Any(c => !Party.Contains(c)))
           _status = "Everyone on file is already in the party.";
         else
         {
@@ -90,11 +97,11 @@ class GuildScreen(App app) : IScreen
         }
         else
         {
-          app.GameState!.X = 2;
-          app.GameState.Y = 11;
-          app.GameState.Facing = Dir.East;
-          app.GameState.Say("You leave the Guild and step out into the town.");
-          app.Screens.Replace(new AdventureScreen(app));
+          _app.GameState!.X = 2;
+          _app.GameState.Y = 11;
+          _app.GameState.Facing = Dir.East;
+          _app.GameState.Say("You leave the Guild and step out into the town.");
+          _app.Screens.Replace(new AdventureScreen(_app));
         }
         break;
       case SDL_Keycode.SDLK_1:
@@ -104,8 +111,8 @@ class GuildScreen(App app) : IScreen
       case SDL_Keycode.SDLK_5:
       case SDL_Keycode.SDLK_6:
         int slot = (int) (key.key - SDL_Keycode.SDLK_1);
-        if (slot <= app.Roster.Count)
-          app.Screens.Push(new CharacterScreen(app, slot));
+        if (slot <= _app.Roster.Count)
+          _app.Screens.Push(new CharacterScreen(_app, slot));
         break;
     }
   }
