@@ -38,6 +38,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
         break;
       case SDL_Keycode.SDLK_RETURN:
       case SDL_Keycode.SDLK_KP_ENTER:
+      case SDL_Keycode.SDLK_SPACE:
         ToggleGear();
         break;
       case SDL_Keycode.SDLK_D:
@@ -202,7 +203,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
 
       while (lines.Count < 18)
         lines.Add("");
-      lines.Add("-enter- to equip/unequip item");
+      lines.Add("-enter or space- to toggle item");
       lines.Add("T) trade");
       lines.Add("U) use");
       lines.Add("D) discard");
