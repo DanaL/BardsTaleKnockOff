@@ -56,6 +56,9 @@ class GuildScreen(App app) : IScreen
     _status = "";
     switch (key.key)
     {
+      case SDL_Keycode.SDLK_Q:
+        app.Screens.Replace(new MainMenuScreen(app));
+        break;
       case SDL_Keycode.SDLK_C:
         app.Screens.Push(new CreateCharacterScreen(app));
         break;
@@ -174,7 +177,7 @@ class GuildScreen(App app) : IScreen
     {
       Mode.ChoosingToAdd => ["Add whom to the party?", "Up/Down to choose, Enter to add, Esc when done.", ""],
       Mode.ChoosingToRemove => ["Remove whom from the party?"],
-      _ => ["C) Create a character", "A) Add to party", "R) Remove from party", "E) Enter town"]
+      _ => ["C) Create a character", "A) Add to party", "R) Remove from party", "E) Enter town", "", "Q) Return to main menu"]
     });
 
     if (_mode == Mode.ChoosingToAdd)

@@ -63,12 +63,12 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case SDL_Scancode.SDL_SCANCODE_C:
         app.Screens.Push(new ChoosePartyMemberScreen(app, this, "Who will cast a spell"));
         break;
-      case SDL_Scancode.SDL_SCANCODE_ESCAPE:
-        app.Screens.Push(new ConfirmScreen(app, "Abandon this adventure and return to the main menu?", () =>
-        {
-          app.Screens.Replace(new MainMenuScreen(app));
-        }));
-        break;
+      // case SDL_Scancode.SDL_SCANCODE_ESCAPE:
+      //   app.Screens.Push(new ConfirmScreen(app, "Abandon this adventure and return to the main menu?", () =>
+      //   {
+      //     app.Screens.Replace(new MainMenuScreen(app));
+      //   }));
+      //   break;
     }
   }
 
