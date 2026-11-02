@@ -9,6 +9,8 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.ComponentModel;
+
 namespace BardsTaleKnockOff;
 
 // Bard's Tale didn't really have unique items and such so this probably 
@@ -30,6 +32,7 @@ class Item
   public int NumDamageDice { get; init; } = 0;
   public int DamageDie { get; init; } = 0;
   public int DamageBonus { get; init; } = 0;
+  public bool Useable { get; init; } = false;
 }
 
 class ItemCatalog
@@ -64,7 +67,7 @@ class ItemCatalog
 
   public static Item Item(int num) => num switch
   {
-    TORCH => new() {  Id = TORCH, Name = "Torch", Type = ItemType.Misc, Value = 5, UseableBy = ALL },
+    TORCH => new() {  Id = TORCH, Name = "Torch", Type = ItemType.Misc, Value = 5, UseableBy = ALL, Useable = true },
     BROADSWORD => new() { Id = BROADSWORD, Name = "Broadsword", Type = ItemType.Weapon, Value = 80, DamageDie = 4, NumDamageDice = 2, UseableBy = FIGHTER | Role.Hunter },
     SHORTSWORD => new() { Id = SHORTSWORD, Name = "Shortsword", Type = ItemType.Weapon, Value = 30, DamageDie = 6, NumDamageDice = 1, UseableBy = Role.Warrior | Role.Paladin | Role.Archer | Role.Hunter | Role.Rogue | Role.Trickster },
     DAGGER => new() { Id = DAGGER, Name = "Dagger", Type = ItemType.Weapon, Value = 20, DamageDie = 4, NumDamageDice = 1, UseableBy = ALL },
@@ -83,4 +86,17 @@ class ItemCatalog
     MACE => new() { Id = MACE, Name = "Mace", Type = ItemType.Weapon, Value = 60, DamageDie = 8, NumDamageDice = 1, UseableBy = NONCASTER },
     _ => throw new Exception($"Item {num} is not defined!")
   };
+  
+  public static bool Use(Item item, GameState gs)
+  {
+    bool consumed = false;
+
+    if (item.Id == TORCH)
+    {
+      SpellResolver.Mafl(null, gs, 0);
+      consumed = true;
+    }
+
+    return consumed;    
+  }
 }

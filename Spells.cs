@@ -96,12 +96,12 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     party.Buffs = [.. party.Buffs.Where(b => b.Buff != Buff.MageFlame && b.Buff != Buff.SteelLight)];
   }
 
-  public static void Mafl(Character caster, GameState gs, int cost)
+  public static void Mafl(Character? caster, GameState gs, int cost)
   {
+    caster?.MP -= cost;
+
     // Casting a light spell replaces an existing light
     ClearLightSources(gs.Party);
-
-    caster.MP -= cost;
     gs.Party.Buffs.Add(new TempBuff(Buff.MageFlame, gs.Turn + 2000, false));
   }
 

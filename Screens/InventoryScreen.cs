@@ -45,9 +45,35 @@ class InventoryScreen(App app, Character character) : IScreen
           DiscardItem(slot, item);
         }));
         break;
+      case SDL_Keycode.SDLK_U:
+        UseItem();
+        break;
       case SDL_Keycode.SDLK_ESCAPE:
         app.Screens.Pop();
         break;
+    }
+  }
+
+  void UseItem()
+  {
+    var (_, item) = _items[_cursor];
+
+    if (!item.Useable)
+    {
+      app.Screens.Push(new PopupScreen(app, "You know no use for that item."));
+      return;
+    }
+
+    // Eventually I'm going to want to (nicely) prevent the user from using a
+    // combat-specific item outside of combat
+    bool consumed = ItemCatalog.Use(item, app.GameState);
+    if (consumed)
+    {
+      character.Inventory[_cursor] = null;
+      GetInv();
+      RecalcInventory();
+      if (_cursor >= _items.Count)
+      _cursor = _items.Count - 1;
     }
   }
 
@@ -59,11 +85,11 @@ class InventoryScreen(App app, Character character) : IScreen
     }
     else
     {
+      app.Screens.Push(new PopupScreen(app, $"You discard the {item.Name}."));
+
       character.Inventory[_cursor] = null;
       GetInv();
       RecalcInventory();
-      app.Screens.Push(new PopupScreen(app, $"You discard the {item.Name}."));
-
       if (_cursor >= _items.Count)
         _cursor = _items.Count - 1;
     }
