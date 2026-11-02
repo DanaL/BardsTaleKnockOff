@@ -112,7 +112,7 @@ class HealingScreen(App app, Character c, int slot) : IScreen
       lines.AddRange($"I'm afraid the resurrection has failed. {c.Name} is permanently dead, and beyond our help.", "", "- space to continue -", "");
     }
 
-    ui.DrawPicture("Temple");
+    ui.DrawNoBackground("Temple");
     ui.DrawTextPanel(lines);
     ui.DrawRoster(app.GameState.Party);
   }
@@ -204,7 +204,7 @@ class TempleScreen(App app) : IScreen
       lines.AddRange("Greetings Seekers, and welcome to Temple of St. Bunten.", "", "Which of you has need for healing?", "", "E) Exit");
     }
     
-    ui.DrawPicture("Temple");
+    ui.DrawNoBackground("Temple");
     ui.DrawTextPanel(lines);
     ui.DrawRoster(app.GameState.Party);
   }

@@ -53,7 +53,7 @@ class PickRoleScreen(App app, string name, Lineage lineage) : IScreen
     lines.Add("4) Magician");
     lines.AddRange("", "Esc to cancel.");
    
-    ui.DrawPicture("Adventurers' Guild");
+    ui.DrawNoBackground("Adventurers' Guild");
     ui.DrawTextPanel(lines);
     ui.DrawRoster(app.GameState?.Party);
   }

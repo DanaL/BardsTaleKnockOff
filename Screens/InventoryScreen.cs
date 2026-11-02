@@ -199,8 +199,8 @@ class InventoryScreen(App app, Character character) : IScreen
     }
 
 
-    ui.DrawPicture("");
+    ui.DrawNoBackground("");
     ui.DrawTextPanel(lines, highlight);
-    ui.DrawRoster(app.GameState!.Party);
+    ui.DrawRoster(app.GameState.Party);
   }
 }

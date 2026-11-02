@@ -101,7 +101,7 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
       highlight = -1;  
     }
 
-    ui.DrawPicture("Equipment Shop");
+    ui.DrawNoBackground("Equipment Shop");
     ui.DrawTextPanel(lines, highlight);
     ui.DrawRoster(app.GameState!.Party);
   }
@@ -170,7 +170,7 @@ class ShopScreen : IScreen
   {
     List<string> lines = [ "Welcome to Sam's Supplies. We're here for all your adventuring needs!", "", "Who will shop?", "", "E) Exit" ];
     
-    ui.DrawPicture("Equipment Shop");
+    ui.DrawNoBackground("Equipment Shop");
     ui.DrawTextPanel(lines);
     ui.DrawRoster(_app.GameState!.Party);
   }

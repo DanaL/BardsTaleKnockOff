@@ -84,7 +84,7 @@ class LoadCampaignScreen(App app) : IScreen
     }
 
     ui.DrawTextPanel(lines, highlight);
-    ui.DrawPicture("");
+    ui.DrawNoBackground("");
     ui.DrawRoster();
   }
 }

@@ -255,7 +255,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       options.Add(("melee", meleeTargets[rng.Next(meleeTargets.Count)]));
     }
     
-    options.AddRange(ExtraOptions(m.Script, targets. m));
+    options.AddRange(ExtraOptions(m.Script, targets, m));
     
     if (options.Count == 0)
       return;

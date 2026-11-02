@@ -75,7 +75,7 @@ class CreateCampaignScreen(App app) : IScreen
     if (_status.Length > 0)
       lines.AddRange(["", _status]);
 
-    ui.DrawPicture("");
+    ui.DrawNoBackground("");
     ui.DrawTextPanel(lines);
     ui.DrawRoster();
   }  

@@ -17,6 +17,7 @@ class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt) : IS
 {
   public string Image { get; set; } = "";
   public string Caption { get; set; } = "";
+  public bool DungeonView { get; set; } = true;
 
   public void OnKey(SDL_KeyboardEvent key)
   {
@@ -40,8 +41,10 @@ class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt) : IS
   {
     if (Image != "")
       ui.DrawImage(Image, Caption, null);
-    else
+    else if (DungeonView)
       ui.DrawDungeonView(app.GameState);
+    else
+      ui.DrawNoBackground("");
     ui.DrawTextPanel([$"{prompt}: {1}-{app.GameState.Party.Count}"]);
     ui.DrawRoster(app.GameState.Party);
   }

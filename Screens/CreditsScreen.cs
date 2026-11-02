@@ -20,7 +20,7 @@ class CreditsScreen(App app) : IScreen
 
   public void Draw(GameUI ui)
   {
-    ui.DrawPicture("Credits");
+    ui.DrawNoBackground("Credits");
     // TODO: check the art credit against the licence file in the art pack.
     ui.DrawTextPanel([
       "Programming: Dana",

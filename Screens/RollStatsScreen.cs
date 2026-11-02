@@ -144,7 +144,7 @@ class RollStatsScreen : IScreen
     lines.AddRange("", "(r) reroll or -enter- to accept");
     lines.AddRange("", "Esc to cancel.");
 
-    ui.DrawPicture("Adventurers' Guild");
+    ui.DrawNoBackground("Adventurers' Guild");
     ui.DrawTextPanel(lines);
     ui.DrawRoster(_app.GameState?.Party);
   }

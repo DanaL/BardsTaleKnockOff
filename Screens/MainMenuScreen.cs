@@ -40,7 +40,7 @@ class MainMenuScreen(App app) : IScreen
 
   public void Draw(GameUI ui)
   {
-    ui.DrawPicture("Bard's Tale Knock-Off");
+    ui.DrawNoBackground("Bard's Tale Knock-Off");
     ui.DrawTextPanel([
       "Welcome to Dana's Bard's Tale Knockoff!",
       "",

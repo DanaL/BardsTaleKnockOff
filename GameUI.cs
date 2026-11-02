@@ -130,7 +130,7 @@ unsafe class GameUI
   // Something other than the map in the picture area (the Guild, a shop, a
   // title screen...). Until there's art for these, it's a dark panel with a
   // caption in the middle.
-  public void DrawPicture(string caption)
+  public void DrawNoBackground(string caption)
   {
     Frame(ViewRect);
     FillRect(PictureBackground, ViewRect);

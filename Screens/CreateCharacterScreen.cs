@@ -85,7 +85,7 @@ class CreateCharacterScreen(App app) : IScreen
     if (_status.Length > 0)
       lines.AddRange(["", _status]);
 
-    ui.DrawPicture("Adventurers' Guild");
+    ui.DrawNoBackground("Adventurers' Guild");
     ui.DrawTextPanel(lines);
     ui.DrawRoster(app.GameState?.Party);
   }
