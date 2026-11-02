@@ -234,13 +234,9 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     Messages.Enqueue($"{s.DefArticle().Capitalize()} advance!");
   }
 
-  // Only monsters in the first 2 ranks can engage in melee
-  // Not sure what rate they should do their special attacks at yet
   void MonsterAction(Monster m, int group)
   {
-    // Need to check available actions and available targets
-
-    // also have to take into account the Special slot eventually
+    // Have to take into account the Special slot eventually
     List<int> targets = [];    
     for (int j = 0; j < gs.Party.Count; j++)
     {
@@ -259,11 +255,8 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       options.Add(("melee", meleeTargets[rng.Next(meleeTargets.Count)]));
     }
     
-    if (m.Special == "ARFI_1")
-    {
-      options.Add(("ARFI_1", targets[rng.Next(targets.Count)]));
-    }
-
+    options.AddRange(ExtraOptions(m.Script, targets));
+    
     if (options.Count == 0)
       return;
 
@@ -277,15 +270,60 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         MonsterMeleeAttack(m, target);
         break;
       case "ARFI_1":
-        MonsterArcFire(m, target, 1);
+        MonsterCastArcFire(m, target, 1);
         break;
+      case "FRFO":
+        MonsterCaseFreezeFoes(m);
+        break;
+    }
+  }
+
+  List<(string, int)> ExtraOptions(MonsterScript script, List<int> targets)
+  {
+    List<(string, int)> options;
+    switch (script)
+    {
+      case MonsterScript.Conjuror0:
+        options = [ ("ARFI_1", targets[rng.Next(targets.Count)]) ];
+        if (rng.Next(3) >= 0)
+          options.Add(("FRFO", 0));
+        break;
+      default:
+        options = [];
+        break;
+    }
+
+    return options;
+  }
+
+  void MonsterCaseFreezeFoes(Monster m)
+  {
+    Messages.Enqueue($"{m.Name.IndefArticle().Capitalize() } casts Freeze Foes the party!");
+
+    foreach (var c in gs.Party.Members.OfType<Character>())
+    {
+      if (c.Incapacitated)
+        continue;
+      
+      if (c.Buffs.Any(b => b.Buff == Buff.FreezeFoe))
+        continue;
+
+      if (c.RollSavingThrow(SavingThrow.Spell, rng))
+      {
+        Messages.Enqueue($"{c.Name} resists!");
+      }
+      else
+      {
+        Messages.Enqueue($"{c.Name} becomes enervated!");
+        c.Buffs.Add(new TempBuff(Buff.FreezeFoe, ulong.MaxValue, true));
+      }
     }
   }
 
   // It's a little redundant to duplicate a bunch of the spell cast, but
   // monsters don't really have that many abilities and this keeps the
   // methods pretty simple
-  void MonsterArcFire(Monster m, Character target, int level)
+  void MonsterCastArcFire(Monster m, Character target, int level)
   {
     int dmg = rng.Next(1, 5) * level;
     
@@ -303,9 +341,15 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     string n = m.Name.ToLower().DefArticle().Capitalize();
     int roll = rng.Next(1, 21);
     int targetAC = m.THAC0 - target.AC;
-    if (target.Buffs.Any(b => b.Buff == Buff.Defending))
-      targetAC += 5; // Not sure what BT1 did, but -5 is roughly equip to Disadvantage in 5e
-                      // and what you get for taking the Dodge action
+
+    foreach (var buff in target.Buffs)
+    {
+      if (buff.Buff == Buff.Defending) // Not sure what BT1 did, but -5 is roughly equip to Disadvantage in 5e
+        targetAC += 5;                 // and what you get for taking the Dodge action
+      else if (buff.Buff == Buff.FreezeFoe)
+        targetAC -= 2; // Guess at what BT1 did 
+    }
+
     if (roll > targetAC)
     {
       int dmg = rng.Next(m.DmgLow, m.DmgHigh + 1);
@@ -359,7 +403,6 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
       if (hiding)
         roll += 5;
-      // Eventually there will be other buffs?
 
       int targetAC = c.THAC0 - target.AC;
       if (roll > targetAC)

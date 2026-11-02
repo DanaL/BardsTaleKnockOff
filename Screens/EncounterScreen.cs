@@ -423,7 +423,7 @@ class EncounterScreen : IScreen
       monsterOptions.AddRange((MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4));
     else if (_app.GameState.CurrTile.Feature == Feature.House)
       monsterOptions.Add((MonsterCatalog.SPIDER, 4));
-    
+
     List<Monster> monsterGroup = [];
     (int monsterId, int count) = monsterOptions[app.Rng.Next(monsterOptions.Count)];
     _groups.Add(GenGroup(monsterId, count, app.Rng));
