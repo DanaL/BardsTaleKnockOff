@@ -113,22 +113,14 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     gs.Party.Buffs.Add(new TempBuff(Buff.SteelLight, gs.Turn + 1000, false));
   }
 
-  public void Arfi(Character? caster, int monsterGroup, Character? target, int cost, Rng rng)
+  public void Arfi(Character caster, int monsterGroup, Character? target, int cost, Rng rng)
   {
-    if (caster is not null)
+    caster.MP -= cost;
+    if (foes[monsterGroup].Count > 0)
     {
-      caster.MP -= cost;
-
-      if (foes[monsterGroup].Count > 0)
-      {
-        int targetNum = rng.Next(foes[monsterGroup].Count);
-        int dmg = rng.Next(1, 5) * caster.Level;
-        battle.DamageMonster(monsterGroup, targetNum, dmg);
-      }
-    }
-    else
-    {
-      // I'll indicate a monster casting a spell with a null caster
-    }
+      int targetNum = rng.Next(foes[monsterGroup].Count);
+      int dmg = rng.Next(1, 5) * caster.Level;
+      battle.DamageMonster(monsterGroup, targetNum, dmg);
+    }    
   }
 }
