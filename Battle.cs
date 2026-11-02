@@ -255,7 +255,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       options.Add(("melee", meleeTargets[rng.Next(meleeTargets.Count)]));
     }
     
-    options.AddRange(ExtraOptions(m.Script, targets));
+    options.AddRange(ExtraOptions(m.Script, targets. m));
     
     if (options.Count == 0)
       return;
@@ -275,10 +275,23 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       case "FRFO":
         MonsterCaseFreezeFoes(m);
         break;
+      case "WIST":
+        MonsterCastWitherStrike(m, target);
+        break;
+      case "ZAP":
+        MonsterCastZap(m, target);
+        break;
+      case "INVI":
+        Messages.Enqueue($"{m.Name.DefArticle().Capitalize() } casts Invisibility!");
+        if (!m.Buffs.Any(b => b.Buff == Buff.Invisibility))
+        {
+          m.Buffs.Add(new TempBuff(Buff.Invisibility, ulong.MaxValue, true));
+        }
+        break;
     }
   }
 
-  List<(string, int)> ExtraOptions(MonsterScript script, List<int> targets)
+  List<(string, int)> ExtraOptions(MonsterScript script, List<int> targets, Monster monster)
   {
     List<(string, int)> options;
     switch (script)
@@ -287,6 +300,16 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         options = [ ("ARFI_1", targets[rng.Next(targets.Count)]) ];
         if (rng.Next(3) >= 0)
           options.Add(("FRFO", 0));
+        break;
+      case MonsterScript.Magician0:
+        // In og BT1, I don't remember Magicians casting WIST very often or 
+        // it being a big problem in the early game so I'll make it somewhat
+        // uncommon
+        options = [ ("ZAP", targets[rng.Next(targets.Count)]) ];
+        if (rng.Next(3) == 0 && !monster.Buffs.Any(b => b.Buff == Buff.Invisibility))
+          options.Add(("INVI", 0));
+        if (rng.Next(7) == 0)
+          options.Add(("WIST", targets[rng.Next(targets.Count)]));
         break;
       default:
         options = [];
@@ -320,14 +343,46 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     }
   }
 
-  // It's a little redundant to duplicate a bunch of the spell cast, but
-  // monsters don't really have that many abilities and this keeps the
-  // methods pretty simple
+  // It's a little redundant to duplicate a bunch of the spell cast code, but
+  // monsters don't really have that many abilities and this keeps the methods
+  // pretty simple
+
+  void MonsterCastWitherStrike(Monster m, Character target)
+  {
+    Messages.Enqueue($"{m.Name.IndefArticle().Capitalize() } casts Wither Strike on {target.Name}!");
+    if (target.Condition == "OLD")
+      return;
+    
+    if (target.RollSavingThrow(SavingThrow.Spell, rng))
+    {
+      Messages.Enqueue($"...but they resist!");
+    }
+    else
+    {
+      Messages.Enqueue($"{target.Name} is Withered!");
+      target.Condition = "OLD";
+    }    
+  }
+
+  
   void MonsterCastArcFire(Monster m, Character target, int level)
   {
     int dmg = rng.Next(1, 5) * level;
     
-    Messages.Enqueue($"{m.Name.IndefArticle().Capitalize() } casts Arc Fire on {target.Name} for {dmg} hp!");
+    Messages.Enqueue($"{m.Name.DefArticle().Capitalize() } casts Arc Fire on {target.Name} for {dmg} hp!");
+    target.HP -= dmg;
+    if (target.HP < 1)
+    {
+      Messages.Enqueue($"{target.Name} is killed!");
+      target.Condition = "DEAD";
+    }
+  }
+
+  void MonsterCastZap(Monster m, Character target)
+  {
+    int dmg = rng.Next(1, 5);
+    
+    Messages.Enqueue($"{m.Name.DefArticle().Capitalize() } zaps {target.Name} for {dmg} hp!");
     target.HP -= dmg;
     if (target.HP < 1)
     {
@@ -340,17 +395,22 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
   {
     string n = m.Name.ToLower().DefArticle().Capitalize();
     int roll = rng.Next(1, 21);
-    int targetAC = m.THAC0 - target.AC;
+    int toHitTarget = m.THAC0 - target.AC;
 
     foreach (var buff in target.Buffs)
     {
       if (buff.Buff == Buff.Defending) // Not sure what BT1 did, but -5 is roughly equip to Disadvantage in 5e
-        targetAC += 5;                 // and what you get for taking the Dodge action
+        toHitTarget += 5;                 // and what you get for taking the Dodge action
       else if (buff.Buff == Buff.FreezeFoe)
-        targetAC -= 2; // Guess at what BT1 did 
+        toHitTarget -= 2; // Guess at what BT1 did
+      else if (buff.Buff == Buff.Invisibility)
+        toHitTarget += 5;
     }
 
-    if (roll > targetAC)
+    if (target.Condition == "OLD")
+      toHitTarget -= 5;
+
+    if (roll >= toHitTarget)
     {
       int dmg = rng.Next(m.DmgLow, m.DmgHigh + 1);
       Messages.Enqueue($"{n} {m.Verb} {target.Name} and hits for {dmg} hp!");
@@ -404,8 +464,19 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       if (hiding)
         roll += 5;
 
-      int targetAC = c.THAC0 - target.AC;
-      if (roll > targetAC)
+      if (c.Condition == "OLD")
+         roll -= 10;
+
+      int toHitTarget = c.THAC0 - target.AC;
+      foreach (var buff in target.Buffs)
+      {
+        if (buff.Buff == Buff.FreezeFoe)
+          toHitTarget -= 2; // Guess at what BT1 did
+        else if (buff.Buff == Buff.Invisibility)
+          toHitTarget += 5;
+      }
+
+      if (roll >= toHitTarget)
       {
         ++hits;
         dmg += strMod;
@@ -423,6 +494,9 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         }
       }
     }
+
+    if (c.Condition == "OLD")
+      dmg /= 4;
 
     if (hiding)
       s = $"{c.Name} leaps from the shadows";
@@ -462,7 +536,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     }
 
     if (dmg > 0)
-      Foes[group][targetNum] = m with { HP = m.HP - dmg };
+      m.HP -= dmg;
 
     return false;
   }
