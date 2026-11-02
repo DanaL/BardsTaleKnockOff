@@ -205,6 +205,16 @@ unsafe class ViewRenderer
     SDL_SetRenderClipRect(_renderer, null);
   }
 
+  // A small picture from assets/ (e.g. a status icon), drawn at (x, y) at the
+  // given size. Art drawn at more than one pixel per logical pixel keeps its
+  // detail, since SDL scales the whole screen up.
+  public void DrawIcon(string name, int x, int y, int size)
+  {
+    var tex = Sheet(name);
+    var dst = new SDL_FRect { x = x, y = y, w = size, h = size };
+    SDL_RenderTexture(_renderer, tex, null, &dst);
+  }
+
   public void Draw(GameState gs, int px, int py, Dir facing, int originX, int originY)
   {
     Dungeon map = gs.CurrMap;

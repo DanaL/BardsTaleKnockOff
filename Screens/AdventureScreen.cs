@@ -167,6 +167,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
   public void Draw(GameUI ui)
   {
     ui.DrawDungeonView(GS);
+    ui.DrawStatusIcons(flame: true);
     ui.DrawTextPanel(GS.Messages);
     ui.DrawRoster(GS.Party);
   }

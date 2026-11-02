@@ -40,6 +40,12 @@ unsafe class GameUI
   // (compass, active spells, ...).
   const int IconGap = 24;
 
+  // Status icons are 32x32 art drawn at half size, like the double-resolution
+  // view art, so five of them fit down the gap beside the 3D view.
+  const int IconSize = 16;
+  const int IconCount = 5;
+  const int IconSpacing = ViewRenderer.ViewH / IconCount;
+
   static readonly SDL_Rect ViewRect = new() { x = Margin, y = Margin, w = ViewRenderer.ViewW, h = ViewRenderer.ViewH };
   static readonly SDL_Rect InfoRect = new()
   {
@@ -103,6 +109,22 @@ unsafe class GameUI
   {
     Frame(ViewRect);
     _view.Draw(state, state.X, state.Y, state.Facing, ViewRect.x, ViewRect.y);
+  }
+
+  // The column of icons between the picture and the text panel showing the
+  // party's active spells/effects, top to bottom. Slot 0 is the light
+  // (flame) icon.
+  public void DrawStatusIcons(bool flame)
+  {
+    if (flame)
+      Icon(0, "flame1.png");
+
+    void Icon(int slot, string filename)
+    {
+      int x = ViewRect.x + ViewRect.w + (IconGap - IconSize) / 2;
+      int y = ViewRect.y + slot * IconSpacing + (IconSpacing - IconSize) / 2;
+      _view.DrawIcon(filename, x, y, IconSize);
+    }
   }
 
   // Something other than the map in the picture area (the Guild, a shop, a
