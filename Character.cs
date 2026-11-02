@@ -11,6 +11,8 @@
 
 namespace BardsTaleKnockOff;
 
+enum SavingThrow { Poison, Petrification, BreathWeapon, Spell }
+
 enum Lineage { Human, Orc, Dwarf, Gnome, Elf, Goblin }
 
 [Flags]
@@ -19,6 +21,206 @@ enum Role { Warrior = 1 << 0, Rogue = 1 << 1, Hunter = 1 << 2, Conjurer = 1 << 3
             Paladin = 1 << 9 }
 
 record struct InvSlot(int Id, bool Equipped);
+
+class SavingThrowTable
+{
+  public static int Rogue(SavingThrow save, int level)
+  {
+    switch (save)
+    {
+      case SavingThrow.Poison:
+        if (level < 5)
+          return 13;
+        else if (level < 9)
+          return 12;
+        else if (level < 13)
+          return 11;
+        else if (level < 17)
+          return 10;
+        else if (level < 20)
+          return 9;
+        else
+          return 8;
+      case SavingThrow.Petrification:
+        if (level < 5)
+          return 12;
+        else if (level < 9)
+          return 11;
+        else if (level < 13)
+          return 10;
+        else if (level < 17)
+          return 9;
+        else if (level < 20)
+          return 8;
+        else
+          return 7;        
+      case SavingThrow.BreathWeapon:
+        if (level < 5)
+          return 14;
+        else if (level < 9)
+          return 12;
+        else if (level < 13)
+          return 10;
+        else if (level < 17)
+          return 8;
+        else if (level < 20)
+          return 6;
+        else
+          return 4;
+      case SavingThrow.Spell:
+        if (level < 5)
+          return 15;
+        else if (level < 9)
+          return 13;
+        else if (level < 13)
+          return 11;
+        else if (level < 17)
+          return 9;
+        else if (level < 20)
+          return 7;
+        else
+          return 5;
+    }
+
+    throw new Exception("Hmm we shouldn't get here! Unknown Rogue save?");
+  }
+
+  public static int MagicUser(SavingThrow save, int level)
+  {
+    switch (save)
+    {
+      case SavingThrow.Poison:
+        if (level < 6)
+          return 14;
+        else if (level < 11)
+          return 13;
+        else if (level < 16)
+          return 11;
+        else if (level < 20)
+          return 10;
+        else
+          return 8;
+      case SavingThrow.Petrification:
+        if (level < 6)
+          return 13;
+        else if (level < 11)
+          return 11;
+        else if (level < 16)
+          return 9;
+        else if (level < 20)
+          return 7;
+        else
+          return 5;       
+      case SavingThrow.BreathWeapon:
+        if (level < 6)
+          return 15;
+        else if (level < 11)
+          return 13;
+        else if (level < 16)
+          return 11;
+        else if (level < 20)
+          return 9;
+        else
+          return 7;
+      case SavingThrow.Spell:
+        if (level < 6)
+          return 12;
+        else if (level < 11)
+          return 10;
+        else if (level < 16)
+          return 8;
+        else if (level < 20)
+          return 6;
+        else
+          return 4;
+    }
+
+    throw new Exception("Hmm we shouldn't get here! Unknown Rogue save?");
+  }
+
+  public static int Fighter(SavingThrow save, int level)
+  {
+    switch (save)
+    {
+      case SavingThrow.Poison:
+        if (level < 3)
+          return 14;
+        else if (level < 5)
+          return 13;
+        else if (level < 7)
+          return 11;
+        else if (level < 9)
+          return 10;
+        else if (level < 11)
+          return 8;
+        else if (level < 13)
+          return 7;
+        else if (level < 15)
+          return 5;
+        else if (level < 17)
+          return 4;
+        else
+          return 3;
+      case SavingThrow.Petrification:
+        if (level < 3)
+          return 15;
+        else if (level < 5)
+          return 14;
+        else if (level < 7)
+          return 12;
+        else if (level < 9)
+          return 11;
+        else if (level < 11)
+          return 9;
+        else if (level < 13)
+          return 8;
+        else if (level < 15)
+          return 6;
+        else if (level < 17)
+          return 5;
+        else
+          return 4;        
+      case SavingThrow.BreathWeapon:
+        if (level < 3)
+          return 17;
+        else if (level < 5)
+          return 16;
+        else if (level < 7)
+          return 13;
+        else if (level < 9)
+          return 12;
+        else if (level < 11)
+          return 9;
+        else if (level < 13)
+          return 8;
+        else if (level < 15)
+          return 6;
+        else
+          return 4;
+      case SavingThrow.Spell:
+        if (level < 3)
+          return 17;
+        else if (level < 5)
+          return 16;
+        else if (level < 7)
+          return 14;
+        else if (level < 9)
+          return 13;
+        else if (level < 11)
+          return 11;
+        else if (level < 13)
+          return 10;
+        else if (level < 15)
+          return 8;
+        else if (level < 17)
+          return 7;
+        else
+          return 6;
+    }
+
+    throw new Exception("Hmm we shouldn't get here! Unknown Fighter save?");
+  }
+}
 
 class Character
 {
@@ -154,6 +356,24 @@ class Character
       PermanentlyDead = true;
       return false;
     }
+  }
+
+  // I wasn't sure how saving throws worked in Bard's Tale so I'm copying the
+  // Saving Throws from 1e AD&D
+  public bool RollSavingThrow(SavingThrow save, Rng rng)
+  {
+    int threshold = Role switch
+    {
+      Role.Warrior or Role.Archer or Role.Paladin => SavingThrowTable.Fighter(save, Level),
+      Role.Rogue or Role.Trickster or Role.Hunter => SavingThrowTable.Rogue(save, Level),
+      _ => SavingThrowTable.MagicUser(save, Level),// The magic user classes
+    };
+
+    int roll = rng.Next(1, 21) + StatToMod(Luck);
+    if (Role == Role.Paladin)
+      roll += 2;
+
+    return roll > threshold;
   }
 }
 
