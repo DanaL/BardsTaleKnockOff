@@ -9,15 +9,17 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using Microsoft.VisualBasic;
 using SDL;
 
 namespace BardsTaleKnockOff;
 
-class InventoryScreen(App app, Character character) : IScreen
+class InventoryScreen(App app, Character character, int characterSlot = -1) : IScreen, IPartyPickScreen
 {
   string _status = "";
   int _cursor = 0;
   List<(InvSlot, Item)> _items = [];
+  int _tradeToSlot = -1;
 
   static readonly ItemType[] EquipOrder =
     [ItemType.Weapon, ItemType.Armour, ItemType.Shield, ItemType.Helmet, ItemType.Gloves, ItemType.Ring];
@@ -47,6 +49,17 @@ class InventoryScreen(App app, Character character) : IScreen
         break;
       case SDL_Keycode.SDLK_U:
         UseItem();
+        break;
+      case SDL_Keycode.SDLK_T:
+        var (tradeSlot, toTrade) = _items[_cursor];
+        if (tradeSlot.Equipped) 
+        {
+          app.Screens.Push(new PopupScreen(app, "You cannot trade something that is equipped."));
+        }
+        else
+        {
+          app.Screens.Push(new ChoosePartyMemberScreen(app, this, $"Trade {toTrade.Name} to whom", characterSlot) { DungeonView = false });
+        }
         break;
       case SDL_Keycode.SDLK_ESCAPE:
         app.Screens.Pop();
@@ -198,9 +211,32 @@ class InventoryScreen(App app, Character character) : IScreen
       highlight = _cursor;
     }
 
-
     ui.DrawNoBackground("");
     ui.DrawTextPanel(lines, highlight);
     ui.DrawRoster(app.GameState.Party);
+  }
+
+  public void CharacterChosen(int partySlot)
+  {
+    if (app.GameState.Party.Members[partySlot] is not Character tradeTo)
+      return;
+
+    var (_, item) = _items[_cursor];
+
+    character.Inventory[_cursor] = null;
+    GetInv();
+    RecalcInventory();
+    if (_cursor >= _items.Count)
+      _cursor = _items.Count - 1;
+
+    _tradeToSlot = -1;
+
+    tradeTo.AddItem(item.Id);
+    app.Screens.Push(new PopupScreen(app, $"{character.Name} gives {item.Name.DefArticle()} to {tradeTo.Name}."));
+  }
+
+  public void AbortSelection()
+  {
+    _tradeToSlot = -1;
   }
 }

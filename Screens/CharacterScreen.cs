@@ -39,13 +39,13 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
             app.Screens.Replace(new CharacterScreen(app, otherSlot));
           break;
         case SDL_Keycode.SDLK_I:
-          app.Screens.Push(new InventoryScreen(app, app.GameState?.Party.Members[slot]!));
+          app.Screens.Push(new InventoryScreen(app, app.GameState?.Party.Members[slot]!, slot));
           break;
         case SDL_Keycode.SDLK_P:
           app.GameState.Party.PoolGold(slot);
           break;
         case SDL_Keycode.SDLK_T:
-          app.Screens.Push(new ChoosePartyMemberScreen(app, this, "Trade gold to whom") { DungeonView = false });
+          app.Screens.Push(new ChoosePartyMemberScreen(app, this, "Trade gold to whom", slot) { DungeonView = false });
           break;
         case SDL_Keycode.SDLK_ESCAPE:
           app.Screens.Pop();
