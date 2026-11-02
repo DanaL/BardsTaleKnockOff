@@ -86,7 +86,7 @@ class RollStatsScreen : IScreen
     _hp += Character.StatToMod(_con);
 
     if (_role == Role.Conjurer || _role == Role.Magician)
-      _mp = 10 + Character.StatToMod(_lore); 
+      _mp = 15 + Character.StatToMod(_lore); 
   }
 
   public void OnKey(SDL_KeyboardEvent key)
