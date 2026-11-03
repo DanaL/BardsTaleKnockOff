@@ -9,6 +9,7 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.ComponentModel.Design;
 using SDL;
 
 namespace BardsTaleKnockOff;
@@ -112,12 +113,20 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
   }
 }
 
-class ShopScreen : IScreen
+class ShoppeScreen : IScreen
 {
   readonly App _app;
   List<Item> _inventory = [];
 
-  public ShopScreen(App app)
+  const int MAIN = 0;
+  const int MENU = 1;
+  
+  int _state = MAIN;
+
+  int _shopperSlot;
+  Character _shopper;
+
+  public ShoppeScreen(App app)
   {
     _app = app;
 
@@ -144,36 +153,73 @@ class ShopScreen : IScreen
 
   public void OnKey(SDL_KeyboardEvent key)
   {
-    switch (key.key)
+    if (_state == MAIN)
     {
-      case SDL_Keycode.SDLK_1:
-      case SDL_Keycode.SDLK_2:
-      case SDL_Keycode.SDLK_3:
-      case SDL_Keycode.SDLK_4:
-      case SDL_Keycode.SDLK_5:
-      case SDL_Keycode.SDLK_6:
-        int slot = (int) (key.key - SDL_Keycode.SDLK_0) - 1;
-        if (slot <= _app.GameState!.Party.Count)
-        {
-          Character? c = _app.GameState!.Party.Members[slot];
-          if (c is not null)
-            _app.Screens.Push(new PurchaseScreen(_app, c, _inventory));
-        }          
-        break;
-      case SDL_Keycode.SDLK_ESCAPE:
-      case SDL_Keycode.SDLK_E:
-        _app.GameState!.Facing = _app.GameState.Facing.Opposite();
-        var (dx, dy) = _app.GameState.Facing.Delta();
-        _app.GameState.X += dx;
-        _app.GameState.Y += dy;
-        _app.Screens.Pop();
-        break;
+      switch (key.key)
+      {
+        case SDL_Keycode.SDLK_1:
+        case SDL_Keycode.SDLK_2:
+        case SDL_Keycode.SDLK_3:
+        case SDL_Keycode.SDLK_4:
+        case SDL_Keycode.SDLK_5:
+        case SDL_Keycode.SDLK_6:
+          int slot = (int) (key.key - SDL_Keycode.SDLK_0) - 1;
+          if (slot <= _app.GameState!.Party.Count)
+          {            
+            if (_app.GameState!.Party.Members[slot] is Character c)
+            {
+              _shopper = c;
+              _shopperSlot = slot;
+              _state = MENU;
+            }
+          }          
+          break;
+        case SDL_Keycode.SDLK_ESCAPE:
+        case SDL_Keycode.SDLK_E:
+          ExitShop();
+          break;
+      }
     }
+    else if (_state == MENU)
+    {
+      switch (key.key)
+      {
+        case SDL_Keycode.SDLK_ESCAPE:
+          _state = MAIN;
+          break;
+        case SDL_Keycode.SDLK_B:
+          _app.Screens.Push(new PurchaseScreen(_app, _shopper, _inventory));
+          break;
+        case SDL_Keycode.SDLK_P:
+          _app.GameState.Party.PoolGold(_shopperSlot);
+          break;
+      }
+    }
+  }
+
+  void ExitShop()
+  {
+     _app.GameState!.Facing = _app.GameState.Facing.Opposite();
+    var (dx, dy) = _app.GameState.Facing.Delta();
+    _app.GameState.X += dx;
+    _app.GameState.Y += dy;
+    _app.Screens.Pop();
   }
 
   public void Draw(GameUI ui)
   {
-    List<string> lines = [ "Welcome to Sam's Supplies. We're here for all your adventuring needs!", "", "Who will shop?", "", "E) Exit" ];
+    List<string> lines = [ "Welcome to Sam's Supplies. We're here for all your adventuring needs!", "" ];
+
+    switch (_state)
+    {
+      case MAIN:
+        lines.AddRange( "Who is shopping?", "", "E) Exit");
+        break;
+      case MENU:
+        lines.AddRange($"{_shopper.Name} has {_shopper.Gold} gp.", "");
+        lines.AddRange("B) Buy gear", "S) Sell items", "P) Pool gold");
+        break;
+    }
     
     ui.DrawNoBackground("Equipment Shop");
     ui.DrawTextPanel(lines);

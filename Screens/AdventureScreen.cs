@@ -101,7 +101,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     }
     else if (tile.Feature == Feature.Shop)
     {
-      app.Screens.Push(new ShopScreen(app));
+      app.Screens.Push(new ShoppeScreen(app));
     }
     else if (tile.Feature == Feature.House)
     {
