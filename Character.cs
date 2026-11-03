@@ -407,6 +407,13 @@ class Character
     ++Level;
     MaxHP += newHP;
     HP += newHP;
+
+    if (MaxMP > 0)
+    {
+      int newMP = int.Max(1, rng.Next(1, 5) + StatToMod(Lore));
+      MaxMP += newMP;
+      MP += newMP;
+    }
   }
 }
 
