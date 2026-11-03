@@ -89,7 +89,7 @@ class HealingScreen(App app, Character c, int slot) : IScreen
       else if (c.HP < c.MaxHP)
       {
         lines.Add($"{c.Name} is indeed in need of healing! They can be made well for the small donation of {Invoice()} gold pieces.");
-        lines.AddRange("", $"{c.Name} has {c.Gold} gp.", "", $"H)eal {c.Name}");
+        lines.AddRange("", $"{c.Name} has {c.Gold} gp.", "", $"H) Heal {c.Name}");
       }
       else
       {
@@ -97,7 +97,7 @@ class HealingScreen(App app, Character c, int slot) : IScreen
         lines.AddRange($"{c.Name} has {c.Gold} gp.", "");
       }
 
-      lines.Add("P)ool gold");
+      lines.Add("P) Pool gold");
     }
     else if (_state == BROKE)
     {
