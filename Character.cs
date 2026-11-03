@@ -329,6 +329,18 @@ class Character
 
   public InvSlot?[] Inventory { get; init; } = new InvSlot?[INVENTORY_SLOTS];
 
+  public string ReceiveDmg(int dmg)
+  {
+    HP = int.Max(HP - dmg, 0);
+    if (HP < 1)
+    {
+      Condition = "DEAD";
+      return $"{Name} is killed!";
+    }
+
+    return "";
+  }
+
   public bool AddItem(int id)
   {
     int slot = Array.IndexOf(Inventory, null);

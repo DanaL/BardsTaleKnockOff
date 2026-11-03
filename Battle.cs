@@ -370,12 +370,9 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     int dmg = rng.Next(1, 5) * level;
     
     Messages.Enqueue($"{m.Name.DefArticle().Capitalize() } casts Arc Fire on {target.Name} for {dmg} hp!");
-    target.HP -= dmg;
-    if (target.HP < 1)
-    {
-      Messages.Enqueue($"{target.Name} is killed!");
-      target.Condition = "DEAD";
-    }
+    string s = target.ReceiveDmg(dmg);
+    if (s != "")
+      Messages.Enqueue(s);
   }
 
   void MonsterCastZap(Monster m, Character target)
@@ -383,12 +380,9 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     int dmg = rng.Next(1, 5);
     
     Messages.Enqueue($"{m.Name.DefArticle().Capitalize() } zaps {target.Name} for {dmg} hp!");
-    target.HP -= dmg;
-    if (target.HP < 1)
-    {
-      Messages.Enqueue($"{target.Name} is killed!");
-      target.Condition = "DEAD";
-    }
+    string s = target.ReceiveDmg(dmg);
+    if (s != "")
+      Messages.Enqueue(s);
   }
 
   void MonsterMeleeAttack(Monster m, Character target)
@@ -414,13 +408,9 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     {
       int dmg = rng.Next(m.DmgLow, m.DmgHigh + 1);
       Messages.Enqueue($"{n} {m.Verb} {target.Name} and hits for {dmg} hp!");
-      target.HP -= dmg;
-
-      if (target.HP < 1)
-      {
-        Messages.Enqueue($"{target.Name} is killed!");
-        target.Condition = "DEAD";
-      }
+      string s = target.ReceiveDmg(dmg);
+      if (s != "")
+        Messages.Enqueue(s);
     }
     else
     {
