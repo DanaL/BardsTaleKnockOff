@@ -19,11 +19,11 @@ class GuildScreen : IScreen
 
   Mode _mode = Mode.Menu;
   string _status = "";
-// 
+ 
   // While adding: the characters who could join (on file, not already in the
   // party) in alphabetical order, which one is selected, and which is the
   // first of the rows currently scrolled into view.
-  const int VisibleRows = 10;
+  const int VISIBLE_ROWS = 10;
   private readonly App _app;
   List<Character> _choices = [];
   int _cursor;
@@ -68,6 +68,9 @@ class GuildScreen : IScreen
         break;
       case SDL_Keycode.SDLK_C:
         _app.Screens.Push(new CreateCharacterScreen(_app));
+        break;
+      case SDL_Keycode.SDLK_D:
+        _app.Screens.Push(new DeleteCharacterScreen(_app));
         break;
       case SDL_Keycode.SDLK_A:
         if (Party.IsFull)
@@ -154,9 +157,9 @@ class GuildScreen : IScreen
     // Scroll just enough to keep the selected row in view.
     if (_cursor < _scrollTop)
       _scrollTop = _cursor;
-    else if (_cursor >= _scrollTop + VisibleRows)
-      _scrollTop = _cursor - VisibleRows + 1;
-    _scrollTop = Math.Clamp(_scrollTop, 0, Math.Max(0, _choices.Count - VisibleRows));
+    else if (_cursor >= _scrollTop + VISIBLE_ROWS)
+      _scrollTop = _cursor - VISIBLE_ROWS + 1;
+    _scrollTop = Math.Clamp(_scrollTop, 0, Math.Max(0, _choices.Count - VISIBLE_ROWS));
   }
 
   // Party members are numbered 1-6, as in the roster at the bottom.
@@ -177,20 +180,20 @@ class GuildScreen : IScreen
 
   public void Draw(GameUI ui)
   {
-    var lines = new List<string> { "Welcome to the Adventurers' Guild.", "" };
+    List<string> lines = [ "Welcome to the Adventurers' Guild.", "" ];
     int highlight = -1;
 
     lines.AddRange(_mode switch
     {
       Mode.ChoosingToAdd => ["Add whom to the party?", "Up/Down to choose, Enter to add, Esc when done.", ""],
       Mode.ChoosingToRemove => ["Remove whom from the party?"],
-      _ => ["C) Create a character", "A) Add to party", "R) Remove from party", "E) Enter town", "", "Q) Return to main menu"]
+      _ => ["C) Create a character", "A) Add to party", "R) Remove from party", "D) Delete character", "E) Enter town", "", "Q) Return to main menu"]
     });
 
     if (_mode == Mode.ChoosingToAdd)
     {
       lines.Add(_scrollTop > 0 ? "  (more above)" : "");
-      int end = Math.Min(_scrollTop + VisibleRows, _choices.Count);
+      int end = Math.Min(_scrollTop + VISIBLE_ROWS, _choices.Count);
       for (int i = _scrollTop; i < end; i++)
       {
         if (i == _cursor)
