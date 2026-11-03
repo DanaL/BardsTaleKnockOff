@@ -9,7 +9,6 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-using System.ComponentModel.Design;
 using SDL;
 
 namespace BardsTaleKnockOff;
@@ -56,8 +55,8 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
     else
     {
       character.Gold -= item.Value;
-      _status = $"{character.Name} purchases the {item.Name.ToLower()}.";
       character.AddItem(item.Id);
+      app.Screens.Push(new PopupScreen(app, $"{character.Name} purchases the {item.Name.ToLower()} for {item.Value} gp."));
     }
   }
 
@@ -75,7 +74,7 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
 
   public void Draw(GameUI ui)
   {
-    int highlight = -1;
+    int highlight;
     List<string> lines = [ $"{character.Name} has {character.Gold} gold pieces.", "" ];
     
     if (!character.InventoryFull)
@@ -107,7 +106,7 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
       highlight = -1;  
     }
 
-    ui.DrawNoBackground("Equipment Shop");
+    ui.DrawNoBackground("Ye Olde Equipment Shoppe");
     ui.DrawTextPanel(lines, highlight);
     ui.DrawRoster(app.GameState!.Party);
   }
@@ -232,7 +231,7 @@ class ShoppeScreen : IScreen, IInventorySelectionScreen
         break;
     }
     
-    ui.DrawNoBackground("Equipment Shop");
+    ui.DrawNoBackground("Ye Olde Equipment Shoppe");
     ui.DrawTextPanel(lines);
     ui.DrawRoster(_app.GameState!.Party);
   }
