@@ -48,6 +48,10 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
     {
       _status = $"{character.Name} cannot afford that!";
     }
+    else if (character.InventoryFull)
+    {
+      _status = "Their inventory is full!";
+    }
     else
     {
       character.Gold -= item.Value;
@@ -58,6 +62,7 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
 
   void MoveCursor(int delta)
   {
+    _status = "";
     _cursor = Math.Clamp(_cursor + delta, 0, inventory.Count - 1);
     // Scroll just enough to keep the selected row in view.
     if (_cursor < _scrollTop)
@@ -72,7 +77,7 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
     int highlight = -1;
     List<string> lines = [ $"{character.Name} has {character.Gold} gold pieces.", "" ];
     
-    if (character.Inventory.Any(i => i is null))
+    if (!character.InventoryFull)
     {
       highlight = _cursor + 2;
       bool anyCannotUse = false;

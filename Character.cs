@@ -341,6 +341,8 @@ class Character
     return "";
   }
 
+  public bool InventoryFull => !Inventory.Any(s => s is null);
+
   public bool AddItem(int id)
   {
     int slot = Array.IndexOf(Inventory, null);

@@ -18,8 +18,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
   string _status = "";
   int _cursor = 0;
   List<(InvSlot, Item)> _items = [];
-  int _tradeToSlot = -1;
-
+  
   static readonly ItemType[] EquipOrder =
     [ItemType.Weapon, ItemType.Armour, ItemType.Shield, ItemType.Helmet, ItemType.Gloves, ItemType.Ring];
 
@@ -203,9 +202,9 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
       while (lines.Count < 18)
         lines.Add("");
       lines.Add("-enter or space- to toggle item");
-      lines.Add("T) trade");
-      lines.Add("U) use");
-      lines.Add("D) discard");
+      lines.Add("T) Trade");
+      lines.Add("U) Use");
+      lines.Add("D) Discard");
 
 
       highlight = _cursor;
@@ -221,6 +220,12 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
     if (app.GameState.Party.Members[partySlot] is not Character tradeTo)
       return;
 
+    if (tradeTo.InventoryFull)
+    {
+      app.Screens.Push(new PopupScreen(app, "There's no room in their inventory!"));
+      return;
+    }
+
     var (_, item) = _items[_cursor];
 
     character.Inventory[_cursor] = null;
@@ -229,14 +234,9 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
     if (_cursor >= _items.Count)
       _cursor = _items.Count - 1;
 
-    _tradeToSlot = -1;
-
     tradeTo.AddItem(item.Id);
     app.Screens.Push(new PopupScreen(app, $"{character.Name} gives {item.Name.DefArticle()} to {tradeTo.Name}."));
   }
 
-  public void AbortSelection()
-  {
-    _tradeToSlot = -1;
-  }
+  public void AbortSelection() { }
 }
