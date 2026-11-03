@@ -452,7 +452,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         roll += weapon.AttackBonus;
 
       if (hiding)
-        roll += 5;
+        roll += 3;
 
       if (c.Condition == "OLD")
          roll -= 10;
