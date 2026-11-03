@@ -28,23 +28,27 @@ interface IScreen
   void Update(ulong elapsedMs) { }
 }
 
-// A screen for picking a spell; this is the method that receives the selection
+// These are interfaces for various UI controls. The class that receives the
+// result will implement the interfaces
+
+interface IInventorySelectionScreen
+{
+  void ItemSelected(InvSlot slot, Item item);
+  void AbortSelection();
+}
+
 interface ICastSpellScreen
 {
   void SpellChosen(SpellInfo spell);
   void AbortSelection();
 }
 
-// A screen for picking a group of monsters; this is the method that receives
-// the selection
 interface IMonsterPickScreen
 {
   void MonsterGroupChosen(int groupNum);
   void AbortSelection();
 }
 
-// A screen for picking a party member as a target; the method that receives
-// the choice
 interface IPartyPickScreen
 {
   void CharacterChosen(int partySlot);

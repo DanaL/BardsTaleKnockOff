@@ -181,10 +181,10 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
       lines.AddRange("", "", "", "");
     }
 
-    lines.AddRange("", "", "", "", "", "I) view inventory", "P) pool good");
+    lines.AddRange("", "", "", "", "", "I) View inventory", "P) Pool good");
 
     if (c.Gold > 0)
-      lines.Add("T) trade gold");
+      lines.Add("T) Trade gold");
 
     return lines;
   }

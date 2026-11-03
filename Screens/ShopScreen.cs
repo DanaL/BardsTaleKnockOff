@@ -113,7 +113,7 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
   }
 }
 
-class ShoppeScreen : IScreen
+class ShoppeScreen : IScreen, IInventorySelectionScreen
 {
   readonly App _app;
   List<Item> _inventory = [];
@@ -124,7 +124,7 @@ class ShoppeScreen : IScreen
   int _state = MAIN;
 
   int _shopperSlot;
-  Character _shopper;
+  Character? _shopper = null;
 
   public ShoppeScreen(App app)
   {
@@ -188,10 +188,18 @@ class ShoppeScreen : IScreen
           _state = MAIN;
           break;
         case SDL_Keycode.SDLK_B:
-          _app.Screens.Push(new PurchaseScreen(_app, _shopper, _inventory));
+          if (_shopper is not null)
+            _app.Screens.Push(new PurchaseScreen(_app, _shopper, _inventory));
           break;
         case SDL_Keycode.SDLK_P:
           _app.GameState.Party.PoolGold(_shopperSlot);
+          break;
+        case SDL_Keycode.SDLK_S:
+          if (_shopper is not null) 
+          {
+            InventorySelectionOptions opt = new(_app, _shopper, "Sell which item?", true, "sell");
+            _app.Screens.Push(new InventorySelectionScreen(opt, this));
+          }
           break;
       }
     }
@@ -216,8 +224,11 @@ class ShoppeScreen : IScreen
         lines.AddRange( "Who is shopping?", "", "E) Exit");
         break;
       case MENU:
-        lines.AddRange($"{_shopper.Name} has {_shopper.Gold} gp.", "");
-        lines.AddRange("B) Buy gear", "S) Sell items", "P) Pool gold");
+        if (_shopper is not null)
+        {
+          lines.AddRange($"{_shopper.Name} has {_shopper.Gold} gp.", "");
+          lines.AddRange("B) Buy gear", "S) Sell items", "P) Pool gold");  
+        }
         break;
     }
     
@@ -225,4 +236,21 @@ class ShoppeScreen : IScreen
     ui.DrawTextPanel(lines);
     ui.DrawRoster(_app.GameState!.Party);
   }
+
+  public void ItemSelected(InvSlot slot, Item item)
+  {
+    if (_shopper is null)
+      return;
+
+    int idx = _shopper.Inventory.IndexOf(slot);
+    if (idx != -1)
+    {
+      int price = int.Max(1, item.Value / 4);
+      _shopper.Inventory[idx] = null;
+      _shopper.Gold += price;
+      _app.Screens.Push(new PopupScreen(_app, $"{_shopper.Name} sells {item.Name.DefArticle()} for {price} gp."));
+    }
+  }
+
+  public void AbortSelection() { }
 }
