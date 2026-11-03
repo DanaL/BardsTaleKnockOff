@@ -19,7 +19,7 @@ class GuildScreen : IScreen
 
   Mode _mode = Mode.Menu;
   string _status = "";
-
+// 
   // While adding: the characters who could join (on file, not already in the
   // party) in alphabetical order, which one is selected, and which is the
   // first of the rows currently scrolled into view.
