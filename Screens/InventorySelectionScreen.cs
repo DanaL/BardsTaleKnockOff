@@ -60,7 +60,13 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
     }
   }
   
-  void ItemSelected() => src.ItemSelected(_items[_cursor].Item1, _items[_cursor].Item2);
+  void ItemSelected() 
+  { 
+    src.ItemSelected(_items[_cursor].Item1, _items[_cursor].Item2);
+    GetInv();
+    if (_cursor >= _items.Count)
+      _cursor = _items.Count - 1;
+  }
 
   void MoveCursor(int delta)
   {
