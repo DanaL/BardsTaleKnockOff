@@ -427,8 +427,11 @@ class EncounterScreen : IScreen
     List<Monster> monsterGroup = [];
     (int monsterId, int count) = monsterOptions[app.Rng.Next(monsterOptions.Count)];
     _groups.Add(GenGroup(monsterId, count, app.Rng));
-    if (app.GameState.CurrLevel == 0 && app.Rng.Next(4) == 0)
-      _groups.Add(GenGroup(monsterId, count, app.Rng));
+    if (app.GameState.CurrLevel == 0 && app.Rng.Next(4) == 0) 
+    {
+      (int monsterId2, int count2) = monsterOptions[app.Rng.Next(monsterOptions.Count)];
+      _groups.Add(GenGroup(monsterId2, count2, app.Rng));
+    }
     
     //_groups = [ [ MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng), MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng) ] ];
 
