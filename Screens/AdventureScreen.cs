@@ -94,6 +94,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     ++GS.Turn;
 
     Tile tile = GS.CurrMap.TileAt(GS.X, GS.Y);
+
     if (tile.Feature == Feature.Guild)
     {
       Serialize.WriteSaveGame(app);
@@ -112,6 +113,10 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     else if (tile.Feature == Feature.Temple)
     {
       app.Screens.Push(new TempleScreen(app));
+    }
+    else if (tile.Feature == Feature.TrainingHall)
+    {
+      app.Screens.Push(new TrainingHallScreen(app));
     }
     else if (IsEncounter())
     {

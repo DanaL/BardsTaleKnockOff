@@ -176,7 +176,7 @@ class TempleScreen(App app) : IScreen
         case SDL_Scancode.SDL_SCANCODE_5:
         case SDL_Scancode.SDL_SCANCODE_6:
           int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
-          if (slot <= app.GameState!.Party.Count)
+          if (slot <= app.GameState.Party.Count)
           {
             Character? c = app.GameState!.Party.Members[slot];
             if (c is not null)

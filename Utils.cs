@@ -186,6 +186,7 @@ static class MapLoader
       int y = int.Parse(coords[1]);
 
       string[] f = pieces[1].Split(',');
+
       Tile tile = new(
         Enum.Parse<Floor>(f[0], true),
         Enum.Parse<Ceiling>(f[1], true),

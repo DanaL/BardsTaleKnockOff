@@ -16,9 +16,12 @@ enum SavingThrow { Poison, Petrification, BreathWeapon, Spell }
 enum Lineage { Human, Orc, Dwarf, Gnome, Elf, Goblin }
 
 [Flags]
-enum Role { Warrior = 1 << 0, Rogue = 1 << 1, Hunter = 1 << 2, Conjurer = 1 << 3, Magician = 1 << 4, 
-            Sorcerer = 1 << 5, Wizard = 1 << 6, Trickster = 1 << 7, Archer = 1 << 8, 
-            Paladin = 1 << 9 }
+enum Role
+{
+  Warrior = 1 << 0, Rogue = 1 << 1, Hunter = 1 << 2, Conjurer = 1 << 3, Magician = 1 << 4,
+  Sorcerer = 1 << 5, Wizard = 1 << 6, Trickster = 1 << 7, Archer = 1 << 8,
+  Paladin = 1 << 9
+}
 
 record struct InvSlot(int Id, bool Equipped);
 
@@ -53,7 +56,7 @@ class SavingThrowTable
         else if (level < 20)
           return 8;
         else
-          return 7;        
+          return 7;
       case SavingThrow.BreathWeapon:
         if (level < 5)
           return 14;
@@ -110,7 +113,7 @@ class SavingThrowTable
         else if (level < 20)
           return 7;
         else
-          return 5;       
+          return 5;
       case SavingThrow.BreathWeapon:
         if (level < 6)
           return 15;
@@ -179,7 +182,7 @@ class SavingThrowTable
         else if (level < 17)
           return 5;
         else
-          return 4;        
+          return 4;
       case SavingThrow.BreathWeapon:
         if (level < 3)
           return 17;
@@ -228,7 +231,7 @@ class Character
 
   public required string Name { get; init; }
   public required Lineage Lineage { get; init; }
-  public required Role Role { get; init; }  
+  public required Role Role { get; init; }
   public int HP { get; set; }
   public int MaxHP { get; set; }
   public int MP { get; set; }
@@ -252,11 +255,11 @@ class Character
   public int Resurrections { get; set; } = 0;
   public bool PermanentlyDead { get; set; } = false;
 
-  public List<TempBuff> Buffs { get; set;} = [];
+  public List<TempBuff> Buffs { get; set; } = [];
 
   // Conditions that take a character out of action. Add STONED etc. here.
   public bool Incapacitated => Condition is "DEAD";
-  
+
   public int THAC0 => Role switch
   {
     Role.Warrior or Role.Paladin or Role.Archer => int.Max(1, 20 - Level),
@@ -274,10 +277,10 @@ class Character
         return item;
       else
         return null;
-    }  
+    }
   }
 
-  public int AC 
+  public int AC
   {
     get
     {
@@ -298,14 +301,14 @@ class Character
 
       return ac;
     }
-  } 
+  }
 
   public int NumOfMeleeAttacks => Role switch
   {
     Role.Warrior or Role.Paladin or Role.Archer => Level / 5 + 1,
     _ => 1,
   };
-  
+
   public int HideInShadows
   {
     get
@@ -353,7 +356,7 @@ class Character
     return true;
   }
 
-  public static int StatToMod(int stat) => (int) Math.Floor((stat - 10.0) / 2);
+  public static int StatToMod(int stat) => (int)Math.Floor((stat - 10.0) / 2);
 
   public bool Resurrect(Rng rng)
   {
@@ -389,6 +392,51 @@ class Character
 
     return roll > threshold;
   }
+
+  public void LevelUp(Rng rng)
+  {
+    int newHP = Role switch
+    {
+      Role.Warrior or Role.Paladin or Role.Archer => rng.Next(4, 17),
+      Role.Rogue or Role.Hunter or Role.Trickster => rng.Next(1, 9),
+      Role.Magician or Role.Conjurer => rng.Next(1, 5),
+      _ => rng.Next(1, 7) // Wizard or Sorcerer
+    };
+
+    newHP = int.Max(1, newHP + StatToMod(Con));
+    ++Level;
+    MaxHP += newHP;
+    HP += newHP;
+  }
+}
+
+class XPTable
+{
+  // XP needed to reach each level, starting at level 2
+  static readonly int[] _fighterXP = [2000, 4000, 7000, 10_000, 15_000, 20_000, 30_000, 50_000, 80_000, 110_000, 150_000];
+  static readonly int[] _rogueXP = [1750, 3500, 6000, 9_000, 13_000, 17_500, 26_000, 43_000, 60_000, 95_000, 130_000];
+  static readonly int[] _magicianXP = [2500, 5000, 9000, 13_000, 18_000, 23_000, 35_000, 60_000, 110_000, 160_000, 220_000];   // Conjurer, Magician
+  static readonly int[] _sorcererXP = [7000, 15_000, 25_000, 40_000, 60_000, 80_000, 100_000, 130_000, 170_000, 220_000, 300_000];   // Sorcerer, Wizard
+
+  static int[] _table(Role role) => role switch
+  {
+    Role.Warrior or Role.Paladin or Role.Archer => _fighterXP,
+    Role.Rogue or Role.Hunter or Role.Trickster => _rogueXP,
+    Role.Conjurer or Role.Magician => _magicianXP,
+    Role.Sorcerer or Role.Wizard => _sorcererXP,
+    _ => throw new Exception($"Unknown role: {role}!"),
+  };
+
+  static int XPForLevel(Role role, int level) => _table(role)[level - 2];
+
+  public static int Needed(Role role, int level) => role switch
+  {
+    Role.Warrior or Role.Paladin or Role.Archer or Role.Rogue
+      or Role.Hunter or Role.Trickster => level > 12 ? level * 200_000 : XPForLevel(role, level),
+    Role.Conjurer or Role.Magician => level > 12 ? level * 220_000 : XPForLevel(role, level),
+    Role.Sorcerer or Role.Wizard => level > 12 ? level * 300_000 : XPForLevel(role, level),
+    _ => throw new Exception($"Unknown role: {role}!"),
+  };
 }
 
 class Party
@@ -413,7 +461,7 @@ class Party
     if (slot < 0)
       return false;
     Members[slot] = c;
-    
+
     return true;
   }
 
