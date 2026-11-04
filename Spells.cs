@@ -12,7 +12,7 @@
 namespace BardsTaleKnockOff;
 
 enum SpellDuration { NA, Short, Medium, Long, Combat }
-enum SpellTarget { None, Self, Party, Monsters }
+enum SpellTarget { None, Self, PartyMember, FullParty, Monsters }
 
 record SpellInfo(string Code, string Name, int Level, int Cost, int Range, SpellDuration Duration, bool Combat, Role Role, SpellTarget Target);
 
@@ -24,20 +24,25 @@ class Spells
     new SpellInfo("SOSH","Sorcerer Shield", 1, 3, 0, SpellDuration.Combat, true, Role.Conjurer, SpellTarget.Self),
     new SpellInfo("TRZP","Trap Zap", 1, 2, 3, SpellDuration.NA, false, Role.Conjurer, SpellTarget.None),
 
-    new SpellInfo("VOPL","Vorpal Plating", 1, 3, 0, SpellDuration.Combat, true, Role.Magician, SpellTarget.Party),
+    new SpellInfo("VOPL","Vorpal Plating", 1, 3, 0, SpellDuration.Combat, true, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("AIAR","Air Armour", 1, 3, 0, SpellDuration.Combat, true, Role.Magician, SpellTarget.Self),
     new SpellInfo("STLI","Steel Light", 1, 2, 2, SpellDuration.Short, false, Role.Magician, SpellTarget.None),
-    new SpellInfo("SCSI","Scry Site", 1, 2, 0, SpellDuration.NA, false, Role.Magician, SpellTarget.None)
+    new SpellInfo("SCSI","Scry Site", 1, 2, 0, SpellDuration.NA, false, Role.Magician, SpellTarget.None),
+
+    new SpellInfo("PHBL","Phase Blur", 1, 2, 0, SpellDuration.Combat, true, Role.Sorcerer | Role.Trickster, SpellTarget.FullParty),
+    new SpellInfo("HYIM","Hyponotic Image", 1, 3, 0, SpellDuration.Combat, true, Role.Sorcerer | Role.Trickster, SpellTarget.Monsters),
+    new SpellInfo("SOST","Soft Step", 1, 2, 0, SpellDuration.Medium, false, Role.Trickster, SpellTarget.None)
   ];
 
   public static List<SpellInfo> SpellsFor(Character c)
   {
     List<SpellInfo> spells = [];
     
-    spells.AddRange(_spells.Where(s => s.Role == Role.Conjurer && s.Level <= c.ConjurerSpellLevel));
-    spells.AddRange(_spells.Where(s => s.Role == Role.Magician && s.Level <= c.MagicianSpellLevel));
-    spells.AddRange(_spells.Where(s => s.Role == Role.Sorcerer && s.Level <= c.SorcererSpellLevel));
-    spells.AddRange(_spells.Where(s => s.Role == Role.Wizard && s.Level <= c.WizardSpellLevel));
+    spells.AddRange(_spells.Where(s => (s.Role & Role.Conjurer) == Role.Conjurer && s.Level <= c.ConjurerSpellLevel));
+    spells.AddRange(_spells.Where(s => (s.Role & Role.Magician) == Role.Magician && s.Level <= c.MagicianSpellLevel));
+    spells.AddRange(_spells.Where(s => (s.Role & Role.Sorcerer) == Role.Sorcerer && s.Level <= c.SorcererSpellLevel));
+    spells.AddRange(_spells.Where(s => (s.Role & Role.Wizard) == Role.Wizard && s.Level <= c.WizardSpellLevel));
+    spells.AddRange(_spells.Where(s => (s.Role & Role.Trickster) == Role.Trickster && s.Level <= c.TricksterSpellLevel));
 
     return [.. spells.OrderBy(s => s.Level).ThenBy(s => s.Name)];
   }
@@ -57,8 +62,14 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         if (!caster.Buffs.Any(b => b.Buff == Buff.AirArmour))
           caster.Buffs.Add(new TempBuff(Buff.AirArmour, ulong.MaxValue, true));
         break;
+      case "HYMI":
+        Hyim(caster, monsterGroup, spell.Cost, rng);
+        break;
       case "MAFL":
         Mafl(caster, gs, spell.Cost);
+        break;
+      case "PHBL":
+        Phbl(caster, gs, spell.Cost);
         break;
       case "SCSI":
         caster.MP -= spell.Cost;
@@ -102,9 +113,27 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     party.Buffs = [.. party.Buffs.Where(b => b.Buff != Buff.MageFlame && b.Buff != Buff.SteelLight)];
   }
 
-  public static void Mafl(Character? caster, GameState gs, int cost)
+  public void Hyim(Character caster, int monsterGroup, int cost, Rng rng)
   {
-    caster?.MP -= cost;
+    // caster.MP -= cost;
+    // foreach (Monster m in foes[monsterGroup])
+    // {
+    //   caster.RollSavingThrow()
+    // }
+  }
+
+  public static void Phbl(Character caster, GameState gs, int cost)
+  {
+    caster.MP -= cost;
+
+    foreach (Character c in gs.Party.Members.OfType<Character>())
+    if (!c.Buffs.Any(b => b.Buff == Buff.PhaseBlur))
+      c.Buffs.Add(new TempBuff(Buff.PhaseBlur, uint.MaxValue, true));
+  }
+
+  public static void Mafl(Character caster, GameState gs, int cost)
+  {
+    caster.MP -= cost;
 
     // Casting a light spell replaces an existing light
     ClearLightSources(gs.Party);
@@ -127,6 +156,6 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
       int targetNum = rng.Next(foes[monsterGroup].Count);
       int dmg = rng.Next(1, 5) * caster.Level;
       battle.DamageMonster(monsterGroup, targetNum, dmg);
-    }    
+    }
   }
 }

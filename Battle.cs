@@ -151,7 +151,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
           {
             Character? partyTarget = choice.PartySlot >= 0 ? gs.Party.Members[choice.PartySlot] : null;
             string s = $"{c.Name} casts {spell.Code}";
-            if (choice.Spell.Target == SpellTarget.Party && partyTarget is not null)
+            if (choice.Spell.Target == SpellTarget.PartyMember && partyTarget is not null)
             {
               s += $" on {partyTarget.Name}";
             }
@@ -399,6 +399,8 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         toHitTarget -= 2; // Guess at what BT1 did
       else if (buff.Buff == Buff.Invisibility)
         toHitTarget += 5;
+      else if (buff.Buff == Buff.PhaseBlur)
+        toHitTarget += 2;
     }
 
     if (target.Condition == "OLD")

@@ -126,11 +126,22 @@ class ChangeClassScreen(App app, Character c, HashSet<Role> options) : IScreen
       case SDL_Scancode.SDL_SCANCODE_H:
         ChangeToHunter();
         app.Screens.Pop();
-        app.Screens.Push(new PopupScreen(app, $"{c.Name} has taken up the path of a Hunter!"));
+        app.Screens.Push(new PopupScreen(app, $"{c.Name} has taken up the path of the Hunter!"));
         break;
       case SDL_Scancode.SDL_SCANCODE_T:
+        ChangeToTrickster();
+        app.Screens.Pop();
+        app.Screens.Push(new PopupScreen(app, $"{c.Name} has taken up the path of the Trickster!"));
         break;
     }
+  }
+
+  void ChangeToTrickster()
+  {
+    c.Role = Role.Trickster;
+    c.BaseMP = app.Rng.Next(4, 9);
+    c.MP = c.MaxMP;
+    c.TricksterSpellLevel = 1;
   }
 
   void ChangeToHunter()

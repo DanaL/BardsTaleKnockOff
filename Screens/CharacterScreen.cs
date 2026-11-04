@@ -175,17 +175,22 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
 
     lines.AddRange("", $"Gold: {c.Gold}");
 
-    if (c.MaxMP > 0)
-    {
-      lines.AddRange("", "Spells:");
-      lines.Add($"Conjurer: {c.ConjurerSpellLevel}   Magician: {c.MagicianSpellLevel}");
-      lines.Add($"Sorcerer: {c.SorcererSpellLevel}   Wizard: {c.WizardSpellLevel}");
-    }
-    else
+    if (c.MaxMP == 0)
     {
       lines.AddRange("", "", "", "");
     }
-
+    else if (c.Role == Role.Trickster)
+    {
+      lines.AddRange("", "Spells:");      
+      lines.Add($"Trickster: {c.TricksterSpellLevel}");
+    }
+    else
+    {
+      lines.AddRange("", "Spells:");      
+      lines.Add($"Conjurer: {c.ConjurerSpellLevel}   Magician: {c.MagicianSpellLevel}");
+      lines.Add($"Sorcerer: {c.SorcererSpellLevel}   Wizard: {c.WizardSpellLevel}");
+    }
+    
     lines.AddRange("", "", "", "", "", "I) View inventory", "P) Pool good");
 
     if (c.Gold > 0)

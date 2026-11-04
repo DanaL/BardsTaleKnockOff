@@ -276,7 +276,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
               monster = $" on the {monster.Pluralize()}";
               s += monster;
             }
-            else if (choice.Spell.Target == SpellTarget.Party && app.GameState.Party.Members[choice.PartySlot] is Character target)
+            else if (choice.Spell.Target == SpellTarget.PartyMember && app.GameState.Party.Members[choice.PartySlot] is Character target)
             {
               s += $" on {target.Name}";
             }
@@ -343,7 +343,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
   {
     switch (spell.Target)
     {
-      case SpellTarget.Party:
+      case SpellTarget.PartyMember:
         _pendingAction = BattleAction.CastSpell;
         _pendingSpell = spell;
         app.Screens.Push(new ChoosePartyMemberScreen(app, this, $"Cast {spell.Code} on whom") { Caption = _caption, Image = _image });
