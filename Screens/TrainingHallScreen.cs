@@ -17,7 +17,7 @@ class SpendAbilityPointsScreen(App app, Character c) : IScreen
 {
   public void OnKey(SDL_KeyboardEvent key)
   {
-    bool canRaiseState = c.Gold >= 100 && c.AbilityPoints > 0;
+    bool canRaiseStat = c.Gold >= 100 && c.AbilityPoints > 0;
 
     switch (key.scancode)
     {
@@ -32,7 +32,7 @@ class SpendAbilityPointsScreen(App app, Character c) : IScreen
         }        
         break;
       case SDL_Scancode.SDL_SCANCODE_1:
-        if (canRaiseState)
+        if (canRaiseStat)
         {
           c.Str += 1;
           c.Gold -= 100;
@@ -40,7 +40,7 @@ class SpendAbilityPointsScreen(App app, Character c) : IScreen
         }
         break;
       case SDL_Scancode.SDL_SCANCODE_2:
-        if (canRaiseState)
+        if (canRaiseStat)
         {
           c.Dex += 1;
           c.Gold -= 100;
@@ -48,7 +48,7 @@ class SpendAbilityPointsScreen(App app, Character c) : IScreen
         }
         break;
       case SDL_Scancode.SDL_SCANCODE_3:
-        if (canRaiseState)
+        if (canRaiseStat)
         {
           int hpDelta = c.MaxHP - c.HP;
           c.Con += 1;
@@ -58,7 +58,7 @@ class SpendAbilityPointsScreen(App app, Character c) : IScreen
         }
         break;
       case SDL_Scancode.SDL_SCANCODE_4:
-        if (canRaiseState)
+        if (canRaiseStat)
         {
           int mpDelta = c.MaxMP - c.MP;
           c.Lore += 1;
@@ -68,7 +68,7 @@ class SpendAbilityPointsScreen(App app, Character c) : IScreen
         }
         break;
       case SDL_Scancode.SDL_SCANCODE_5:
-        if (canRaiseState)
+        if (canRaiseStat)
         {
           c.Luck += 1;
           c.Gold -= 100;
@@ -112,6 +112,63 @@ class SpendAbilityPointsScreen(App app, Character c) : IScreen
   }
 }
 
+class ChangeClassScreen(App app, Character c, HashSet<Role> options) : IScreen
+{
+  HashSet<SDL_Scancode> _roleChoices = [];
+
+  public void OnKey(SDL_KeyboardEvent key)
+  {
+    switch (key.scancode)
+    {
+      case SDL_Scancode.SDL_SCANCODE_ESCAPE:
+        app.Screens.Pop();
+        break;
+      case SDL_Scancode.SDL_SCANCODE_H:
+        ChangeToHunter();
+        app.Screens.Pop();
+        app.Screens.Push(new PopupScreen(app, $"{c.Name} has taken up the path of a Hunter!"));
+        break;
+      case SDL_Scancode.SDL_SCANCODE_T:
+        break;
+    }
+  }
+
+  void ChangeToHunter()
+  {
+    c.Role = Role.Hunter;
+    c.CritChance = 51;
+    c.BaseHP += 5;
+    c.HP += 5;
+  }
+
+  public void Draw(GameUI ui)
+  {
+    List<string> lines = [ "Change to which class (this cannot be undone):", "" ];
+
+    foreach (Role role in options)
+    {
+      (SDL_Scancode opt, string s) = role switch
+      {
+        Role.Hunter => (SDL_Scancode.SDL_SCANCODE_H, "H) Hunter"),
+        Role.Trickster => (SDL_Scancode.SDL_SCANCODE_T, "T) Trickster"),
+        Role.Paladin => (SDL_Scancode.SDL_SCANCODE_P, "P) Paladin"),
+        Role.Archer => (SDL_Scancode.SDL_SCANCODE_A, "A) Archer"),
+        Role.Conjurer => (SDL_Scancode.SDL_SCANCODE_C, "C) Conjurer"),
+        Role.Magician => (SDL_Scancode.SDL_SCANCODE_M, "M) Magician"),
+        Role.Wizard => (SDL_Scancode.SDL_SCANCODE_W, "W) Wizard"),
+        Role.Sorcerer => (SDL_Scancode.SDL_SCANCODE_S, "S) Sorcerer"),
+        _ => throw new Exception($"Hmm {role} can't chance classes...")
+      };
+      _roleChoices.Add(opt);
+      lines.Add(s);
+    }
+
+    ui.DrawNoBackground("Training Hall");
+    ui.DrawTextPanel(lines);
+    ui.DrawRoster(app.GameState.Party);
+  }
+}
+
 class TrainingHallServicesScreen(App app, Character c) : IScreen
 {
   const int MAIN = 0;
@@ -120,6 +177,7 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
   const char MEDITATION_OPT = 'm';
   const char LEVEL_UP_OPT = 'l';
   const char ABILITY_PT_OPT = 'a';
+  const char CHANGE_CLASS_OPT = 'c';
 
   const char YES_OPT = 'y';
   const char NO_OPT = 'n';
@@ -149,6 +207,12 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
           if (_options.Contains(ABILITY_PT_OPT))
           {
             app.Screens.Push(new SpendAbilityPointsScreen(app, c));
+          }
+          break;
+        case SDL_Scancode.SDL_SCANCODE_C:
+          if (_options.Contains(CHANGE_CLASS_OPT))
+          {
+            app.Screens.Push(new ChangeClassScreen(app, c, ClassesAvailable()));
           }
           break;
         case SDL_Scancode.SDL_SCANCODE_ESCAPE:
@@ -200,6 +264,14 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
         _options.Add(ABILITY_PT_OPT);
         menuOptions.Add("A) Use ability points");
       }
+      
+      if (ClassesAvailable().Count > 0)
+      {
+        _options.Add(CHANGE_CLASS_OPT);
+        menuOptions.Add("C) Change class.");
+        if (c.Role == Role.Warrior || c.Role == Role.Rogue)
+          menuOptions.AddRange("", "(Warriors and Rogues may only change classes at level 3. After that, they are committed to their path)");
+      }
 
       if (c.MP < c.MaxMP)
       {
@@ -229,6 +301,61 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
     ui.DrawNoBackground("Training Hall");
     ui.DrawTextPanel(lines);
     ui.DrawRoster(app.GameState.Party);
+  }
+
+  HashSet<Role> ClassesAvailable()
+  {
+    HashSet<Role> roles = [];
+
+    switch (c.Role)
+    {
+      case Role.Warrior:
+        if (c.Level == 3 && c.Lore >= 12)
+          roles.Add(Role.Paladin);
+        if (c.Level == 3 && c.Dex >= 12)
+          roles.Add(Role.Archer);
+        break;
+      case Role.Rogue:
+        if (c.Level == 3 && c.Lore >= 12)
+          roles.Add(Role.Trickster);
+        if (c.Level == 3 && c.Con >= 12)
+          roles.Add(Role.Hunter);
+        break;
+      case Role.Conjurer:
+        if (c.ConjurerSpellLevel >= 3 && c.MagicianSpellLevel == 0)
+          roles.Add(Role.Magician);
+        if (c.ConjurerSpellLevel >= 3 && c.SorcererSpellLevel == 0)
+          roles.Add(Role.Sorcerer);
+        if (c.ConjurerSpellLevel >= 3 && c.WizardSpellLevel == 0)
+          roles.Add(Role.Wizard);
+        break;
+      case Role.Magician:        
+        if (c.MagicianSpellLevel >= 3 && c.ConjurerSpellLevel == 0)
+          roles.Add(Role.Conjurer);
+        if (c.MagicianSpellLevel >= 3 && c.SorcererSpellLevel == 0)
+          roles.Add(Role.Sorcerer);
+        if (c.MagicianSpellLevel >= 3 && c.WizardSpellLevel == 0)
+          roles.Add(Role.Wizard);
+        break;
+      case Role.Sorcerer:
+        if (c.SorcererSpellLevel >= 3 && c.MagicianSpellLevel == 0)
+          roles.Add(Role.Magician);
+        if (c.SorcererSpellLevel >= 3 && c.ConjurerSpellLevel == 0)
+          roles.Add(Role.Conjurer);
+        if (c.SorcererSpellLevel >= 3 && c.WizardSpellLevel == 0)
+          roles.Add(Role.Wizard);
+        break;
+      case Role.Wizard:
+        if (c.WizardSpellLevel >= 3 && c.MagicianSpellLevel == 0)
+          roles.Add(Role.Magician);
+        if (c.WizardSpellLevel >= 3 && c.ConjurerSpellLevel == 0)
+          roles.Add(Role.Conjurer);
+        if (c.WizardSpellLevel >= 3 && c.SorcererSpellLevel == 0)
+          roles.Add(Role.Sorcerer);
+        break;
+    }
+
+    return roles;
   }
 }
 

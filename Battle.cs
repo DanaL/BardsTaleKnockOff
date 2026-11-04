@@ -488,13 +488,15 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     if (c.Condition == "OLD")
       dmg /= 4;
 
+    bool criticalHit = hits > 0 && (hiding || (c.CritChance > 0 && rng.Next(256) < c.CritChance));
+      
     if (hiding)
       s = $"{c.Name} leaps from the shadows";
 
     string targetName = target.Name.DefArticle().ToLower();
     if (hits == 0)
       s += " but misses!";
-    else if (hiding)
+    else if (criticalHit)
       s += $" and strikes {targetName}, killing it instantly!";
     else if (hits == 1)
       s+= $" and hits for {dmg} dmg!";
@@ -507,7 +509,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     c.Buffs = [.. c.Buffs.Where(b => b.Buff != Buff.Hiding)];
 
     int monsterHit = rng.Next(Foes[monsterGroup].Count);
-    if (hiding && hits > 0)
+    if (criticalHit)
       KillMonster(monsterGroup, monsterHit);
     else
       DamageMonster(monsterGroup, monsterHit, dmg);

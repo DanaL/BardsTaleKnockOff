@@ -231,7 +231,7 @@ class Character
 
   public required string Name { get; init; }
   public required Lineage Lineage { get; init; }
-  public required Role Role { get; init; }
+  public required Role Role { get; set; }
 
   public int HP { get; set; }
   public int BaseHP { get; set; }
@@ -252,11 +252,14 @@ class Character
   public int XP { get; set; }
   public int Level { get; set; }
   public int AbilityPoints { get; set; } = 0;
-  
+  public int CritChance { get; set; } = 0;
+
   public int ConjurerSpellLevel { get; set; } = 0;
   public int MagicianSpellLevel { get; set; } = 0;
   public int SorcererSpellLevel { get; set; } = 0;
   public int WizardSpellLevel { get; set; } = 0;
+  public int TricksterSpellLevel { get; set; } = 0;
+  public int PaladinSpellLevel { get; set; } = 0;
 
   public int Resurrections { get; set; } = 0;
   public bool PermanentlyDead { get; set; } = false;
@@ -319,20 +322,27 @@ class Character
   {
     get
     {
+      int score;
+
       switch (Role)
       {
-        case Role.Rogue:
-        case Role.Hunter:
         case Role.Trickster:
-          int score = 15 + 5 * Level;
-          if (Lineage == Lineage.Gnome || Lineage == Lineage.Goblin)
-            score += 10;
-          if (Dex > 16)
-            score += 10;
-          return int.Min(99, score);
+        case Role.Hunter:
+          score = 15 + 5 * int.Max(Level - 2, 3);
+          break;          
+        case Role.Rogue:
+          score = 15 + 5 * Level;
+          break;          
         default:
           return 0;
       }
+
+      if (Lineage == Lineage.Gnome || Lineage == Lineage.Goblin)
+        score += 5;
+      if (Dex > 16)
+        score += 10;
+
+      return int.Min(99, score);
     }
   }
 
@@ -412,8 +422,14 @@ class Character
         if (nextLevel % 2 == 0)
           AbilityPoints += 1;
         break;
-      case Role.Rogue:
+      
       case Role.Hunter:
+         newHP = rng.Next(1, 9);
+         CritChance += rng.Next(1, 32);
+        if (nextLevel % 2 == 0)
+          AbilityPoints += 1;
+        break;
+      case Role.Rogue:
       case Role.Trickster:
         newHP = rng.Next(1, 9);
         if (nextLevel % 2 == 0)

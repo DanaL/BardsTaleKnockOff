@@ -167,6 +167,11 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
     }
     if (c.HideInShadows > 0)
       lines.Add($"Hide in shadows: {c.HideInShadows}%");
+    if (c.CritChance > 0)
+    {
+      int adjusted = c.CritChance * 100 / 255;
+      lines.Add($"Critical hit: {adjusted}%");
+    }
 
     lines.AddRange("", $"Gold: {c.Gold}");
 
