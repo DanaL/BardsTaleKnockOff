@@ -69,6 +69,12 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
           s += $"on level {gs.CurrLevel} at X {gs.X}, Y {gs.Y}. ";
         s += $"You face {gs.Facing}.";
         gs.Say(s);
+
+        if (gs.CurrLevel == 0)
+        {
+          var (h, m) = gs.CurrTime();
+          gs.Say($"The time is {h}:{m.ToString().PadLeft(2, '0')}.");
+        }
         break;
       case "SOSH":
         caster.MP -= spell.Cost;

@@ -47,7 +47,7 @@ class GameState
     return (hour, minute);
   }
 
-  public bool DayTime => CurrTime().Item1 >= 6 && CurrTime().Item1 <= 19;
+  public bool DayTime => CurrTime().Item1 >= 6 && CurrTime().Item1 < 19;
 
   public void Say(string message)
   {
