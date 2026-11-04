@@ -33,7 +33,7 @@ class ChooseSpellScreen(App app, Character c, bool combatSpells, ICastSpellScree
     foreach (char ch in text)
     {
       if (char.IsLetter(ch))
-        _filter += (_filter + ch).ToUpper();
+        _filter = (_filter + ch).ToUpper();
     }
 
     _cursor = 0;
@@ -117,7 +117,7 @@ class ChooseSpellScreen(App app, Character c, bool combatSpells, ICastSpellScree
     {
       foreach (var spell in _spells.Skip(_offset).Take(_displaySize))
       {
-        lines.Add(spell.Code);
+        lines.Add(spell.Name);
       }
       offsetCursor = _cursor + 2;
     }
