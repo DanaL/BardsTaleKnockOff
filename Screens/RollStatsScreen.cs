@@ -106,7 +106,8 @@ class RollStatsScreen : IScreen
           Gold = _app.Rng.Next(150, 251)
         };
         c.HP = c.MaxHP;
-
+        c.MP = c.MaxMP;
+        
         if (_role == Role.Conjurer)
           c.ConjurerSpellLevel = 1;
         else if (_role == Role.Magician)
