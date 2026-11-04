@@ -13,6 +13,103 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
+class SpendAbilityPointsScreen(App app, Character c) : IScreen
+{
+  public void OnKey(SDL_KeyboardEvent key)
+  {
+    bool canRaiseState = c.Gold >= 100 && c.AbilityPoints > 0;
+
+    switch (key.scancode)
+    {
+      case SDL_Scancode.SDL_SCANCODE_P:
+        for (int j = 0; j < Party.MAX_PARTY_SIZE; j++)
+        {
+          if (app.GameState.Party.Members[j] == c)
+          {
+            app.GameState.Party.PoolGold(j);
+            break;
+          }
+        }        
+        break;
+      case SDL_Scancode.SDL_SCANCODE_1:
+        if (canRaiseState)
+        {
+          c.Str += 1;
+          c.Gold -= 100;
+          c.AbilityPoints -= 1;
+        }
+        break;
+      case SDL_Scancode.SDL_SCANCODE_2:
+        if (canRaiseState)
+        {
+          c.Dex += 1;
+          c.Gold -= 100;
+          c.AbilityPoints -= 1;
+        }
+        break;
+      case SDL_Scancode.SDL_SCANCODE_3:
+        if (canRaiseState)
+        {
+          c.Con += 1;
+          c.Gold -= 100;
+          c.AbilityPoints -= 1;
+          // need to re-calc HP after
+        }
+        break;
+      case SDL_Scancode.SDL_SCANCODE_4:
+        if (canRaiseState)
+        {
+          c.Lore += 1;
+          c.Gold -= 100;
+          c.AbilityPoints -= 1;
+          // need to re-calc MP after
+        }
+        break;
+      case SDL_Scancode.SDL_SCANCODE_5:
+        if (canRaiseState)
+        {
+          c.Luck += 1;
+          c.Gold -= 100;
+          c.AbilityPoints -= 1;
+        }
+        break;
+      case SDL_Scancode.SDL_SCANCODE_ESCAPE:
+        app.Screens.Pop();
+        break;
+    }
+  }
+
+  public void Draw(GameUI ui)
+  {
+    List<string> lines = [ $"{c.Name} has {c.AbilityPoints} ability points to spend." ];
+    
+    lines.Add($"Strength: {c.Str}  Dexterity: {c.Dex}  Constitution: {c.Con}");
+    lines.Add($"Lore: {c.Lore}  Luck: {c.Luck}");
+    lines.Add($"Gold: {c.Gold}");
+
+    lines.AddRange("", "P) Pool gold");
+
+    if (c.Gold < 100)
+    {
+      lines.AddRange("", "", "Tuition fees to raise an ability are 100 gp.");
+    }
+    else
+    {
+      lines.AddRange("", "", "", "Raise which stat?");
+      lines.Add("1) Strength");
+      lines.Add("2) Dexterity");
+      lines.Add("3) Constitution");
+      lines.Add("4) Lore");
+      lines.Add("5) Luck");
+    }
+    
+
+    ui.DrawNoBackground("Training Hall");
+    ui.DrawTextPanel(lines);
+    ui.DrawRoster(app.GameState.Party);
+  }
+}
+
 class TrainingHallServicesScreen(App app, Character c) : IScreen
 {
   const int MAIN = 0;
@@ -20,6 +117,7 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
 
   const char MEDITATION_OPT = 'm';
   const char LEVEL_UP_OPT = 'l';
+  const char ABILITY_PT_OPT = 'a';
 
   const char YES_OPT = 'y';
   const char NO_OPT = 'n';
@@ -43,6 +141,12 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
           {
             c.LevelUp(app.Rng);
             app.Screens.Push(new PopupScreen(app, $"{c.Name} is now level {c.Level}!"));
+          }
+          break;
+        case SDL_Scancode.SDL_SCANCODE_A:
+          if (_options.Contains(ABILITY_PT_OPT))
+          {
+            app.Screens.Push(new SpendAbilityPointsScreen(app, c));
           }
           break;
         case SDL_Scancode.SDL_SCANCODE_ESCAPE:
@@ -72,23 +176,37 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
   public void Draw(GameUI ui)
   {
     List<string> lines = [ $"What can we do for {c.Name} today?", "" ];
+    List<string> menuOptions = [];
 
     if (_state == MAIN)
     {
       int xpNeeded = XPTable.Needed(c.Role, c.Level + 1);
-      if (c.XP < xpNeeded)
-        lines.AddRange($"They require {xpNeeded - c.XP} more XP to reach the next level.", "");
+      if (c.XP < xpNeeded) 
+      {
+        lines.Add($"They require {xpNeeded - c.XP} more XP to reach the next level.");
+      }
       else 
       {
-        lines.AddRange($"They are ready to advance to level {c.Level + 1}!", "", "L) Level up");
+        lines.Add($"They are ready to advance to level {c.Level + 1}!");
+        menuOptions.Add("L) Level up");
         _options.Add(LEVEL_UP_OPT);
+      }
+
+      if (c.AbilityPoints > 0)
+      {
+        lines.AddRange("They have ability points to spend.");
+        _options.Add(ABILITY_PT_OPT);
+        menuOptions.Add("A) Use ability points");
       }
 
       if (c.MP < c.MaxMP)
       {
-        lines.Add("M) Relax in the meditation hall.");
+        menuOptions.Add("M) Relax in the meditation hall.");
         _options.Add(MEDITATION_OPT);
       }
+
+      lines.Add("");
+      lines.AddRange(menuOptions);
     }
     else if (_state == MEDITATION)
     {

@@ -246,7 +246,8 @@ class Character
   public int Gold { get; set; }
   public int XP { get; set; }
   public int Level { get; set; }
-
+  public int AbilityPoints { get; set; } = 0;
+  
   public int ConjurerSpellLevel { get; set; } = 0;
   public int MagicianSpellLevel { get; set; } = 0;
   public int SorcererSpellLevel { get; set; } = 0;
@@ -395,16 +396,40 @@ class Character
 
   public void LevelUp(Rng rng)
   {
-    int newHP = Role switch
-    {
-      Role.Warrior or Role.Paladin or Role.Archer => rng.Next(4, 17),
-      Role.Rogue or Role.Hunter or Role.Trickster => rng.Next(1, 9),
-      Role.Magician or Role.Conjurer => rng.Next(1, 5),
-      _ => rng.Next(1, 7) // Wizard or Sorcerer
-    };
-
-    newHP = int.Max(1, newHP + StatToMod(Con));
     ++Level;
+
+    int newHP = 0;
+    switch (Role)
+    {
+      case Role.Warrior:
+      case Role.Paladin:
+      case Role.Archer:
+        newHP = rng.Next(4, 17);
+        if (Level % 2 == 0)
+          AbilityPoints += 1;
+        break;
+      case Role.Rogue:
+      case Role.Hunter:
+      case Role.Trickster:
+        newHP = rng.Next(1, 9);
+        if (Level % 2 == 0)
+          AbilityPoints += 1;
+        break;
+      case Role.Magician:
+      case Role.Conjurer:
+        newHP = rng.Next(1, 5);
+        if (Level % 4 == 0)
+          AbilityPoints += 1;
+        break;
+      case Role.Sorcerer:
+      case Role.Wizard:
+        newHP = rng.Next(1, 7);
+        if (Level % 4 == 0)
+          AbilityPoints += 1;
+        break;
+    }
+    
+    newHP = int.Max(1, newHP + StatToMod(Con));    
     MaxHP += newHP;
     HP += newHP;
 
