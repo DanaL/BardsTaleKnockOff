@@ -50,19 +50,21 @@ class SpendAbilityPointsScreen(App app, Character c) : IScreen
       case SDL_Scancode.SDL_SCANCODE_3:
         if (canRaiseState)
         {
+          int hpDelta = c.MaxHP - c.HP;
           c.Con += 1;
           c.Gold -= 100;
           c.AbilityPoints -= 1;
-          // need to re-calc HP after
+          c.HP = c.MaxHP - hpDelta;
         }
         break;
       case SDL_Scancode.SDL_SCANCODE_4:
         if (canRaiseState)
         {
+          int mpDelta = c.MaxMP - c.MP;
           c.Lore += 1;
           c.Gold -= 100;
           c.AbilityPoints -= 1;
-          // need to re-calc MP after
+          c.MP = c.MaxMP - mpDelta;
         }
         break;
       case SDL_Scancode.SDL_SCANCODE_5:

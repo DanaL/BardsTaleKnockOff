@@ -232,10 +232,15 @@ class Character
   public required string Name { get; init; }
   public required Lineage Lineage { get; init; }
   public required Role Role { get; init; }
+
   public int HP { get; set; }
-  public int MaxHP { get; set; }
+  public int BaseHP { get; set; }
+  public int MaxHP => BaseHP + StatToMod(Con) * Level;
+  
   public int MP { get; set; }
-  public int MaxMP { get; set; }
+  public int BaseMP { get; set; }
+  public int MaxMP => BaseMP > 0 ? BaseMP + StatToMod(Lore) * Level : 0;
+  
   public string Condition { get; set; } = "";
 
   public int Str { get; set; }
@@ -430,13 +435,13 @@ class Character
     }
     
     newHP = int.Max(1, newHP + StatToMod(Con));    
-    MaxHP += newHP;
+    BaseHP += newHP;
     HP += newHP;
 
-    if (MaxMP > 0)
+    if (BaseMP > 0)
     {
       int newMP = int.Max(1, rng.Next(1, 5) + StatToMod(Lore));
-      MaxMP += newMP;
+      BaseMP += newMP;
       MP += newMP;
     }
   }

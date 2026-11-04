@@ -102,10 +102,11 @@ class RollStatsScreen : IScreen
         {
           Name = _name, Role = _role, Lineage = _lineage,
           Str = _str, Dex = _dex, Con = _con, Lore = _lore, Luck = _luck,
-          HP = _hp, MaxHP = _hp, MP = _mp, MaxMP = _mp, Level = 1,
+          HP = _hp, BaseHP = _hp, MP = _mp, BaseMP = _mp, Level = 1,
           Gold = _app.Rng.Next(150, 251)
         };
-
+        c.HP = c.MaxHP;
+        
         if (_role == Role.Conjurer)
           c.ConjurerSpellLevel = 1;
         else if (_role == Role.Magician)
