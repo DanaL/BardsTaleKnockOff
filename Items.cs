@@ -33,6 +33,8 @@ class Item
   public int DamageDie { get; init; } = 0;
   public int DamageBonus { get; init; } = 0;
   public bool Useable { get; init; } = false;
+
+  public int SellValue => int.Max(Value / 4, 1);
 }
 
 class ItemCatalog

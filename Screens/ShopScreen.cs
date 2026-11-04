@@ -196,7 +196,7 @@ class ShoppeScreen : IScreen, IInventorySelectionScreen
         case SDL_Keycode.SDLK_S:
           if (_shopper is not null) 
           {
-            InventorySelectionOptions opt = new(_app, _shopper, "Sell which item?", true, "sell");
+            InventorySelectionOptions opt = new(_app, _shopper, "Sell which item?", true, "sell", InventoryLabel.SellPrice);
             _app.Screens.Push(new InventorySelectionScreen(opt, this));
           }
           break;
@@ -244,10 +244,9 @@ class ShoppeScreen : IScreen, IInventorySelectionScreen
     int idx = _shopper.Inventory.IndexOf(slot);
     if (idx != -1)
     {
-      int price = int.Max(1, item.Value / 4);
       _shopper.Inventory[idx] = null;
-      _shopper.Gold += price;
-      _app.Screens.Push(new PopupScreen(_app, $"{_shopper.Name} sells {item.Name.DefArticle()} for {price} gp."));
+      _shopper.Gold += item.SellValue;
+      _app.Screens.Push(new PopupScreen(_app, $"{_shopper.Name} sells {item.Name.DefArticle()} for {item.SellValue} gp."));
     }
   }
 

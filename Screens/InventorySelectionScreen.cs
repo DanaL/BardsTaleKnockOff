@@ -16,7 +16,9 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-record InventorySelectionOptions(App App, Character C, string Prompt, bool VerifyEquipped, string Verb);
+enum InventoryLabel { None, Price, SellPrice };
+
+record InventorySelectionOptions(App App, Character C, string Prompt, bool VerifyEquipped, string Verb, InventoryLabel Label);
 
 class InventorySelectionScreen(InventorySelectionOptions options, IInventorySelectionScreen src) : IScreen
 {
@@ -25,6 +27,7 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
   string _prompt = options.Prompt;
   bool _verify = options.VerifyEquipped;
   string _verb = options.Verb;
+  InventoryLabel _label = options.Label;
 
   string _status = "";
   int _cursor = 0;
@@ -46,7 +49,7 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
       case SDL_Scancode.SDL_SCANCODE_RETURN:
         if (_verify && _items[_cursor].Item1.Equipped)
         {
-          string n = _items[_cursor].Item2.Name.DefArticle();
+          string n = _items[_cursor].Item2.Name.DefArticle();          
           _app.Screens.Push(new ConfirmScreen(_app, $"Really {_verb} {n}?", ItemSelected));
         }
         else
@@ -95,11 +98,23 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
       bool anyCannotUse = false;
       foreach (var i in _items.Where(s => s.Item1.Equipped))
       {
-        lines.Add($"§{i.Item2.Name}");
+        string n = _label switch
+        {
+          InventoryLabel.Price => $"{i.Item2.Name} ({i.Item2.Value} gp)",
+          InventoryLabel.SellPrice => $"{i.Item2.Name} ({i.Item2.SellValue} gp)",
+          _ => i.Item2.Name
+        };
+        lines.Add($"§{n}");
       }
       foreach (var i in _items.Where(s => !s.Item1.Equipped))
       {
-        string s = $"{i.Item2.Name}";
+        string s = _label switch
+        {
+          InventoryLabel.Price => $"{i.Item2.Name} ({i.Item2.Value} gp)",
+          InventoryLabel.SellPrice => $"{i.Item2.Name} ({i.Item2.SellValue} gp)",
+          _ => i.Item2.Name
+        };
+        
         if (!i.Item2.UseableBy.HasFlag(_shopper.Role))
         {
           s += " *";
