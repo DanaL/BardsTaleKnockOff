@@ -21,7 +21,6 @@ class GameState
   public int Y { get; set; }
   public Dir Facing { get; set; } = Dir.North;
   public int ViewRange { get; set; } = 2;
-  public bool DayTime { get; set;} = true; // eventually to be replaced with time of day
   public ulong Turn { get; set; } = 0;
 
   public Dungeon CurrMap => Maps[CurrLevel];
@@ -32,6 +31,23 @@ class GameState
   public List<string> Messages { get; } = [];
 
   const int MaxMessages = 50;
+
+  // I made life difficult for myself by deciding that Turn 0 of the game is 
+  // 8:00am T_T One turn is one minute.
+  const int TURNS_PER_HOUR = 60;                  
+  const ulong TURNS_PER_DAY = TURNS_PER_HOUR * 24;
+  const ulong START_OFFSET = 8 * TURNS_PER_HOUR; // Turn 0 is 8:00am
+
+  public (int, int) CurrTime()
+  {
+    int normalized = (int)((Turn + START_OFFSET) % TURNS_PER_DAY);
+    int hour = normalized / TURNS_PER_HOUR;
+    int minute = normalized % TURNS_PER_HOUR;
+
+    return (hour, minute);
+  }
+
+  public bool DayTime => CurrTime().Item1 >= 6 && CurrTime().Item1 <= 19;
 
   public void Say(string message)
   {
