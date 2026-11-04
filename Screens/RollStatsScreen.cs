@@ -106,7 +106,7 @@ class RollStatsScreen : IScreen
           Gold = _app.Rng.Next(150, 251)
         };
         c.HP = c.MaxHP;
-        
+
         if (_role == Role.Conjurer)
           c.ConjurerSpellLevel = 1;
         else if (_role == Role.Magician)
@@ -138,9 +138,9 @@ class RollStatsScreen : IScreen
     lines.Add($"Lore: {_lore}");
     lines.Add($"Luck: {_luck}");
     lines.Add("");
-    lines.Add($"HP: {_hp}");
+    lines.Add($"HP: {_hp + Character.StatToMod(_con)}");
     if (_role == Role.Conjurer || _role == Role.Magician)
-      lines.Add($"MP: {_mp}");
+      lines.Add($"MP: {_mp + Character.StatToMod(_lore)}");
 
     lines.AddRange("", "(r) reroll or -enter- to accept");
     lines.AddRange("", "Esc to cancel.");
