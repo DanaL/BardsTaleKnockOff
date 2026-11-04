@@ -235,11 +235,11 @@ class Character
 
   public int HP { get; set; }
   public int BaseHP { get; set; }
-  public int MaxHP => BaseHP + StatToMod(Con) * Level;
+  public int MaxHP => BaseHP + int.Max(StatToMod(Con) * Level, Level);
   
   public int MP { get; set; }
   public int BaseMP { get; set; }
-  public int MaxMP => BaseMP > 0 ? BaseMP + StatToMod(Lore) * Level : 0;
+  public int MaxMP => BaseMP > 0 ? BaseMP + int.Max(StatToMod(Lore) * Level, Level) : 0;
   
   public string Condition { get; set; } = "";
 
@@ -401,8 +401,7 @@ class Character
 
   public void LevelUp(Rng rng)
   {
-    ++Level;
-
+    int nextLevel = Level + 1;    
     int newHP = 0;
     switch (Role)
     {
@@ -410,39 +409,43 @@ class Character
       case Role.Paladin:
       case Role.Archer:
         newHP = rng.Next(4, 17);
-        if (Level % 2 == 0)
+        if (nextLevel % 2 == 0)
           AbilityPoints += 1;
         break;
       case Role.Rogue:
       case Role.Hunter:
       case Role.Trickster:
         newHP = rng.Next(1, 9);
-        if (Level % 2 == 0)
+        if (nextLevel % 2 == 0)
           AbilityPoints += 1;
         break;
       case Role.Magician:
       case Role.Conjurer:
         newHP = rng.Next(1, 5);
-        if (Level % 4 == 0)
+        if (nextLevel % 4 == 0)
           AbilityPoints += 1;
         break;
       case Role.Sorcerer:
       case Role.Wizard:
         newHP = rng.Next(1, 7);
-        if (Level % 4 == 0)
+        if (nextLevel % 4 == 0)
           AbilityPoints += 1;
         break;
     }
-    
-    newHP = int.Max(1, newHP + StatToMod(Con));    
-    BaseHP += newHP;
-    HP += newHP;
 
+    int hpDelta = MaxHP - HP;
+    int mpDelta = MaxMP - MP;
+
+    ++Level;
+    
+    BaseHP += newHP;
+    HP = MaxHP - hpDelta;
+    
     if (BaseMP > 0)
     {
-      int newMP = int.Max(1, rng.Next(1, 5) + StatToMod(Lore));
+      int newMP = rng.Next(1, 5);      
       BaseMP += newMP;
-      MP += newMP;
+      MP = MaxMP - mpDelta;
     }
   }
 }
