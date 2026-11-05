@@ -203,6 +203,18 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
     {
       switch (key.scancode)
       {
+        case SDL_Scancode.SDL_SCANCODE_1:
+        case SDL_Scancode.SDL_SCANCODE_2:
+        case SDL_Scancode.SDL_SCANCODE_3:
+        case SDL_Scancode.SDL_SCANCODE_4:
+        case SDL_Scancode.SDL_SCANCODE_5:
+        case SDL_Scancode.SDL_SCANCODE_6:
+          int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
+          if (slot <= app.GameState.Party.Count && app.GameState.Party.Members[slot] is Character nc)
+          {
+            c = nc;           
+          }          
+          break;
         case SDL_Scancode.SDL_SCANCODE_M:
           if (_options.Contains(MEDITATION_OPT))
             _state = MEDITATION;
@@ -402,7 +414,7 @@ class TrainingHallScreen(App app) : IScreen
           int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
           if (slot <= app.GameState.Party.Count)
           {
-            Character? c = app.GameState!.Party.Members[slot];
+            Character? c = app.GameState.Party.Members[slot];
             if (c is not null)
               app.Screens.Push(new TrainingHallServicesScreen(app, c));
           }          
