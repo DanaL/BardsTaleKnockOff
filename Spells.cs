@@ -55,7 +55,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     switch (spell.Code)
     {
       case "ARFI":
-        Arfi(caster, monsterGroup, target, spell.Cost, rng);
+        Arfi(caster, monsterGroup, target, spell.Cost, rng, gs);
         break;      
       case "AIAR":
         caster.MP -= spell.Cost;
@@ -131,9 +131,10 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
       c.Buffs.Add(new TempBuff(Buff.PhaseBlur, uint.MaxValue, true));
   }
 
-  public static void Mafl(Character caster, GameState gs, int cost)
+  // caster is nullable because lights can be created from torches, etc
+  public static void Mafl(Character? caster, GameState gs, int cost)
   {
-    caster.MP -= cost;
+    caster?.MP -= cost;
 
     // Casting a light spell replaces an existing light
     ClearLightSources(gs.Party);
@@ -148,13 +149,24 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     gs.Party.Buffs.Add(new TempBuff(Buff.SteelLight, gs.Turn + 1000, false));
   }
 
-  public void Arfi(Character caster, int monsterGroup, Character? target, int cost, Rng rng)
+  public void Arfi(Character caster, int monsterGroup, Character? target, int cost, Rng rng, GameState gs)
   {
     caster.MP -= cost;
     if (foes[monsterGroup].Count > 0)
     {
       int targetNum = rng.Next(foes[monsterGroup].Count);
       int dmg = rng.Next(1, 5) * caster.Level;
+      Monster m = foes[monsterGroup][targetNum];
+      var save = m.RollSavingThrow(caster.MagicPower, rng);
+      if (save == SaveResult.Success)
+      {
+        gs.Say("But they resist!");
+        return;
+      }
+      else if (save == SaveResult.Partial)
+      {
+        dmg = int.Max(1, dmg / 2);
+      }
       battle.DamageMonster(monsterGroup, targetNum, dmg);
     }
   }

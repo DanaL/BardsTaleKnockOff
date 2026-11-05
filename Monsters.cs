@@ -12,7 +12,7 @@
 namespace BardsTaleKnockOff;
 
 enum MonsterScript { Melee, Conjuror0, Magician0 };
-class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, int xp, int gold, MonsterScript script, string verb, string image, bool ranged, int rating)
+class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, int xp, int gold, MonsterScript script, string verb, string image, bool ranged, int rank)
 {
   public string Name { get; } = name;
   public int AC { get; } = ac;
@@ -26,24 +26,21 @@ class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, i
   public string Verb { get; } = verb;
   public string Image { get; } = image;
   public bool Ranged { get; } = ranged;
-  public int Rating { get; } = rating;
+  public int Rank { get; } = rank;
 
   public List<TempBuff> Buffs { get; set; } = [];
 
-  // Monsters in AD&D rolled as fighters, unless they a different table
-  // seemed more appropriate to the DM. So maybe at some point I'll tag
-  // monsters with types so a Spellcaster uses the Magic User table instead
-  public bool RollSavingThrow(SavingThrow save, Rng rng)
+  public SaveResult RollSavingThrow(int magicPower, Rng rng)
   {
-    // SavingThrowTable.Fighter(save, Level)
-    
-    // int roll = rng.Next(1, 21) + StatToMod(Luck);
-    // if (Role == Role.Paladin)
-    //   roll += 2;
+    int roll = Rank + rng.Next(8);
+    int margin = roll - magicPower;
 
-    // return roll > threshold;
-
-    return false;
+    if (margin < 0)
+      return SaveResult.Failure;
+    else if (margin <= 4)
+      return SaveResult.Partial;
+    else
+      return SaveResult.Success;
   }
 }
 

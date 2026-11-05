@@ -11,8 +11,6 @@
 
 namespace BardsTaleKnockOff;
 
-enum SavingThrow { Poison, Petrification, BreathWeapon, Spell }
-
 enum Lineage { Human, Orc, Dwarf, Gnome, Elf, Goblin }
 
 [Flags]
@@ -24,206 +22,6 @@ enum Role
 }
 
 record struct InvSlot(int Id, bool Equipped);
-
-class SavingThrowTable
-{
-  public static int Rogue(SavingThrow save, int level)
-  {
-    switch (save)
-    {
-      case SavingThrow.Poison:
-        if (level < 5)
-          return 13;
-        else if (level < 9)
-          return 12;
-        else if (level < 13)
-          return 11;
-        else if (level < 17)
-          return 10;
-        else if (level < 20)
-          return 9;
-        else
-          return 8;
-      case SavingThrow.Petrification:
-        if (level < 5)
-          return 12;
-        else if (level < 9)
-          return 11;
-        else if (level < 13)
-          return 10;
-        else if (level < 17)
-          return 9;
-        else if (level < 20)
-          return 8;
-        else
-          return 7;
-      case SavingThrow.BreathWeapon:
-        if (level < 5)
-          return 14;
-        else if (level < 9)
-          return 12;
-        else if (level < 13)
-          return 10;
-        else if (level < 17)
-          return 8;
-        else if (level < 20)
-          return 6;
-        else
-          return 4;
-      case SavingThrow.Spell:
-        if (level < 5)
-          return 15;
-        else if (level < 9)
-          return 13;
-        else if (level < 13)
-          return 11;
-        else if (level < 17)
-          return 9;
-        else if (level < 20)
-          return 7;
-        else
-          return 5;
-    }
-
-    throw new Exception("Hmm we shouldn't get here! Unknown Rogue save?");
-  }
-
-  public static int MagicUser(SavingThrow save, int level)
-  {
-    switch (save)
-    {
-      case SavingThrow.Poison:
-        if (level < 6)
-          return 14;
-        else if (level < 11)
-          return 13;
-        else if (level < 16)
-          return 11;
-        else if (level < 20)
-          return 10;
-        else
-          return 8;
-      case SavingThrow.Petrification:
-        if (level < 6)
-          return 13;
-        else if (level < 11)
-          return 11;
-        else if (level < 16)
-          return 9;
-        else if (level < 20)
-          return 7;
-        else
-          return 5;
-      case SavingThrow.BreathWeapon:
-        if (level < 6)
-          return 15;
-        else if (level < 11)
-          return 13;
-        else if (level < 16)
-          return 11;
-        else if (level < 20)
-          return 9;
-        else
-          return 7;
-      case SavingThrow.Spell:
-        if (level < 6)
-          return 12;
-        else if (level < 11)
-          return 10;
-        else if (level < 16)
-          return 8;
-        else if (level < 20)
-          return 6;
-        else
-          return 4;
-    }
-
-    throw new Exception("Hmm we shouldn't get here! Unknown Rogue save?");
-  }
-
-  public static int Fighter(SavingThrow save, int level)
-  {
-    switch (save)
-    {
-      case SavingThrow.Poison:
-        if (level < 3)
-          return 14;
-        else if (level < 5)
-          return 13;
-        else if (level < 7)
-          return 11;
-        else if (level < 9)
-          return 10;
-        else if (level < 11)
-          return 8;
-        else if (level < 13)
-          return 7;
-        else if (level < 15)
-          return 5;
-        else if (level < 17)
-          return 4;
-        else
-          return 3;
-      case SavingThrow.Petrification:
-        if (level < 3)
-          return 15;
-        else if (level < 5)
-          return 14;
-        else if (level < 7)
-          return 12;
-        else if (level < 9)
-          return 11;
-        else if (level < 11)
-          return 9;
-        else if (level < 13)
-          return 8;
-        else if (level < 15)
-          return 6;
-        else if (level < 17)
-          return 5;
-        else
-          return 4;
-      case SavingThrow.BreathWeapon:
-        if (level < 3)
-          return 17;
-        else if (level < 5)
-          return 16;
-        else if (level < 7)
-          return 13;
-        else if (level < 9)
-          return 12;
-        else if (level < 11)
-          return 9;
-        else if (level < 13)
-          return 8;
-        else if (level < 15)
-          return 6;
-        else
-          return 4;
-      case SavingThrow.Spell:
-        if (level < 3)
-          return 17;
-        else if (level < 5)
-          return 16;
-        else if (level < 7)
-          return 14;
-        else if (level < 9)
-          return 13;
-        else if (level < 11)
-          return 11;
-        else if (level < 13)
-          return 10;
-        else if (level < 15)
-          return 8;
-        else if (level < 17)
-          return 7;
-        else
-          return 6;
-    }
-
-    throw new Exception("Hmm we shouldn't get here! Unknown Fighter save?");
-  }
-}
 
 class Character
 {
@@ -391,27 +189,61 @@ class Character
     }
   }
 
-  // I wasn't sure how saving throws worked in Bard's Tale so I'm copying the
-  // Saving Throws from 1e AD&D
-  public bool RollSavingThrow(SavingThrow save, Rng rng)
+  public int MagicPower
   {
-    int threshold = Role switch
+    get
     {
-      Role.Warrior or Role.Archer or Role.Paladin => SavingThrowTable.Fighter(save, Level),
-      Role.Rogue or Role.Trickster or Role.Hunter => SavingThrowTable.Rogue(save, Level),
-      _ => SavingThrowTable.MagicUser(save, Level),// The magic user classes
-    };
+      int score = 2 + int.Min(Level / 2, 18) + int.Max(StatToMod(Luck), 1);
+      switch (Role)
+      {
+        case Role.Sorcerer:
+        case Role.Wizard:
+          score += 3;
+          break;
+        case Role.Magician:
+        case Role.Conjurer:
+        case Role.Trickster:        
+          score += 2;
+          break;
+        case Role.Paladin:
+          if (Level < 4) score += 1;
+          else if (Level < 10) score += 2;
+          else if (Level < 18) score += 3;
+          else if (Level < 26) score += 4;
+          else if (Level < 30) score += 5;
+          else score += 6;
+          break;
+        default:
+          score += 1;
+          break;
+      }
+      
+      // Eventually items like Luckshields will affect the score
+      // foreach (var inv in Inventory.OfType<InvSlot>())
+      // {
+      //   if (inv.Equipped && )
+      // }
 
-    int roll = rng.Next(1, 21) + StatToMod(Luck);
-    if (Role == Role.Paladin)
-      roll += 2;
+      return score;
+    }
+  }
 
-    return roll > threshold;
+  public SaveResult RollSavingThrow(int monsterRank, Rng rng)
+  {
+    int roll = monsterRank + rng.Next(8);
+    int margin = MagicPower - roll;
+
+    if (margin < 0)
+      return SaveResult.Failure;
+    else if (margin <= 4)
+      return SaveResult.Partial;
+    else 
+      return SaveResult.Success;    
   }
 
   public void LevelUp(Rng rng)
   {
-    int nextLevel = Level + 1;    
+    int nextLevel = Level + 1;
     int newHP = 0;
     switch (Role)
     {

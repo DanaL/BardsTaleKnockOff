@@ -331,7 +331,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       if (c.Buffs.Any(b => b.Buff == Buff.FreezeFoe))
         continue;
 
-      if (c.RollSavingThrow(SavingThrow.Spell, rng))
+      if (c.RollSavingThrow(m.Rank, rng) == SaveResult.Success)
       {
         Messages.Enqueue($"{c.Name} resists!");
       }
@@ -353,7 +353,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     if (target.Condition == "OLD")
       return;
     
-    if (target.RollSavingThrow(SavingThrow.Spell, rng))
+    if (target.RollSavingThrow(m.Rank, rng) == SaveResult.Success)
     {
       Messages.Enqueue($"...but they resist!");
     }
@@ -364,25 +364,42 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     }    
   }
 
-  
+  void ResolveMonsterDmgSpell(Monster m, Character target, string msg, int dmg)
+  {
+    var save = target.RollSavingThrow(m.Rank, rng);
+    if (save == SaveResult.Success)
+    {
+      msg += " but they resist!";
+      Messages.Enqueue(msg);
+      return;
+    }
+    
+    if (save == SaveResult.Partial) 
+    {
+      dmg = int.Max(1, dmg / 2);
+    }
+    msg += $" for {dmg} hp!";
+    Messages.Enqueue(msg);
+
+    string s = target.ReceiveDmg(dmg);
+    if (s != "")
+      Messages.Enqueue(s);
+  }
+
   void MonsterCastArcFire(Monster m, Character target, int level)
   {
     int dmg = rng.Next(1, 5) * level;
     
-    Messages.Enqueue($"{m.Name.DefArticle().Capitalize() } casts Arc Fire on {target.Name} for {dmg} hp!");
-    string s = target.ReceiveDmg(dmg);
-    if (s != "")
-      Messages.Enqueue(s);
+    string msg = $"{m.Name.DefArticle().Capitalize() } casts Arc Fire on {target.Name}";
+    ResolveMonsterDmgSpell(m, target, msg, dmg);
   }
 
   void MonsterCastZap(Monster m, Character target)
   {
     int dmg = rng.Next(1, 5);
     
-    Messages.Enqueue($"{m.Name.DefArticle().Capitalize() } zaps {target.Name} for {dmg} hp!");
-    string s = target.ReceiveDmg(dmg);
-    if (s != "")
-      Messages.Enqueue(s);
+    string msg = $"{m.Name.DefArticle().Capitalize() } zaps {target.Name}";
+    ResolveMonsterDmgSpell(m, target, msg, dmg);
   }
 
   void MonsterMeleeAttack(Monster m, Character target)

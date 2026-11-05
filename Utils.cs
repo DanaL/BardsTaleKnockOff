@@ -11,6 +11,8 @@
 
 using BardsTaleKnockOff;
 
+enum SaveResult { Success, Partial, Failure }
+
 enum Buff { AirArmour, Defending, FreezeFoe, MageFlame, Hiding, PhaseBlur, SorcShield, SteelLight, VorpalPlating, Invisibility }
 record struct TempBuff(Buff Buff, ulong ExpiresOn, bool CombatOnly);
 
