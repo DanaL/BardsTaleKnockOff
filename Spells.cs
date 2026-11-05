@@ -50,6 +50,9 @@ class Spells
 
 class SpellResolver(List<List<Monster>> foes, Battle battle)
 {
+  const int DURATION_SHORT = 1000;
+  const int DURATION_MEDIUM = 2000;
+  
   public void Cast(SpellInfo spell, Character caster, Rng rng, int monsterGroup, Character? target, GameState gs)
   {
     switch (spell.Code)
@@ -91,6 +94,11 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         caster.MP -= spell.Cost;
         if (!caster.Buffs.Any(b => b.Buff == Buff.SorcShield))
           caster.Buffs.Add(new TempBuff(Buff.SorcShield, ulong.MaxValue, true));
+        break;
+      case "SOST":
+        caster.MP -= spell.Cost;
+        if (!gs.Party.Buffs.Any(b => b.Buff == Buff.SoftStep))
+          gs.Party.Buffs.Add(new TempBuff(Buff.SoftStep, gs.Turn + DURATION_MEDIUM, false));
         break;
       case "STLI":
         Stli(caster, gs, spell.Cost);
@@ -154,7 +162,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     ClearLightSources(gs.Party);
 
     caster.MP -= cost;
-    gs.Party.Buffs.Add(new TempBuff(Buff.SteelLight, gs.Turn + 1000, false));
+    gs.Party.Buffs.Add(new TempBuff(Buff.SteelLight, gs.Turn + DURATION_SHORT, false));
   }
 
   public void Arfi(Character caster, int monsterGroup, Character? target, int cost, Rng rng, GameState gs)

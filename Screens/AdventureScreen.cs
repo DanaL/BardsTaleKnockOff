@@ -162,18 +162,23 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
   bool IsEncounter()
   {
+    int odds = 4;
+
     if (app.GameState.CurrLevel == 0 && app.GameState.DayTime)
     {
-      return app.Rng.Next(6) == 0;
+      odds = 7;
     }
     else if (app.GameState.CurrLevel == 0 && !app.GameState.DayTime)
     {
-      return app.Rng.Next(4) == 0;
+      odds = 5;
     }
 
-    return false;
-  }
+    if (app.GameState.Party.Buffs.Any(b => b.Buff == Buff.SoftStep))
+      odds *= 2;
 
+    return app.Rng.Next(odds) == 0;
+  }
+  
   public void Draw(GameUI ui)
   {
     ui.DrawDungeonView(GS);
