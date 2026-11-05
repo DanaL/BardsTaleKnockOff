@@ -124,8 +124,8 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
       }
       else if (!m.Buffs.Any(b => b.Buff == Buff.Hypnotized))
       {
-        m.Buffs.Add(new(Buff.Hypnotized, ulong.MaxValue, true));
-        gs.Say($"{m.Name.IndefArticle().Capitalize()} is mesmerized!");
+        m.Buffs.Add(new(Buff.Hypnotized, gs.Turn + 1, true));
+        gs.Say($"{m.Name.IndefArticle().Capitalize()} becomes hypnotized!");
       }      
     }
   }

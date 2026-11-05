@@ -183,8 +183,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
   // Advance the clock, expire buffs, move the fallen to the back and drop
   // any monster groups that have been wiped out.
   public RoundResult EndRound()
-  {
-    ++gs.Turn;
+  {    
     if (gs.Party.Alive == 0)
     {
       // Uh-oh, TPK
@@ -194,6 +193,13 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     {
       member.Buffs = [.. member.Buffs.Where(b => b.ExpiresOn > gs.Turn)];
     }
+    foreach (var group in Foes)
+    {
+      foreach (var monster in group)
+        monster.Buffs = [.. monster.Buffs.Where(b => b.ExpiresOn > gs.Turn)];
+    }
+
+    ++gs.Turn;
 
     gs.Party.MoveIncapacitatedToBack();
 
@@ -236,6 +242,15 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
   void MonsterAction(Monster m, int group)
   {
+    if (m.Buffs.Any(b => b.Buff == Buff.Hypnotized))
+    {
+      Messages.Enqueue($"{m.Name.IndefArticle().Capitalize()} is mesmerized.");
+      // Check this here so that if a monster acts the same round they had HYIM
+      // cast on them but after the casting, they don't miss two turns
+      m.Buffs = [.. m.Buffs.Where(b => b.Buff != Buff.Hypnotized)];
+      return;  
+    }
+
     // Have to take into account the Special slot eventually
     List<int> targets = [];    
     for (int j = 0; j < gs.Party.Count; j++)
@@ -418,12 +433,6 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         toHitTarget += 5;
       else if (buff.Buff == Buff.PhaseBlur)
         toHitTarget += 2;
-    }
-
-    foreach (var buff in m.Buffs)
-    {
-      if (buff.Buff == Buff.Hypnotized)
-        roll -= 2;  
     }
 
     if (target.Condition == "OLD")
