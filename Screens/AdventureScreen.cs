@@ -100,6 +100,9 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         if (app.Rng.Next(2) == 0)
           app.Screens.Push(new EncounterScreen(app));
         break;
+      case Feature.Tavern:
+        app.Screens.Push(new TavernScreen(app));
+        break;
       case Feature.Temple:
         app.Screens.Push(new TempleScreen(app));
         break;
