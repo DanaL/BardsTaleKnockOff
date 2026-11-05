@@ -20,7 +20,7 @@ class GameState
   public int X { get; set; }
   public int Y { get; set; }
   public Dir Facing { get; set; } = Dir.North;
-  public int ViewRange { get; set; } = 2;
+  
   public ulong Turn { get; set; } = 0;
 
   public Dungeon CurrMap => Maps[CurrLevel];
@@ -39,6 +39,28 @@ class GameState
   const ulong START_OFFSET = 8 * TURNS_PER_HOUR; // Turn 0 is 8:00am
 
   public Dictionary<string, Fact> FactDb { get; set; } = [];
+
+  public int ViewRange
+  {
+    get
+    {
+      int range = 0;
+      
+      if (!CurrMap.Indoors)
+      {
+        range = DayTime ? 3 : 1;
+      }
+
+      foreach (var buff in Party.Buffs)
+      {
+        if (buff.Buff == Buff.MageFlame || buff.Buff == Buff.SteelLight)
+          range += 1;
+      }
+
+      // 3 until/unless I implement vision to range 4...
+      return int.Clamp(range, 0, 3);
+    }
+  }
 
   public (int, int) CurrTime()
   {

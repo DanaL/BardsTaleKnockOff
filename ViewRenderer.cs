@@ -215,10 +215,13 @@ unsafe class ViewRenderer
     SDL_RenderTexture(_renderer, tex, null, &dst);
   }
 
-  public void Draw(GameState gs, int px, int py, Dir facing, int originX, int originY)
+  public void Draw(GameState gs, int originX, int originY)
   {
+    int px = gs.X;
+    int py = gs.Y;
+    Dir facing = gs.Facing;
+    int viewRange = gs.ViewRange;
     Dungeon map = gs.CurrMap;
-    int viewRange = map.Indoors ? 2 : 3;
     _fade = DistanceFade.ToBlack;
     
     var (fx, fy) = facing.Delta();

@@ -105,10 +105,10 @@ unsafe class GameUI
   public void Clear() => FillRect(Background, new SDL_Rect { x = 0, y = 0, w = ScreenW, h = ScreenH });
 
   // The first-person view of the map.
-  public void DrawDungeonView(GameState state)
+  public void DrawDungeonView(GameState gs)
   {
     Frame(ViewRect);
-    _view.Draw(state, state.X, state.Y, state.Facing, ViewRect.x, ViewRect.y);
+    _view.Draw(gs, ViewRect.x, ViewRect.y);
   }
 
   // The column of icons between the picture and the text panel showing the
@@ -145,7 +145,7 @@ unsafe class GameUI
   {
     Frame(ViewRect);
     if (backdrop is not null)
-      _view.Draw(backdrop, backdrop.X, backdrop.Y, backdrop.Facing, ViewRect.x, ViewRect.y);
+      _view.Draw(backdrop, ViewRect.x, ViewRect.y);
     else
       FillRect(PictureBackground, ViewRect);
     _view.DrawImage(fileName, ViewRect.x, ViewRect.y);
