@@ -546,20 +546,20 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
     int monsterHit = rng.Next(Foes[monsterGroup].Count);
     if (criticalHit)
-      KillMonster(monsterGroup, monsterHit);
+      KillMonster(monsterGroup, monsterHit, gs);
     else
-      DamageMonster(monsterGroup, monsterHit, dmg);
+      DamageMonster(monsterGroup, monsterHit, dmg, gs);
   }
 
   // Killing a monster shifts the indexes of the ones after it in the group,
   // so when damaging a whole group, loop from the back.
-  public bool DamageMonster(int group, int targetNum, int dmg)
+  public bool DamageMonster(int group, int targetNum, int dmg, GameState gs)
   {
     Monster m = Foes[group][targetNum];
     if (dmg >= m.HP)
     {
       Messages.Enqueue($"{m.Name.DefArticle().ToLower().Capitalize()} is killed!");
-      KillMonster(group, targetNum);
+      KillMonster(group, targetNum, gs);
       return true;
     }
 
@@ -569,12 +569,15 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     return false;
   }
 
-  public void KillMonster(int group, int index)
+  public void KillMonster(int group, int index, GameState gs)
   {
     Monster m = Foes[group][index];
     _xpWon += m.XP;
     _goldWon += m.Gold;
     Foes[group].RemoveAt(index);
+
+    if (m.DefeatFact is Fact fact)
+      gs.FactDb[fact.Key] = fact;
   }
 
   int Initiative(Character c)

@@ -191,7 +191,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
       {
         dmg = int.Max(1, dmg / 2);
       }
-      battle.DamageMonster(monsterGroup, targetNum, dmg);
+      battle.DamageMonster(monsterGroup, targetNum, dmg, gs);
     }
   }
 }

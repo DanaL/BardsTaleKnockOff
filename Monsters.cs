@@ -27,7 +27,8 @@ class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, i
   public string Image { get; } = image;
   public bool Ranged { get; } = ranged;
   public int Rank { get; } = rank;
-
+  public Fact? DefeatFact { get; set; } = null;
+  
   public List<TempBuff> Buffs { get; set; } = [];
 
   public SaveResult RollSavingThrow(int magicPower, Rng rng)
