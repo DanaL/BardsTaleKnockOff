@@ -277,6 +277,7 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
   {
     List<string> lines = [ $"What can we do for {c.Name} today?", "" ];
     List<string> menuOptions = [];
+    bool mentionGold = false;
 
     if (_state == MAIN)
     {
@@ -296,7 +297,7 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
       {
         lines.AddRange("They have ability points to spend.");
         _options.Add(ABILITY_PT_OPT);
-        menuOptions.Add("A) Use ability points");
+        menuOptions.Add("A) Use ability points");        
       }
       
       if (ClassesAvailable().Count > 0)
@@ -308,7 +309,7 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
       }
 
       if (c.MP < c.MaxMP)
-      {
+      {        
         menuOptions.Add("M) Relax in the meditation hall.");
         _options.Add(MEDITATION_OPT);
       }
@@ -320,13 +321,15 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
     {
       int fee = 15 * (c.MaxMP - c.MP);
       lines.Add($"Some contemplation and breath work will indeed refocus {c.Name}'s mind and restore their MP.");
+      lines.AddRange("", $"{c.Name} has {c.Gold} gp.");
+
       if (fee > c.Gold)
       {
         lines.AddRange($"Unfortunately, they lack the {fee} gp we require to book a session.");
       }
       else
       {
-        lines.AddRange("", $"Renting time in the meditation hall will cost {fee} gp.", "", "Shall they pay? (y/n)");
+        lines.AddRange("", $"Booking time in the meditation hall will cost {fee} gp.", "", "Shall they pay? (y/n)");
         _options.Add(YES_OPT);
         _options.Add(NO_OPT);
       }
