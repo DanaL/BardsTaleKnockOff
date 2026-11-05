@@ -62,8 +62,8 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         if (!caster.Buffs.Any(b => b.Buff == Buff.AirArmour))
           caster.Buffs.Add(new TempBuff(Buff.AirArmour, ulong.MaxValue, true));
         break;
-      case "HYMI":
-        Hyim(caster, monsterGroup, spell.Cost, rng);
+      case "HYIM":
+        Hyim(caster, monsterGroup, spell.Cost, rng, gs);
         break;
       case "MAFL":
         Mafl(caster, gs, spell.Cost);
@@ -113,13 +113,21 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     party.Buffs = [.. party.Buffs.Where(b => b.Buff != Buff.MageFlame && b.Buff != Buff.SteelLight)];
   }
 
-  public void Hyim(Character caster, int monsterGroup, int cost, Rng rng)
+  public void Hyim(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
   {
-    // caster.MP -= cost;
-    // foreach (Monster m in foes[monsterGroup])
-    // {
-    //   caster.RollSavingThrow()
-    // }
+    caster.MP -= cost;
+    foreach (Monster m in foes[monsterGroup])
+    {
+      if (m.RollSavingThrow(caster.MagicPower, rng) == SaveResult.Success)
+      {
+        gs.Say($"{m.Name.IndefArticle().Capitalize()} resists!");
+      }
+      else if (!m.Buffs.Any(b => b.Buff == Buff.Hypnotized))
+      {
+        m.Buffs.Add(new(Buff.Hypnotized, ulong.MaxValue, true));
+        gs.Say($"{m.Name.IndefArticle().Capitalize()} is mesmerized!");
+      }      
+    }
   }
 
   public static void Phbl(Character caster, GameState gs, int cost)

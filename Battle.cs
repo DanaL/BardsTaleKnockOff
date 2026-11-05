@@ -420,6 +420,12 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         toHitTarget += 2;
     }
 
+    foreach (var buff in m.Buffs)
+    {
+      if (buff.Buff == Buff.Hypnotized)
+        roll -= 2;  
+    }
+
     if (target.Condition == "OLD")
       toHitTarget -= 5;
 
