@@ -108,7 +108,11 @@ unsafe class GameUI
   public void DrawDungeonView(GameState gs)
   {
     Frame(ViewRect);
-    _view.Draw(gs, ViewRect.x, ViewRect.y);
+
+    if (gs.ViewRange == 0) // this will happen when the party is blind
+      DrawNoBackground("It's dark!");
+    else
+      _view.Draw(gs, ViewRect.x, ViewRect.y);
   }
 
   // The column of icons between the picture and the text panel showing the
