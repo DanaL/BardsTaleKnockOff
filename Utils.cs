@@ -9,6 +9,7 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.Text.Json.Serialization;
 using BardsTaleKnockOff;
 
 enum SaveResult { Success, Partial, Failure }
@@ -24,6 +25,13 @@ readonly record struct Rgb(byte R, byte G, byte B);
 // Outdoors, things become see-through and melt into the sky/ground behind them
 // (haze on a bright day).
 enum DistanceFade { ToBlack, ToBackground }
+
+// Facts are saved polymorphically: each subtype needs a [JsonDerivedType]
+// line with a unique tag, or saving a fact of that type throws.
+[JsonPolymorphic]
+[JsonDerivedType(typeof(FlagFact), "flag")]
+abstract record Fact(string Key);
+record FlagFact(string Key, bool Value) : Fact(Key);
 
 static class Util
 {

@@ -38,6 +38,8 @@ class GameState
   const ulong TURNS_PER_DAY = TURNS_PER_HOUR * 24;
   const ulong START_OFFSET = 8 * TURNS_PER_HOUR; // Turn 0 is 8:00am
 
+  public Dictionary<string, Fact> FactDb { get; set; } = [];
+
   public (int, int) CurrTime()
   {
     int normalized = (int)((Turn + START_OFFSET) % TURNS_PER_DAY);

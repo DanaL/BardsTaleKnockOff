@@ -277,8 +277,7 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
   {
     List<string> lines = [ $"What can we do for {c.Name} today?", "" ];
     List<string> menuOptions = [];
-    bool mentionGold = false;
-
+    
     if (_state == MAIN)
     {
       int xpNeeded = XPTable.Needed(c.Role, c.Level + 1);

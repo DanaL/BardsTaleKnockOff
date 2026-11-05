@@ -38,17 +38,14 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case SDL_Scancode.SDL_SCANCODE_DOWN:
       case SDL_Scancode.SDL_SCANCODE_S:        
         GS.Facing = GS.Facing.Opposite();
-        ResolveTurn();
         break;
       case SDL_Scancode.SDL_SCANCODE_LEFT:
       case SDL_Scancode.SDL_SCANCODE_A:
         GS.Facing = GS.Facing.TurnLeft();
-        ResolveTurn();
         break;
       case SDL_Scancode.SDL_SCANCODE_RIGHT:
       case SDL_Scancode.SDL_SCANCODE_D:
         GS.Facing = GS.Facing.TurnRight();
-        ResolveTurn();
         break;
       case SDL_Scancode.SDL_SCANCODE_1:
       case SDL_Scancode.SDL_SCANCODE_2:
@@ -95,32 +92,36 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
     Tile tile = GS.CurrMap.TileAt(GS.X, GS.Y);
 
-    if (tile.Feature == Feature.Guild)
+    switch (tile.Feature)
     {
-      Serialize.WriteSaveGame(app);
-      app.Screens.Replace(new GuildScreen(app));
-    }
-    else if (tile.Feature == Feature.Shop)
-    {
-      app.Screens.Push(new ShoppeScreen(app));
-    }
-    else if (tile.Feature == Feature.House)
-    {
-      app.Screens.Push(new HouseScreen(app));
-      if (app.Rng.Next(2) == 0)
-        app.Screens.Push(new EncounterScreen(app));
-    }
-    else if (tile.Feature == Feature.Temple)
-    {
-      app.Screens.Push(new TempleScreen(app));
-    }
-    else if (tile.Feature == Feature.TrainingHall)
-    {
-      app.Screens.Push(new TrainingHallScreen(app));
-    }
-    else if (IsEncounter())
-    {
-      app.Screens.Push(new EncounterScreen(app));
+      case Feature.Guild:
+        Serialize.WriteSaveGame(app);
+        app.Screens.Replace(new GuildScreen(app));
+        break;
+      case Feature.Shop:
+        app.Screens.Push(new ShoppeScreen(app));
+        break;
+      case Feature.House:
+        app.Screens.Push(new HouseScreen(app));
+        if (app.Rng.Next(2) == 0)
+          app.Screens.Push(new EncounterScreen(app));
+        break;
+      case Feature.Temple:
+        app.Screens.Push(new TempleScreen(app));
+        break;
+      case Feature.TrainingHall:
+        app.Screens.Push(new TrainingHallScreen(app));
+        break;
+      case Feature.Special1:
+        if (!GS.FactDb.ContainsKey("TownOgreSlain"))
+        {
+          app.Screens.Push(new PopupScreen(app, "To the east is a yawning portal, beyond which adventure beckons. An ogre lumbers back and forth, blocking your access."));
+        }
+        break;
+      default:
+        if (IsEncounter())
+          app.Screens.Push(new EncounterScreen(app));        
+        break;
     }
 
     GS.Party.Buffs = [.. GS.Party.Buffs.Where(b => b.ExpiresOn > GS.Turn)];

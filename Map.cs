@@ -29,7 +29,7 @@ static class EdgeExt
 
 // Something standing in the middle of a square, drawn as a sprite that fills
 // the square (e.g. a tree). Unlike edges, these belong to the square itself.
-enum Feature : byte { None, Tree, Guild, House, Shop, Temple, TrainingHall }
+enum Feature : byte { None, Tree, Guild, House, Shop, Temple, TrainingHall, Special1 }
 
 static class FeatureExt
 {
@@ -61,7 +61,7 @@ static class DirExt
 
 record struct Tile(Floor Floor, Ceiling Ceiling, Feature Feature, Edge EdgeN, Edge EdgeS, Edge EdgeE, Edge EdgeW)
 {
-  public Edge EdgeForDir(Dir dir) => dir switch {
+  public readonly Edge EdgeForDir(Dir dir) => dir switch {
     Dir.North => EdgeN,
     Dir.South => EdgeS,
     Dir.East => EdgeE,
