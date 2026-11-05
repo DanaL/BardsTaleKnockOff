@@ -242,6 +242,17 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
             _state = MAIN;  
           }
           break;
+        case SDL_Scancode.SDL_SCANCODE_Y:
+          if (_options.Contains(NO_OPT))
+          {
+            int fee = 15 * (c.MaxMP - c.MP);
+            c.Gold -= fee;
+            c.MP = c.MaxMP;
+            app.Screens.Push(new PopupScreen(app, $"{c.Name} medidates and restores their magic energy!"));
+            _options.Clear();
+            _state = MAIN;  
+          }
+          break;
         case SDL_Scancode.SDL_SCANCODE_ESCAPE:
           _options.Clear();
           _state = MAIN;
