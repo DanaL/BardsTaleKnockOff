@@ -18,7 +18,7 @@ namespace BardsTaleKnockOff;
 // fight ends), shops and so on later.
 class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 {
-  GameState GS => app.GameState!;
+  GameState GS => app.GameState;
 
   const int EXPLORE = 0;
   const int CAST_SPELL = 1;
@@ -63,12 +63,6 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case SDL_Scancode.SDL_SCANCODE_N:
         app.Screens.Push(new ReorderPartyScreen(app));
         break;
-      // case SDL_Scancode.SDL_SCANCODE_ESCAPE:
-      //   app.Screens.Push(new ConfirmScreen(app, "Abandon this adventure and return to the main menu?", () =>
-      //   {
-      //     app.Screens.Replace(new MainMenuScreen(app));
-      //   }));
-      //   break;
     }
   }
 
@@ -116,6 +110,16 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         if (!GS.FactDb.ContainsKey("TownOgreSlain"))
         {
           app.Screens.Push(new PopupScreen(app, "To the east is a yawning portal, beyond which adventure beckons. An ogre lumbers back and forth, blocking your access."));
+        }
+        break;
+      case Feature.Special2:
+        if (!GS.FactDb.ContainsKey("TownOgreSlain"))
+        {
+          app.Screens.Push(new OgreGuardScreen(app));
+        }
+        else
+        {
+          app.GameState.Say("A sinister aura emanates from the portal to the east.");
         }
         break;
       default:
@@ -194,5 +198,36 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     {    
       ResolveTurn();
     }
+  }
+}
+
+class OgreGuardScreen(App app) : IScreen
+{
+  public void OnKey(SDL_KeyboardEvent key)
+  {
+    if (app.GameState.FactDb.ContainsKey("TownOgreSlain"))
+      return;
+
+    Monster ogre = MonsterCatalog.Get(MonsterCatalog.OGRE, app.Rng);
+    ogre.DefeatFact = new FlagFact("TownOgreSlain", true);
+    ogre.HP = 35; // an especially tough ogre
+    ogre.Rank += 1;
+    app.Screens.Push(new BattleScreen(app, [[ ogre ]]) { RetreatLoc = (19, 8) });    
+  }
+
+  public void Draw(GameUI ui)
+  {    
+    if (app.GameState.FactDb.ContainsKey("TownOgreSlain"))
+    {
+      ui.DrawDungeonView(app.GameState);
+      ui.DrawTextPanel([ "A sinister aura emanates from the portal to the east." ]);
+    }
+    else
+    {
+      ui.DrawImage("orc.png", "Ogre", null); // swap to ogre once we have one      
+      ui.DrawTextPanel([ "An enormous ogre bars your path!", "", "- press any key to continue -"]);
+    }
+
+    ui.DrawRoster(app.GameState.Party);
   }
 }

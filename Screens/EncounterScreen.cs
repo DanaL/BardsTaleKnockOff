@@ -17,6 +17,10 @@ namespace BardsTaleKnockOff;
 // then shows the round's messages one at a time. The rules live in Battle.
 class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickScreen
 {
+  // if the player flees some special encounters, like a guarded door, we
+  // might want to move them to a different location
+  public (int X, int Y) RetreatLoc = (-1, -1); 
+
   const SDL_Scancode ATTACK_KEY = SDL_Scancode.SDL_SCANCODE_A;
   const SDL_Scancode DEFEND_KEY = SDL_Scancode.SDL_SCANCODE_D;
   const SDL_Scancode HIDE_KEY = SDL_Scancode.SDL_SCANCODE_H;
@@ -135,6 +139,14 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
     }
     else if (_state == FLED && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
+      if (RetreatLoc.X != -1 && RetreatLoc.Y != -1)
+      {
+        app.GameState.X = RetreatLoc.X;
+        app.GameState.Y = RetreatLoc.Y;
+        app.GameState.Facing = app.GameState.Facing.Opposite();
+        app.Screens.Pop(); // This is to make sure the special encounter screen is popped off the stack
+      }
+
       app.GameState.Party.ClearCombatBuffs();
       app.GameState.Messages.Clear();
       app.Screens.Pop();

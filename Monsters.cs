@@ -26,9 +26,9 @@ class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, i
   public string Verb { get; } = verb;
   public string Image { get; } = image;
   public bool Ranged { get; } = ranged;
-  public int Rank { get; } = rank;
+  public int Rank { get; set; } = rank;
   public Fact? DefeatFact { get; set; } = null;
-  
+
   public List<TempBuff> Buffs { get; set; } = [];
 
   public SaveResult RollSavingThrow(int magicPower, Rng rng)
@@ -54,7 +54,8 @@ class MonsterCatalog
   public const int MAGICIAN_0 = 4;
   public const int FERAL_DOG = 5;
   public const int SPIDER = 6;
-  
+  public const int OGRE = 7;
+
   public static Monster Get(int id, Rng rng) => id switch
   {    
     GOBLIN => new Monster("Goblin", 10, rng.Next(3, 7) + 1, 19, 1, 4, 60, rng.Next(20, 51), MonsterScript.Melee, "attacks", "goblin.png", false, 1),
@@ -64,6 +65,7 @@ class MonsterCatalog
     CONJURER_0 => new Monster("Conjurer", 9, rng.Next(1, 9) + 1, 18, 1, 4, 100, rng.Next(25, 61), MonsterScript.Conjuror0, "attacks", "magicuser_yellow.png", true, 1),
     MAGICIAN_0 => new Monster("Magician", 9, rng.Next(1, 9) + 1, 18, 1, 4, 100, rng.Next(25, 61), MonsterScript.Magician0, "attacks", "magicuser_green.png", true, 1),
     SPIDER => new Monster("Spider", 6, rng.Next(5, 12), 17, 3, 12, 120, rng.Next(20, 51), MonsterScript.Melee, "bites", "spider.png", false, 1),
+    OGRE => new Monster("Ogre", 6, rng.Next(8, 24), 14, 6, 24, 1024, rng.Next(100, 151), MonsterScript.Melee, "swings", "orc.png", false, 3),
     _ => throw new Exception($"Unknown monster id {id}")  
   };
 }
