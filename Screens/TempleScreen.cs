@@ -86,6 +86,11 @@ class HealingScreen(App app, Character c, int slot) : IScreen
         lines.Add($"{c.Name} is indeed in dire straits! But if the gods are willing, they may restored for the modest donation of {Invoice()} gold pieces.");
         lines.AddRange("", $"{c.Name} has {c.Gold} gp.", "", $"H)eal {c.Name}");
       }
+      else if (c.Condition == "OLD")
+      {
+        lines.Add($"{c.Name} certainly needs some assitance! They may restored for the modest donation of {Invoice()} gold pieces.");
+        lines.AddRange("", $"{c.Name} has {c.Gold} gp.", "", $"H)eal {c.Name}");
+      }
       else if (c.HP < c.MaxHP)
       {
         lines.Add($"{c.Name} is indeed in need of healing! They can be made well for the small donation of {Invoice()} gold pieces.");
@@ -129,14 +134,15 @@ class HealingScreen(App app, Character c, int slot) : IScreen
       bool successful = c.Resurrect(app.Rng);
       _state = successful ? HEALED : RES_FAILED;      
     }
+    else if (c.Condition == "OLD")
+    {
+      c.Gold -= Invoice();
+      c.Condition = "";
+    }
     else
     {
       c.Gold -= Invoice();
       c.HP = c.MaxHP;
-
-      // And eventually fix other statuses
-      // Note in og Bard's Tale, you were brought back to life at 1 HP
-
       _state = HEALED;
     }
   }
@@ -146,6 +152,10 @@ class HealingScreen(App app, Character c, int slot) : IScreen
     if (c.Condition == "DEAD")
     {
       return int.Min(900 * c.Level, 11_700);
+    }
+    else if (c.Condition == "OLD")
+    {
+      return int.Min(300 * c.Level, 3900);
     }
     else 
     {
