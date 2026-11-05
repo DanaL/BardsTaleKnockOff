@@ -53,8 +53,10 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
   const int DURATION_SHORT = 1000;
   const int DURATION_MEDIUM = 2000;
   
-  public void Cast(SpellInfo spell, Character caster, Rng rng, int monsterGroup, Character? target, GameState gs)
+  public List<string> Cast(SpellInfo spell, Character caster, Rng rng, int monsterGroup, Character? target, GameState gs)
   {
+    List<string> msgBuffer = [];
+
     switch (spell.Code)
     {
       case "ARFI":
@@ -114,6 +116,8 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
       default:
         throw new Exception($"Unknown spell: {spell.Code}!");
     }
+
+    return msgBuffer;
   }
 
   static void ClearLightSources(Party party)
@@ -121,21 +125,25 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     party.Buffs = [.. party.Buffs.Where(b => b.Buff != Buff.MageFlame && b.Buff != Buff.SteelLight)];
   }
 
-  public void Hyim(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
+  List<string> Hyim(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
   {
+    List<string> msgs = [];
+
     caster.MP -= cost;
     foreach (Monster m in foes[monsterGroup])
     {
       if (m.RollSavingThrow(caster.MagicPower, rng) == SaveResult.Success)
       {
-        gs.Say($"{m.Name.IndefArticle().Capitalize()} resists!");
+        msgs.Add($"{m.Name.IndefArticle().Capitalize()} resists!");        
       }
       else if (!m.Buffs.Any(b => b.Buff == Buff.Hypnotized))
       {
         m.Buffs.Add(new(Buff.Hypnotized, gs.Turn + 1, true));
-        gs.Say($"{m.Name.IndefArticle().Capitalize()} becomes hypnotized!");
+        msgs.Add($"{m.Name.IndefArticle().Capitalize()} becomes hypnotized!");
       }      
     }
+
+    return msgs;
   }
 
   public static void Phbl(Character caster, GameState gs, int cost)

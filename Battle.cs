@@ -172,7 +172,9 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
             }
             else
             {
-              sr.Cast(choice.Spell, c, rng, choice.Group, partyTarget, gs);  
+              var msgs = sr.Cast(choice.Spell, c, rng, choice.Group, partyTarget, gs);
+              foreach (string m in msgs)
+                Messages.Enqueue(s);
             }
           }
           break;
