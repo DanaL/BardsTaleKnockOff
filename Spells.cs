@@ -136,7 +136,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         Stli(caster, gs, spell.Cost);
         break;
       case "WOHL":
-        if (target is not null)
+        if (target is not null && target.Condition != "DEAD")
         {
           caster.MP -= spell.Cost;
           int hp = rng.Next(2, 9);
