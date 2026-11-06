@@ -108,7 +108,7 @@ class SpendAbilityPointsScreen(App app, Character c) : IScreen
 
     ui.DrawNoBackground("Training Hall");
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawRoster(app.GameState);
   }
 }
 
@@ -176,7 +176,7 @@ class ChangeClassScreen(App app, Character c, HashSet<Role> options) : IScreen
 
     ui.DrawNoBackground("Training Hall");
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawRoster(app.GameState);
   }
 }
 
@@ -212,7 +212,13 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
           int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
           if (slot <= app.GameState.Party.Count && app.GameState.Party.Members[slot] is Character nc)
           {
-            c = nc;           
+            c = nc;
+
+            for (int j = 1; j <= 13; j++)
+            {
+              int foo = (int) Math.Round(j / 2.0, MidpointRounding.AwayFromZero);
+              Console.WriteLine($"{j} {foo}");
+            }
           }          
           break;
         case SDL_Scancode.SDL_SCANCODE_M:
@@ -336,7 +342,7 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
 
     ui.DrawNoBackground("Training Hall");
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawRoster(app.GameState);
   }
 
   HashSet<Role> ClassesAvailable()
@@ -443,6 +449,6 @@ class TrainingHallScreen(App app) : IScreen
 
     ui.DrawNoBackground("Training Hall");
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawRoster(app.GameState);
   }
 }

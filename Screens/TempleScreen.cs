@@ -119,7 +119,7 @@ class HealingScreen(App app, Character c, int slot) : IScreen
 
     ui.DrawNoBackground("Temple");
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawRoster(app.GameState);
   }
 
   void HealCharacter()
@@ -216,6 +216,6 @@ class TempleScreen(App app) : IScreen
     
     ui.DrawNoBackground("Temple");
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawRoster(app.GameState);
   }
 }

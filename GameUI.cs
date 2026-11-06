@@ -118,10 +118,20 @@ unsafe class GameUI
   // The column of icons between the picture and the text panel showing the
   // party's active spells/effects, top to bottom. Slot 0 is the light
   // (flame) icon.
-  public void DrawStatusIcons(StatusIcons icons)
+  void DrawStatusIcons(StatusIcons icons)
   {
     if (icons.Light)
       Icon(0, "flame1.png");
+    
+    if (icons.Facing == Dir.North)
+      Icon(3, "CompassN.png");
+    else if (icons.Facing == Dir.South)
+      Icon(3, "CompassS.png");
+    else if (icons.Facing == Dir.East)
+      Icon(3, "CompassE.png");
+    else if (icons.Facing == Dir.West)
+      Icon(3, "CompassW.png");
+
     if (icons.Shoe)
       Icon(4, "shoe.png");
 
@@ -229,7 +239,7 @@ unsafe class GameUI
 
   // The party roster along the bottom. Null draws the empty slots (e.g. on
   // the main menu, before there is a party).
-  public void DrawRoster(Party? party = null)
+  public void DrawRoster(GameState gs)
   {
     Frame(RosterRect);
     FillRect(RosterBackground, RosterRect);
@@ -245,28 +255,25 @@ unsafe class GameUI
     _text.Draw("Class", left + ColClass, y, RosterHeading);
     y += TextRenderer.BaseLineHeight;
 
-    DrawRosterLine("S)", party?.Special, left, y);
+    DrawRosterLine("S)", gs?.Party.Special, left, y);
     y += TextRenderer.BaseLineHeight;
     for (int i = 0; i < Party.MAX_PARTY_SIZE; i++)
     {
-      DrawRosterLine($"{i + 1})", party?.Members[i], left, y);
+      DrawRosterLine($"{i + 1})", gs?.Party.Members[i], left, y);
       y += TextRenderer.BaseLineHeight;
     }
 
     bool light = false;
     bool softStep = false;
-    if (party is not null)
+    foreach (var b in gs.Party.Buffs)
     {
-      foreach (var b in party.Buffs)
-      {
-        if (b.Buff == Buff.MageFlame || b.Buff == Buff.SteelLight)
-          light = true;
-        if (b.Buff == Buff.SoftStep)
-          softStep = true;
-      }
+      if (b.Buff == Buff.MageFlame || b.Buff == Buff.SteelLight)
+        light = true;
+      if (b.Buff == Buff.SoftStep)
+        softStep = true;
     }
-
-    DrawStatusIcons(new(light, softStep));
+    
+    DrawStatusIcons(new(light, softStep, gs.Facing));
   }
 
   void DrawRosterLine(string slot, Character? c, int left, int y)

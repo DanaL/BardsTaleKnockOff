@@ -77,6 +77,6 @@ class CreateCampaignScreen(App app) : IScreen
 
     ui.DrawNoBackground("");
     ui.DrawTextPanel(lines);
-    ui.DrawRoster();
+    ui.DrawRoster(app.GameState);
   }  
 }

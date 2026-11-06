@@ -126,7 +126,7 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
 
     ui.DrawNoBackground(caption);
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(app.GameState?.Party);
+    ui.DrawRoster(app.GameState);
   }
 
   List<string> CharacterInfo(Character c)

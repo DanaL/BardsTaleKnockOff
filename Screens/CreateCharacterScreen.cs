@@ -87,6 +87,6 @@ class CreateCharacterScreen(App app) : IScreen
 
     ui.DrawNoBackground("Adventurers' Guild");
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(app.GameState?.Party);
+    ui.DrawRoster(app.GameState);
   }
 }

@@ -191,7 +191,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
   {
     ui.DrawDungeonView(GS);
     ui.DrawTextPanel(GS.Messages);
-    ui.DrawRoster(GS.Party);
+    ui.DrawRoster(GS);
   }
 
   public void Update(ulong elapsedMs)
@@ -231,6 +231,6 @@ class OgreGuardScreen(App app) : IScreen
       ui.DrawTextPanel([ "An enormous ogre bars your path!", "", "- press any key to continue -"]);
     }
 
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawRoster(app.GameState);
   }
 }

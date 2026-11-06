@@ -34,6 +34,6 @@ class CreditsScreen(App app) : IScreen
       "",
       "Press any key."
     ]);
-    ui.DrawRoster(null);
+    ui.DrawRoster(app.GameState);
   }
 }

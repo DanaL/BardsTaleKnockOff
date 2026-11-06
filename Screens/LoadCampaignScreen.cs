@@ -85,6 +85,6 @@ class LoadCampaignScreen(App app) : IScreen
 
     ui.DrawTextPanel(lines, highlight);
     ui.DrawNoBackground("");
-    ui.DrawRoster();
+    ui.DrawRoster(app.GameState);
   }
 }

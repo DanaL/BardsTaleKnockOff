@@ -219,7 +219,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
     }
 
     ui.DrawImage(_image, _caption, null);
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawRoster(app.GameState);
   }
 
   int PostRound()
@@ -507,6 +507,6 @@ class EncounterScreen : IScreen
 
     ui.DrawImage(image, monsterName, null);
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(_app.GameState.Party);
+    ui.DrawRoster(_app.GameState);
   }
 }

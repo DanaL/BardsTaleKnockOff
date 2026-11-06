@@ -51,6 +51,6 @@ class MainMenuScreen(App app) : IScreen
       "",
       .. _notes
     ]);
-    ui.DrawRoster(null);
+    ui.DrawRoster(app.GameState);
   }
 }

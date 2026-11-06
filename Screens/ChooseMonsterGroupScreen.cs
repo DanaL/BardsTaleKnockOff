@@ -72,6 +72,6 @@ class ChooseMonsterGroupScreen(App app, Character c, List<List<Monster>> foes, I
 
     ui.DrawImage(Image, Caption, null);
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawRoster(app.GameState);
   }
 }

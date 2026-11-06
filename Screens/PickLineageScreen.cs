@@ -66,6 +66,6 @@ class PickLineageScreen(App app, string name) : IScreen
    
     ui.DrawNoBackground("Adventurers' Guild");
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(app.GameState?.Party);
+    ui.DrawRoster(app.GameState);
   }
 }

@@ -100,6 +100,6 @@ class DeleteCharacterScreen : IScreen
 
     ui.DrawNoBackground("Adventurers' Guild");
     ui.DrawTextPanel(lines, highlight);
-    ui.DrawRoster(_app.GameState.Party);
+    ui.DrawRoster(_app.GameState);
   }
 }

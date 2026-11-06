@@ -66,6 +66,6 @@ class ReorderPartyScreen(App app) : IScreen
 
     ui.DrawDungeonView(app.GameState);
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawRoster(app.GameState);
   }
 }

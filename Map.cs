@@ -42,7 +42,7 @@ static class FeatureExt
   };
 }
 
-enum Dir { North, East, South, West }
+enum Dir { North, East, South, West, None }
 
 static class DirExt
 {

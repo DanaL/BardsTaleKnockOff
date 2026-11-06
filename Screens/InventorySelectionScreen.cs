@@ -138,6 +138,6 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
 
     ui.DrawNoBackground("");
     ui.DrawTextPanel(lines, highlight);
-    ui.DrawRoster(_app.GameState.Party);
+    ui.DrawRoster(_app.GameState);
   }  
 }

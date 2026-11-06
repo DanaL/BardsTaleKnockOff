@@ -208,6 +208,6 @@ class GuildScreen : IScreen
 
     ui.DrawNoBackground("Adventurers' Guild");
     ui.DrawTextPanel(lines, highlight);
-    ui.DrawRoster(Party);
+    ui.DrawRoster(_app.GameState);
   }
 }

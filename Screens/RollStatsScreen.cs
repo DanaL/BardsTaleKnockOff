@@ -148,6 +148,6 @@ class RollStatsScreen : IScreen
 
     ui.DrawNoBackground("Adventurers' Guild");
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(_app.GameState?.Party);
+    ui.DrawRoster(_app.GameState);
   }
 }

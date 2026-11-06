@@ -14,7 +14,7 @@ using BardsTaleKnockOff;
 
 enum SaveResult { Success, Partial, Failure }
 
-record StatusIcons(bool Light, bool Shoe);
+record StatusIcons(bool Light, bool Shoe, Dir Facing);
 
 enum Buff { AirArmour, Defending, FreezeFoe, MageFlame, Hiding, Hypnotized, PhaseBlur, SoftStep, SorcShield, SteelLight, VorpalPlating, 
             Invisibility }

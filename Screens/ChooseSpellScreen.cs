@@ -132,6 +132,6 @@ class ChooseSpellScreen(App app, Character c, bool combatSpells, ICastSpellScree
     else
       ui.DrawDungeonView(app.GameState);
     ui.DrawTextPanel(lines, offsetCursor);
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawRoster(app.GameState);
   }
 }

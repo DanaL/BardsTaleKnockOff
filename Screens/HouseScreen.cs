@@ -37,6 +37,6 @@ class HouseScreen(App app) : IScreen
 
     ui.DrawImage("empty building.png", "Empty building");
     ui.DrawTextPanel(lines, highlight);
-    ui.DrawRoster(app.GameState!.Party);
+    ui.DrawRoster(app.GameState);
   }
 }

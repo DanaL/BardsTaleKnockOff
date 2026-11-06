@@ -212,7 +212,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
 
     ui.DrawNoBackground("");
     ui.DrawTextPanel(lines, highlight);
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawRoster(app.GameState);
   }
 
   public void CharacterChosen(int partySlot)

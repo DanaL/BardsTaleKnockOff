@@ -46,6 +46,6 @@ class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt, int 
     else
       ui.DrawNoBackground("");
     ui.DrawTextPanel([$"{prompt}: {1}-{app.GameState.Party.Count}"]);
-    ui.DrawRoster(app.GameState.Party);
+    ui.DrawRoster(app.GameState);
   }
 }

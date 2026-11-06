@@ -108,7 +108,7 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
 
     ui.DrawNoBackground("Ye Olde Equipment Shoppe");
     ui.DrawTextPanel(lines, highlight);
-    ui.DrawRoster(app.GameState!.Party);
+    ui.DrawRoster(app.GameState);
   }
 }
 
@@ -233,7 +233,7 @@ class ShoppeScreen : IScreen, IInventorySelectionScreen
     
     ui.DrawNoBackground("Ye Olde Equipment Shoppe");
     ui.DrawTextPanel(lines);
-    ui.DrawRoster(_app.GameState!.Party);
+    ui.DrawRoster(_app.GameState);
   }
 
   public void ItemSelected(InvSlot slot, Item item)
