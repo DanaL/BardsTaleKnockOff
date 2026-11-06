@@ -474,6 +474,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     bool hiding = false;
     bool vorpalPlating = false;
     bool mageGauntlets = false;
+    bool battleSkill = false;
     foreach (var buff in c.Buffs)
     {
       if (buff.Buff == Buff.Hiding)
@@ -482,6 +483,8 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         vorpalPlating = true;
       else if (buff.Buff == Buff.MageGauntlets)
         mageGauntlets = true;
+      else if (buff.Buff == Buff.BattleSkill)
+        battleSkill = true;
     }
 
     for (int j = 0; j < c.NumOfMeleeAttacks; j++)
@@ -495,6 +498,9 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
       if (c.Condition == "OLD")
          roll -= 10;
+
+      if (battleSkill)
+        roll += 4;
 
       int toHitTarget = c.THAC0 - target.AC;
       foreach (var buff in target.Buffs)
@@ -514,7 +520,9 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
           dmg += rng.Next(2, 9);
         if (mageGauntlets)
           dmg += rng.Next(4, 17);
-
+        if (battleSkill)
+          dmg += 4;
+          
         if (weapon is null) 
         {
           dmg += 1;

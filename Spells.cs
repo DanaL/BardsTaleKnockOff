@@ -24,6 +24,7 @@ class Spells
     new SpellInfo("SOSH","Sorcerer Shield", 1, 3, 0, SpellDuration.Combat, true, Role.Conjurer, SpellTarget.Self),
     new SpellInfo("TRZP","Trap Zap", 1, 2, 3, SpellDuration.NA, false, Role.Conjurer, SpellTarget.None),
     new SpellInfo("MACO","Magic Compass", 2, 3, 0, SpellDuration.Medium, false, Role.Conjurer, SpellTarget.None),
+    new SpellInfo("BASK","Battleskill", 2, 4, 0, SpellDuration.Combat, true, Role.Conjurer, SpellTarget.PartyMember),
 
     new SpellInfo("VOPL","Vorpal Plating", 1, 3, 0, SpellDuration.Combat, true, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("AIAR","Air Armour", 1, 3, 0, SpellDuration.Combat, true, Role.Magician, SpellTarget.Self),
@@ -69,6 +70,14 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         if (!caster.Buffs.Any(b => b.Buff == Buff.AirArmour))
           caster.Buffs.Add(new TempBuff(Buff.AirArmour, ulong.MaxValue, true));
         break;
+      case "BASK":
+        if (target is not null)
+        {
+          caster.MP -= spell.Cost;
+          if (!target.Buffs.Any(b => b.Buff == Buff.BattleSkill))
+            target.Buffs.Add(new TempBuff(Buff.BattleSkill, ulong.MaxValue, true));
+        }
+        break;
       case "HYIM":
         Hyim(caster, monsterGroup, spell.Cost, rng, gs);
         break;
@@ -84,7 +93,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         if (target is not null)
         {
           caster.MP -= spell.Cost;
-          if (!caster.Buffs.Any(b => b.Buff == Buff.MageGauntlets))
+          if (!target.Buffs.Any(b => b.Buff == Buff.MageGauntlets))
             target.Buffs.Add(new TempBuff(Buff.MageGauntlets, ulong.MaxValue, true));
         }
         break;
@@ -124,7 +133,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         if (target is not null)
         {
           caster.MP -= spell.Cost;
-          if (!caster.Buffs.Any(b => b.Buff == Buff.VorpalPlating))
+          if (!target.Buffs.Any(b => b.Buff == Buff.VorpalPlating))
             target.Buffs.Add(new TempBuff(Buff.VorpalPlating, ulong.MaxValue, true));
         }
         break;
