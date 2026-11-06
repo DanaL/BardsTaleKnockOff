@@ -131,6 +131,15 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
       case "STLI":
         Stli(caster, gs, spell.Cost);
         break;
+      case "WOHL":
+        if (target is not null)
+        {
+          caster.MP -= spell.Cost;
+          int hp = rng.Next(2, 9);
+          target.HP = int.Min(target.HP + hp, target.MaxHP);
+          msgBuffer.Add($"{target.Name} is healed for {hp} hp.");
+        }
+        break;
       case "VOPL":
         if (target is not null)
         {

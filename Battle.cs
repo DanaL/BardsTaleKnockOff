@@ -164,17 +164,17 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
               
             s += ".";
             Messages.Enqueue(s);
-            SpellResolver sr = new(Foes, this);
-            
+
             if (c.MP < choice.Spell.Cost) 
             {
               Messages.Enqueue($"But they have insufficient Magic Points!");
             }
             else
             {
+              SpellResolver sr = new(Foes, this);
               var msgs = sr.Cast(choice.Spell, c, rng, choice.Group, partyTarget, gs);
               foreach (string m in msgs)
-                Messages.Enqueue(s);
+                Messages.Enqueue(m);
             }
           }
           break;

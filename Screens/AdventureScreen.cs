@@ -22,8 +22,9 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
   const int EXPLORE = 0;
   const int CAST_SPELL = 1;
-
+  
   Character? _caster = null;
+  SpellInfo? _spellToCast = null;
   ulong _idleTime = 0;
   
   public void OnKey(SDL_KeyboardEvent key)
@@ -138,26 +139,45 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
   public void SpellChosen(SpellInfo spell)
   {
-    SpellResolver sr = new([], new Battle(app.GameState, app.Rng, []));
-    if (spell.Target == SpellTarget.None && _caster is not null)
+    if (_caster is null)
+      return;
+
+    app.GameState.Say($"{_caster.Name} casts {spell.Name}.");
+    if (_caster.MP < spell.Cost) 
     {
-      app.GameState.Say($"{_caster.Name} casts {spell.Name}.");
-      if (_caster.MP < spell.Cost) 
-      {
-        app.GameState.Say($"But they have insufficient Magic Points!");
-      }
-      else
-      {
-        sr.Cast(spell, _caster, app.Rng, -1, null, app.GameState);
-        ResolveTurn();
-      }
+      app.GameState.Say($"But they have insufficient Magic Points!");
+      return;
+    }
+
+    if (spell.Target == SpellTarget.None || spell.Target == SpellTarget.FullParty || spell.Target == SpellTarget.Self)
+    {      
+      SpellResolver sr = new([], new Battle(app.GameState, app.Rng, []));
+      foreach (string s in sr.Cast(spell, _caster, app.Rng, -1, null, app.GameState))
+        GS.Say(s);
+
+      ResolveTurn();      
+    }
+    else if (spell.Target == SpellTarget.PartyMember)
+    {
+      _spellToCast = spell;
+      app.Screens.Push(new ChoosePartyMemberScreen(app, this, $"Cast {spell.Name} on who"));
     }
   }
 
   public void CharacterChosen(int partySlot)
   {
-    if (app.GameState.Party.Members[partySlot] is Character c)
+    if (_caster is not null && _spellToCast is not null)
     {
+      // If _caster isn't null, we are picking a target of a spell
+      SpellResolver sr = new([], new Battle(app.GameState, app.Rng, []));
+      foreach (string s in sr.Cast(_spellToCast, _caster, app.Rng, -1, app.GameState.Party.Members[partySlot], GS))
+        GS.Say(s);
+      _spellToCast = null;
+      ResolveTurn();
+    }
+    else if (app.GameState.Party.Members[partySlot] is Character c)
+    {
+      // We are choosing who to cast a spell here
       if (c.MaxMP == 0)
         app.GameState.Say($"{c.Name} cannot work magic!");
       else
