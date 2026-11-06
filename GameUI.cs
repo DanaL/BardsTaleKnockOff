@@ -237,8 +237,8 @@ unsafe class GameUI
     }
   }
 
-  // The party roster along the bottom. Null draws the empty slots (e.g. on
-  // the main menu, before there is a party).
+  // The party roster along the bottom. An empty party draws the empty slots
+  // (e.g. on the main menu, before there is a party).
   public void DrawRoster(GameState gs)
   {
     Frame(RosterRect);
@@ -255,11 +255,11 @@ unsafe class GameUI
     _text.Draw("Class", left + ColClass, y, RosterHeading);
     y += TextRenderer.BaseLineHeight;
 
-    DrawRosterLine("S)", gs?.Party.Special, left, y);
+    DrawRosterLine("S)", gs.Party.Special, left, y);
     y += TextRenderer.BaseLineHeight;
     for (int i = 0; i < Party.MAX_PARTY_SIZE; i++)
     {
-      DrawRosterLine($"{i + 1})", gs?.Party.Members[i], left, y);
+      DrawRosterLine($"{i + 1})", gs.Party.Members[i], left, y);
       y += TextRenderer.BaseLineHeight;
     }
 
