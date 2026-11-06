@@ -473,12 +473,15 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     int dmg = 0;
     bool hiding = false;
     bool vorpalPlating = false;
+    bool mageGauntlets = false;
     foreach (var buff in c.Buffs)
     {
       if (buff.Buff == Buff.Hiding)
         hiding = true;
       else if (buff.Buff == Buff.VorpalPlating)
         vorpalPlating = true;
+      else if (buff.Buff == Buff.MageGauntlets)
+        mageGauntlets = true;
     }
 
     for (int j = 0; j < c.NumOfMeleeAttacks; j++)
@@ -509,9 +512,13 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
         if (vorpalPlating)
           dmg += rng.Next(2, 9);
+        if (mageGauntlets)
+          dmg += rng.Next(4, 17);
 
-        if (weapon is null)
+        if (weapon is null) 
+        {
           dmg += 1;
+        }
         else
         {
           dmg += weapon.DamageBonus;

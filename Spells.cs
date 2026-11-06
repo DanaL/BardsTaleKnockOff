@@ -23,11 +23,13 @@ class Spells
     new SpellInfo("ARFI","Arc Fire", 1, 3, 0, SpellDuration.NA, true, Role.Conjurer, SpellTarget.Monsters),
     new SpellInfo("SOSH","Sorcerer Shield", 1, 3, 0, SpellDuration.Combat, true, Role.Conjurer, SpellTarget.Self),
     new SpellInfo("TRZP","Trap Zap", 1, 2, 3, SpellDuration.NA, false, Role.Conjurer, SpellTarget.None),
+    new SpellInfo("MACO","Magic Compass", 2, 3, 0, SpellDuration.Medium, false, Role.Conjurer, SpellTarget.None),
 
     new SpellInfo("VOPL","Vorpal Plating", 1, 3, 0, SpellDuration.Combat, true, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("AIAR","Air Armour", 1, 3, 0, SpellDuration.Combat, true, Role.Magician, SpellTarget.Self),
     new SpellInfo("STLI","Steel Light", 1, 2, 2, SpellDuration.Short, false, Role.Magician, SpellTarget.None),
     new SpellInfo("SCSI","Scry Site", 1, 2, 0, SpellDuration.NA, false, Role.Magician, SpellTarget.None),
+    new SpellInfo("MAGA","Mage Gaunlets", 2, 5, 0, SpellDuration.Combat, true, Role.Magician, SpellTarget.PartyMember),
 
     new SpellInfo("PHBL","Phase Blur", 1, 2, 0, SpellDuration.Combat, true, Role.Sorcerer | Role.Trickster, SpellTarget.FullParty),
     new SpellInfo("HYIM","Hyponotic Image", 1, 3, 0, SpellDuration.Combat, true, Role.Sorcerer | Role.Trickster, SpellTarget.Monsters),
@@ -70,8 +72,21 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
       case "HYIM":
         Hyim(caster, monsterGroup, spell.Cost, rng, gs);
         break;
+      case "MACO":
+        caster.MP -= spell.Cost;
+        gs.Party.Buffs = [.. gs.Party.Buffs.Where(b => b.Buff != Buff.Compass)];
+        gs.Party.Buffs.Add(new TempBuff(Buff.Compass, gs.Turn + DURATION_MEDIUM, false));
+        break;
       case "MAFL":
         Mafl(caster, gs, spell.Cost);
+        break;
+      case "MAGA":
+        if (target is not null)
+        {
+          caster.MP -= spell.Cost;
+          if (!caster.Buffs.Any(b => b.Buff == Buff.MageGauntlets))
+            target.Buffs.Add(new TempBuff(Buff.MageGauntlets, ulong.MaxValue, true));
+        }
         break;
       case "PHBL":
         Phbl(caster, gs, spell.Cost);
