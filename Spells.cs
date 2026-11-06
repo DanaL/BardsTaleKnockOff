@@ -32,6 +32,7 @@ class Spells
     new SpellInfo("VOPL","Vorpal Plating", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("AIAR","Air Armour", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.Self),
     new SpellInfo("STLI","Steel Light", 1, 2, 2, SpellDuration.Short, SpellContext.Exploring, Role.Magician, SpellTarget.None),
+    new SpellInfo("HOWA","Holy Water", 2, 4, 0, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
     new SpellInfo("SCSI","Scry Site", 1, 2, 0, SpellDuration.NA, SpellContext.Exploring, Role.Magician, SpellTarget.None),
     new SpellInfo("WIST","Wither Strike", 2, 5, 0, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
     new SpellInfo("MAGA","Mage Gaunlets", 2, 5, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
@@ -44,7 +45,7 @@ class Spells
   public static List<SpellInfo> SpellsFor(Character c)
   {
     List<SpellInfo> spells = [];
-    
+
     spells.AddRange(_spells.Where(s => (s.Role & Role.Conjurer) == Role.Conjurer && s.Level <= c.ConjurerSpellLevel));
     spells.AddRange(_spells.Where(s => (s.Role & Role.Magician) == Role.Magician && s.Level <= c.MagicianSpellLevel));
     spells.AddRange(_spells.Where(s => (s.Role & Role.Sorcerer) == Role.Sorcerer && s.Level <= c.SorcererSpellLevel));
@@ -59,7 +60,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
 {
   const int DURATION_SHORT = 1000;
   const int DURATION_MEDIUM = 2000;
-  
+
   public List<string> Cast(SpellInfo spell, Character caster, Rng rng, int monsterGroup, Character? target, GameState gs)
   {
     List<string> msgBuffer = [];
@@ -84,6 +85,9 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         break;
       case "FRFO":
         msgBuffer.AddRange(FreezeFoes(caster, monsterGroup, spell.Cost, rng));
+        break;
+      case "HOWA":
+        msgBuffer.AddRange(Howa(caster, monsterGroup, spell.Cost, rng, gs));
         break;
       case "HYIM":
         Hyim(caster, monsterGroup, spell.Cost, rng, gs);
@@ -177,13 +181,13 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     {
       if (m.RollSavingThrow(caster.MagicPower, rng) == SaveResult.Success)
       {
-        msgs.Add($"{m.Name.IndefArticle().Capitalize()} resists!");        
+        msgs.Add($"{m.Name.IndefArticle().Capitalize()} resists!");
       }
       else if (!m.Buffs.Any(b => b.Buff == Buff.Hypnotized))
       {
         m.Buffs.Add(new(Buff.Hypnotized, gs.Turn + 1, true));
         msgs.Add($"{m.Name.IndefArticle().Capitalize()} becomes hypnotized!");
-      }      
+      }
     }
 
     return msgs;
@@ -194,8 +198,8 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     caster.MP -= cost;
 
     foreach (Character c in gs.Party.Members.OfType<Character>())
-    if (!c.Buffs.Any(b => b.Buff == Buff.PhaseBlur))
-      c.Buffs.Add(new TempBuff(Buff.PhaseBlur, uint.MaxValue, true));
+      if (!c.Buffs.Any(b => b.Buff == Buff.PhaseBlur))
+        c.Buffs.Add(new TempBuff(Buff.PhaseBlur, uint.MaxValue, true));
   }
 
   // caster is nullable because lights can be created from torches, etc
@@ -216,6 +220,44 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     gs.Party.Buffs.Add(new TempBuff(Buff.SteelLight, gs.Turn + DURATION_SHORT, false));
   }
 
+  public List<string> Howa(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
+  {
+    caster.MP -= cost;
+
+    if (foes[monsterGroup].Count > 0)
+    {
+      int targetNum = rng.Next(foes[monsterGroup].Count);
+      Monster m = foes[monsterGroup][targetNum];
+      
+      if (!m.HasFlag(MonsterFlag.Undead))
+      {
+        return [ "The spell fizzles!"];
+      }
+      
+      string n = Util.CalcName(m).DefArticle();
+      int dmg = rng.Next(6, 25);
+      var save = m.RollSavingThrow(caster.MagicPower, rng);
+      if (save == SaveResult.Success)
+      {
+       return [ $"{n.Capitalize()} resists!" ];        
+      }
+      else if (save == SaveResult.Partial)
+      {
+        dmg = int.Max(1, dmg / 2);
+      }
+      
+      
+      List<string> msgs = [ $"{n.Capitalize()} is burnt for {dmg} hp!" ];
+      Queue<string> q = new();
+      battle.DamageMonster(monsterGroup, targetNum, dmg, gs, q);
+      while (q.Count > 0)
+        msgs.Add(q.Dequeue());
+      return msgs;
+    }
+
+    return [];
+  }
+
   public List<string> FreezeFoes(Character caster, int monsterGroup, int cost, Rng rng)
   {
     List<string> msgs = [];
@@ -233,7 +275,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         m.Buffs.Add(new(Buff.FreezeFoe, ulong.MaxValue, true));
       }
     }
-    
+
     return msgs;
   }
 
@@ -255,7 +297,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
       {
         msgs.Add($"{m.Name.DefArticle().Capitalize()} is withered!");
         m.Condition = "OLD";
-      }      
+      }
     }
 
     return msgs;
@@ -279,7 +321,12 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
       {
         dmg = int.Max(1, dmg / 2);
       }
-      battle.DamageMonster(monsterGroup, targetNum, dmg, gs);
+      
+      Queue<string> q = new();
+      q.Enqueue($"{Util.CalcName(m).DefArticle().Capitalize()} is fried for {dmg} hp!");
+      battle.DamageMonster(monsterGroup, targetNum, dmg, gs, q);
+      while (q.Count > 0)
+        gs.Say(q.Dequeue());
     }
   }
 }

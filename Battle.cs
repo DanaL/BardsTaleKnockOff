@@ -568,17 +568,17 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     if (criticalHit)
       KillMonster(monsterGroup, monsterHit, gs);
     else
-      DamageMonster(monsterGroup, monsterHit, dmg, gs);
+      DamageMonster(monsterGroup, monsterHit, dmg, gs, Messages);
   }
 
   // Killing a monster shifts the indexes of the ones after it in the group,
   // so when damaging a whole group, loop from the back.
-  public bool DamageMonster(int group, int targetNum, int dmg, GameState gs)
+  public bool DamageMonster(int group, int targetNum, int dmg, GameState gs, Queue<string> msgQ)
   {
     Monster m = Foes[group][targetNum];
     if (dmg >= m.HP)
     {
-      Messages.Enqueue($"{m.Name.DefArticle().ToLower().Capitalize()} is killed!");
+      msgQ.Enqueue($"{m.Name.DefArticle().ToLower().Capitalize()} is killed!");
       KillMonster(group, targetNum, gs);
       return true;
     }
