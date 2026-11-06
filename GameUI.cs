@@ -118,10 +118,12 @@ unsafe class GameUI
   // The column of icons between the picture and the text panel showing the
   // party's active spells/effects, top to bottom. Slot 0 is the light
   // (flame) icon.
-  public void DrawStatusIcons(bool flame)
+  public void DrawStatusIcons(StatusIcons icons)
   {
-    if (flame)
+    if (icons.Light)
       Icon(0, "flame1.png");
+    if (icons.Shoe)
+      Icon(5, "shoe.png");
 
     void Icon(int slot, string filename)
     {
@@ -251,10 +253,20 @@ unsafe class GameUI
       y += TextRenderer.BaseLineHeight;
     }
 
-    if (party is not null && party.Buffs.Any(b => b.Buff == Buff.MageFlame || b.Buff == Buff.SteelLight))
+    bool light = false;
+    bool softStep = false;
+    if (party is not null)
     {
-      DrawStatusIcons(flame: true);
+      foreach (var b in party.Buffs)
+      {
+        if (b.Buff == Buff.MageFlame || b.Buff == Buff.SteelLight)
+          light = true;
+        if (b.Buff == Buff.SoftStep)
+          softStep = false;
+      }
     }
+
+    DrawStatusIcons(new(light, softStep));
   }
 
   void DrawRosterLine(string slot, Character? c, int left, int y)
