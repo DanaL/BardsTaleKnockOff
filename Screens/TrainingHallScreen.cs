@@ -129,7 +129,7 @@ class LearnSpellsScreen(App app, Character c) : IScreen
         if (_options.Contains(LEARN_OPT))
         {
           c.Gold -= Tuition;
-          _message = $"{c.Name} has learned {c.Level} level spells.";
+          _message = $"{c.Name} has learned {c.MaxSpellLevel} level spells.";
 
           switch (c.Role)
           {
