@@ -67,7 +67,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     int advInitiative = 1000; // groups advancing always happens after everyone else has acted
     for (int n = 0; n < Foes.Count; n++)
     {
-      if (n < 2 || Foes[n][0].Ranged)
+      if (n < 2 || Foes[n][0].HasFlag(MonsterFlag.Ranged))
       {
         int roll = rng.Next(1, 24);
         _actions.Enqueue(new(n, BattleAction.MonsterAction, n, -1), -roll);        
@@ -85,7 +85,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
       for (int j = 0; j < n; j++)
       {
-        if (Foes[j][0].Ranged)
+        if (Foes[j][0].HasFlag(MonsterFlag.Ranged))
           return true;
       }
       
