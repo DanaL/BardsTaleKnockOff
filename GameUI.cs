@@ -123,7 +123,7 @@ unsafe class GameUI
     if (icons.Light)
       Icon(0, "flame1.png");
     if (icons.Shoe)
-      Icon(5, "shoe.png");
+      Icon(4, "shoe.png");
 
     void Icon(int slot, string filename)
     {
@@ -262,7 +262,7 @@ unsafe class GameUI
         if (b.Buff == Buff.MageFlame || b.Buff == Buff.SteelLight)
           light = true;
         if (b.Buff == Buff.SoftStep)
-          softStep = false;
+          softStep = true;
       }
     }
 
