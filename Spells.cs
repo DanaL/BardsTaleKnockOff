@@ -24,6 +24,7 @@ class Spells
     new SpellInfo("ARFI","Arc Fire", 1, 3, 0, SpellDuration.NA, SpellContext.Combat, Role.Conjurer, SpellTarget.Monsters),
     new SpellInfo("SOSH","Sorcerer Shield", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Conjurer, SpellTarget.Self),
     new SpellInfo("TRZP","Trap Zap", 1, 2, 3, SpellDuration.NA, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
+    new SpellInfo("FRFO","Freeze Foes", 2, 3, 0, SpellDuration.NA, SpellContext.Combat, Role.Conjurer, SpellTarget.Monsters),
     new SpellInfo("MACO","Magic Compass", 2, 3, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
     new SpellInfo("BASK","Battleskill", 2, 4, 0, SpellDuration.Combat, SpellContext.Combat, Role.Conjurer, SpellTarget.PartyMember),
     new SpellInfo("WOHL","Word of Healing", 2, 4, 0, SpellDuration.NA, SpellContext.Both, Role.Conjurer, SpellTarget.PartyMember),
@@ -65,8 +66,8 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     switch (spell.Code)
     {
       case "ARFI":
-        Arfi(caster, monsterGroup, target, spell.Cost, rng, gs);
-        break;      
+        Arfi(caster, monsterGroup, spell.Cost, rng, gs);
+        break;
       case "AIAR":
         caster.MP -= spell.Cost;
         if (!caster.Buffs.Any(b => b.Buff == Buff.AirArmour))
@@ -79,6 +80,9 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
           if (!target.Buffs.Any(b => b.Buff == Buff.BattleSkill))
             target.Buffs.Add(new TempBuff(Buff.BattleSkill, ulong.MaxValue, true));
         }
+        break;
+      case "FRFO":
+        msgBuffer.AddRange(FreezeFoes(caster, monsterGroup, spell.Cost, rng, gs));
         break;
       case "HYIM":
         Hyim(caster, monsterGroup, spell.Cost, rng, gs);
@@ -208,7 +212,28 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     gs.Party.Buffs.Add(new TempBuff(Buff.SteelLight, gs.Turn + DURATION_SHORT, false));
   }
 
-  public void Arfi(Character caster, int monsterGroup, Character? target, int cost, Rng rng, GameState gs)
+  public List<string> FreezeFoes(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
+  {
+    List<string> msgs = [];
+
+    caster.MP -= cost;
+    foreach (Monster m in foes[monsterGroup])
+    {
+      if (m.RollSavingThrow(caster.MagicPower, rng) == SaveResult.Success)
+      {
+        msgs.Add($"{m.Name.IndefArticle().Capitalize()} resists!");
+      }
+      else
+      {
+        msgs.Add($"{m.Name.IndefArticle().Capitalize()} slows down!");
+        m.Buffs.Add(new(Buff.FreezeFoe, ulong.MaxValue, true));
+      }
+    }
+    
+    return msgs;
+  }
+
+  public void Arfi(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
   {
     caster.MP -= cost;
     if (foes[monsterGroup].Count > 0)

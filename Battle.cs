@@ -506,7 +506,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       foreach (var buff in target.Buffs)
       {
         if (buff.Buff == Buff.FreezeFoe)
-          toHitTarget -= 2; // Guess at what BT1 did
+          toHitTarget -= 2;
         else if (buff.Buff == Buff.Invisibility)
           toHitTarget += 5;
       }
