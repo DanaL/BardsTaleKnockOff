@@ -49,7 +49,7 @@ class TavernScreen(App app) : IScreen
     else
     {
       c.Gold -= 2;
-
+      app.GameState.Turn += GameState.TURNS_PER_HOUR;
       var txt = File.ReadAllText(ResourcePath.GetDataFilePath("bartender.txt"));
       var bartenderLines = txt.Split('#');
       _message = bartenderLines[app.Rng.Next(bartenderLines.Length)].Trim();
@@ -58,7 +58,7 @@ class TavernScreen(App app) : IScreen
 
   public void Draw(GameUI ui)
   {
-    List<string> lines = [ "Welcome to the Pickled Elf!", "", "Karnov, the bartender, lazily wipes counter. Care for a drink?", "", "B) Buy a drink 2 gp.", "E) Exit" ];
+    List<string> lines = [ "Welcome to the Pickled Elf!", "", "Karnov the bartender lazily wipes counter. Care for a drink?", "", "B) Buy a drink 2 gp.", "E) Exit" ];
     if (_message != "")
       lines.AddRange("", _message);
 

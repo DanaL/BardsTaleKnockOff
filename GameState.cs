@@ -34,7 +34,7 @@ class GameState
 
   // I made life difficult for myself by deciding that Turn 0 of the game is 
   // 8:00am T_T One turn is one minute.
-  const int TURNS_PER_HOUR = 60;                  
+  public const int TURNS_PER_HOUR = 60;                  
   const ulong TURNS_PER_DAY = TURNS_PER_HOUR * 24;
   const ulong START_OFFSET = 8 * TURNS_PER_HOUR; // Turn 0 is 8:00am
 
