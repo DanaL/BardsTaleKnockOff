@@ -265,15 +265,18 @@ unsafe class GameUI
 
     bool light = false;
     bool softStep = false;
+    Dir facing = Dir.None;
     foreach (var b in gs.Party.Buffs)
     {
       if (b.Buff == Buff.MageFlame || b.Buff == Buff.SteelLight)
         light = true;
       if (b.Buff == Buff.SoftStep)
         softStep = true;
+      if (b.Buff == Buff.Compass)
+        facing = gs.Facing;
     }
     
-    DrawStatusIcons(new(light, softStep, gs.Facing));
+    DrawStatusIcons(new(light, softStep, facing));
   }
 
   void DrawRosterLine(string slot, Character? c, int left, int y)

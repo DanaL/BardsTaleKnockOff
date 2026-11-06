@@ -22,14 +22,7 @@ class SpendAbilityPointsScreen(App app, Character c) : IScreen
     switch (key.scancode)
     {
       case SDL_Scancode.SDL_SCANCODE_P:
-        for (int j = 0; j < Party.MAX_PARTY_SIZE; j++)
-        {
-          if (app.GameState.Party.Members[j] == c)
-          {
-            app.GameState.Party.PoolGold(j);
-            break;
-          }
-        }        
+        app.GameState.Party.PoolGold(c);
         break;
       case SDL_Scancode.SDL_SCANCODE_1:
         if (canRaiseStat)
@@ -112,6 +105,104 @@ class SpendAbilityPointsScreen(App app, Character c) : IScreen
   }
 }
 
+class LearnSpellsScreen(App app, Character c) : IScreen
+{
+  const char LEARN_OPT = 'l';
+  const char POOL_GOLD_OPT = 'p';
+
+  HashSet<char> _options = [];
+  string _message = "";
+
+  public void OnKey(SDL_KeyboardEvent key)
+  {
+    _message = "";
+    switch (key.scancode)
+    {
+      case SDL_Scancode.SDL_SCANCODE_ESCAPE:
+        app.Screens.Pop();
+        break;
+      case SDL_Scancode.SDL_SCANCODE_P:
+        if (_options.Contains(POOL_GOLD_OPT))
+          app.GameState.Party.PoolGold(c);        
+        break;
+      case SDL_Scancode.SDL_SCANCODE_L:
+        if (_options.Contains(LEARN_OPT))
+        {
+          c.Gold -= Tuition;
+          _message = $"{c.Name} has learned {c.Level} level spells.";
+
+          switch (c.Role)
+          {
+            case Role.Conjurer:
+              c.ConjurerSpellLevel += 1;
+              break;
+            case Role.Magician:
+              c.MagicianSpellLevel += 1;
+              break;
+            case Role.Sorcerer:
+              c.SorcererSpellLevel += 1;
+              break;
+            case Role.Wizard:
+              c.WizardSpellLevel += 1;
+              break;
+            case Role.Trickster:
+              c.TricksterSpellLevel += 1;
+              break;
+          }
+        }
+        break;
+    }
+  }
+
+  int CurrSpellLevel => c.Role switch
+  {
+    Role.Conjurer => c.ConjurerSpellLevel,
+    Role.Magician => c.MagicianSpellLevel,
+    Role.Sorcerer => c.SorcererSpellLevel,
+    Role.Wizard => c.WizardSpellLevel,
+    Role.Trickster => c.TricksterSpellLevel,
+    _ => int.MaxValue
+  };
+
+  public void Draw(GameUI ui)
+  {
+    _options.Clear();
+    List<string> lines = [];
+    if (CurrSpellLevel >= c.MaxSpellLevel)
+    {
+      if (!string.IsNullOrEmpty(_message))
+        lines.AddRange(_message, "");
+      lines.Add($"{c.Name} has learned as much as they currently are able to.");
+    }
+    else
+    {
+      lines.AddRange($"Acquiring level {c.MaxSpellLevel} spells will require {Tuition} gp in tuition.", "",
+            $"{c.Name} has {c.Gold} gp.", "", "P) Pool gold");
+      _options.Add(POOL_GOLD_OPT);
+
+      if (c.Gold >= Tuition) 
+      {
+        lines.Add("L) Learn spells");
+        _options.Add(LEARN_OPT);
+      }
+    }
+
+    ui.DrawNoBackground("Training Hall");
+    ui.DrawTextPanel(lines);
+    ui.DrawRoster(app.GameState);
+  }
+
+  int Tuition => c.MaxSpellLevel switch
+  {
+    2 => 1000,
+    3 => 2000,
+    4 => 4000,
+    5 => 7000,
+    6 => 10_000,
+    _ => 20_000
+  };
+}
+
 class ChangeClassScreen(App app, Character c, HashSet<Role> options) : IScreen
 {
   HashSet<SDL_Scancode> _roleChoices = [];
@@ -189,6 +280,7 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
   const char LEVEL_UP_OPT = 'l';
   const char ABILITY_PT_OPT = 'a';
   const char CHANGE_CLASS_OPT = 'c';
+  const char SPELLS_OPT = 's';
 
   const char YES_OPT = 'y';
   const char NO_OPT = 'n';
@@ -244,6 +336,12 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
             app.Screens.Push(new ChangeClassScreen(app, c, ClassesAvailable()));
           }
           break;
+        case SDL_Scancode.SDL_SCANCODE_S:
+          if (_options.Contains(SPELLS_OPT))
+          {
+            app.Screens.Push(new LearnSpellsScreen(app, c));
+          }
+          break;
         case SDL_Scancode.SDL_SCANCODE_ESCAPE:
           app.Screens.Pop();
           break;
@@ -266,7 +364,7 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
             int fee = 15 * (c.MaxMP - c.MP);
             c.Gold -= fee;
             c.MP = c.MaxMP;
-            app.Screens.Push(new PopupScreen(app, $"{c.Name} medidates and restores their magic energy!"));
+            app.Screens.Push(new PopupScreen(app, $"{c.Name} meditates and restores their magic energy!"));
             _options.Clear();
             _state = MAIN;  
           }
@@ -279,8 +377,19 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
     }
   }
 
+  bool SpellsAvailable() => c.Role switch
+  {
+    Role.Conjurer => c.ConjurerSpellLevel < c.MaxSpellLevel,
+    Role.Magician => c.MagicianSpellLevel < c.MaxSpellLevel,
+    Role.Sorcerer => c.SorcererSpellLevel < c.MaxSpellLevel,
+    Role.Wizard => c.WizardSpellLevel < c.MaxSpellLevel,
+    Role.Trickster => c.TricksterSpellLevel < c.MaxSpellLevel,
+    _ => false,
+  };
+
   public void Draw(GameUI ui)
   {
+    _options.Clear();
     List<string> lines = [ $"What can we do for {c.Name} today?", "" ];
     List<string> menuOptions = [];
     
@@ -296,6 +405,13 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
         lines.Add($"They are ready to advance to level {c.Level + 1}!");
         menuOptions.Add("L) Level up");
         _options.Add(LEVEL_UP_OPT);
+      }
+
+      if (SpellsAvailable())
+      {
+        lines.Add($"They can learn more spells!");
+        menuOptions.Add($"S) Learn level {c.MaxSpellLevel} spells.");
+        _options.Add(SPELLS_OPT);
       }
 
       if (c.AbilityPoints > 0)

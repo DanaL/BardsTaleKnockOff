@@ -144,6 +144,9 @@ class Character
     }
   }
 
+  public int MaxSpellLevel => Role == Role.Trickster ? Level >= 9 ? 3 : Level >= 5 ? 2 : 1
+                                : int.Clamp((int)Math.Round(Level / 2.0, MidpointRounding.AwayFromZero), 1, 13);
+
   public InvSlot?[] Inventory { get; init; } = new InvSlot?[INVENTORY_SLOTS];
 
   public string ReceiveDmg(int dmg)
@@ -359,6 +362,18 @@ class Party
     {
       if (Members[j] is Character c)
         c.Buffs = [.. c.Buffs.Where(b => !b.CombatOnly)];
+    }
+  }
+
+  public void PoolGold(Character c)
+  {
+    for (int j = 0; j < Party.MAX_PARTY_SIZE; j++)
+    {
+      if (Members[j] == c)
+      {
+        PoolGold(j);
+        break;
+      }
     }
   }
 
