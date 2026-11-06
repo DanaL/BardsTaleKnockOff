@@ -420,8 +420,8 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
   }
 
   void MonsterMeleeAttack(Monster m, Character target)
-  {
-    string n = m.Name.ToLower().DefArticle().Capitalize();
+  {    
+    string n = Util.CalcName(m).DefArticle().Capitalize();
     int roll = rng.Next(1, 21);
     int toHitTarget = m.THAC0 - target.AC;
 
@@ -440,9 +440,14 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     if (target.Condition == "OLD")
       toHitTarget -= 5;
 
+    if (m.Condition == "OLD")
+      roll -= 10;
+
     if (roll >= toHitTarget)
     {
       int dmg = rng.Next(m.DmgLow, m.DmgHigh + 1);
+      if (m.Condition == "OLD")
+        dmg /= 4;
       Messages.Enqueue($"{n} {m.Verb} {target.Name} and hits for {dmg} hp!");
       string s = target.ReceiveDmg(dmg);
       if (s != "")

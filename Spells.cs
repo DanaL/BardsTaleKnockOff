@@ -33,6 +33,7 @@ class Spells
     new SpellInfo("AIAR","Air Armour", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.Self),
     new SpellInfo("STLI","Steel Light", 1, 2, 2, SpellDuration.Short, SpellContext.Exploring, Role.Magician, SpellTarget.None),
     new SpellInfo("SCSI","Scry Site", 1, 2, 0, SpellDuration.NA, SpellContext.Exploring, Role.Magician, SpellTarget.None),
+    new SpellInfo("WIST","Wither Strike", 2, 5, 0, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
     new SpellInfo("MAGA","Mage Gaunlets", 2, 5, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
 
     new SpellInfo("PHBL","Phase Blur", 1, 2, 0, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.FullParty),
@@ -82,7 +83,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         }
         break;
       case "FRFO":
-        msgBuffer.AddRange(FreezeFoes(caster, monsterGroup, spell.Cost, rng, gs));
+        msgBuffer.AddRange(FreezeFoes(caster, monsterGroup, spell.Cost, rng));
         break;
       case "HYIM":
         Hyim(caster, monsterGroup, spell.Cost, rng, gs);
@@ -134,6 +135,9 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         break;
       case "STLI":
         Stli(caster, gs, spell.Cost);
+        break;
+      case "WIST":
+        msgBuffer.AddRange(Wist(caster, monsterGroup, spell.Cost, rng));
         break;
       case "WOHL":
         if (target is not null && target.Condition != "DEAD")
@@ -212,7 +216,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     gs.Party.Buffs.Add(new TempBuff(Buff.SteelLight, gs.Turn + DURATION_SHORT, false));
   }
 
-  public List<string> FreezeFoes(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
+  public List<string> FreezeFoes(Character caster, int monsterGroup, int cost, Rng rng)
   {
     List<string> msgs = [];
 
@@ -221,15 +225,39 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     {
       if (m.RollSavingThrow(caster.MagicPower, rng) == SaveResult.Success)
       {
-        msgs.Add($"{m.Name.IndefArticle().Capitalize()} resists!");
+        msgs.Add($"{m.Name.DefArticle().Capitalize()} resists!");
       }
       else
       {
-        msgs.Add($"{m.Name.IndefArticle().Capitalize()} slows down!");
+        msgs.Add($"{m.Name.DefArticle().Capitalize()} slows down!");
         m.Buffs.Add(new(Buff.FreezeFoe, ulong.MaxValue, true));
       }
     }
     
+    return msgs;
+  }
+
+  // Ugh I should bring the WIST for PCs and WIST for monsters more in line...
+  public List<string> Wist(Character caster, int monsterGroup, int cost, Rng rng)
+  {
+    List<string> msgs = [];
+
+    caster.MP -= cost;
+    if (foes[monsterGroup].Count > 0)
+    {
+      int targetNum = rng.Next(foes[monsterGroup].Count);
+      Monster m = foes[monsterGroup][targetNum];
+      if (m.RollSavingThrow(caster.MagicPower, rng) == SaveResult.Success)
+      {
+        msgs.Add($"But {m.Name.DefArticle()} resists!");
+      }
+      else
+      {
+        msgs.Add($"{m.Name.DefArticle().Capitalize()} is withered!");
+        m.Condition = "OLD";
+      }      
+    }
+
     return msgs;
   }
 

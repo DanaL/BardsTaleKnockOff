@@ -16,7 +16,7 @@ enum SaveResult { Success, Partial, Failure }
 
 record StatusIcons(bool Light, bool Shoe, Dir Facing);
 
-enum Buff { AirArmour, BattleSkill, Compass, Defending, FreezeFoe, MageFlame, Hiding, Hypnotized, MageGauntlets, PhaseBlur, SoftStep, 
+enum Buff { AirArmour, BattleSkill, Compass, Defending, FreezeFoe, MageFlame, Hiding, Hypnotized, MageGauntlets,  PhaseBlur, SoftStep, 
             SorcShield, SteelLight, VorpalPlating, Invisibility }
 
 record struct TempBuff(Buff Buff, ulong ExpiresOn, bool CombatOnly);
@@ -39,6 +39,15 @@ static class Util
 {
   const string GameFolder = "DanasBardsTale";
   public static double ToDouble(string s) => double.Parse(s, System.Globalization.CultureInfo.InvariantCulture);
+
+  public static string CalcName(Monster m)
+  {
+    string n = m.Name;
+    if (m.Condition == "OLD")
+      n = "withered " + n;
+    
+    return n;
+  }
 
   // This shows up in a couple places and I suspect it will eventually get
   // more complicated  
