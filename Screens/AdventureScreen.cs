@@ -123,7 +123,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
           ogre.DefeatFact = new FlagFact("TownOgreSlain", true);
           ogre.HP = 35; // an especially tough ogre
           ogre.Rank += 1;
-          app.Screens.Push(new BattleScreen(app, [[ ogre ]]) { RetreatLoc = (19, 8) });          
+          app.Screens.Push(new BattleScreen(app, [[ ogre ]]) { RetreatLoc = (19, 8), VictoryMessage = "A sinister aura emanates from the portal to the east." });          
           app.Screens.Push(new PopupScreen(app, "An enormous ogre bars your path!"));
         }        
         break;

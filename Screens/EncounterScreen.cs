@@ -21,6 +21,9 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
   // might want to move them to a different location
   public (int X, int Y) RetreatLoc = (-1, -1); 
 
+  // A message to be written after the player wins the fight
+  public string VictoryMessage { get; set; } = "";
+
   const SDL_Scancode ATTACK_KEY = SDL_Scancode.SDL_SCANCODE_A;
   const SDL_Scancode DEFEND_KEY = SDL_Scancode.SDL_SCANCODE_D;
   const SDL_Scancode HIDE_KEY = SDL_Scancode.SDL_SCANCODE_H;
@@ -136,6 +139,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
       app.GameState.Party.ClearCombatBuffs();
       app.GameState.Messages.Clear();
       app.Screens.Pop();
+      if (!string.IsNullOrEmpty(VictoryMessage))
+        app.GameState.Say(VictoryMessage);
     }
     else if (_state == FLED && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
