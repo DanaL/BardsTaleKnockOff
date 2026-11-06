@@ -34,6 +34,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case SDL_Scancode.SDL_SCANCODE_UP:
       case SDL_Scancode.SDL_SCANCODE_W:
         GS.TryMove(GS.Facing);
+        CheckLocation();
         ResolveTurn();
         break;
       case SDL_Scancode.SDL_SCANCODE_DOWN:
@@ -67,24 +68,8 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     }
   }
 
-  void ResolveTurn()
+  void CheckLocation()
   {
-    // I feel like in OG Bard's Tale you didn't regenerate spell points when
-    // moving, only when you were idle but I'm going to do it every 10 turns
-    // in town (during daytime). Easier to code and track and makes more sense
-    // to me?
-    if (app.GameState.DayTime && app.GameState.CurrLevel == 0 && (_idleTime > 10_000 || GS.Turn % 10 == 0))
-    {
-      foreach (var character in app.GameState.Party.Members.OfType<Character>())
-      {
-        if (character.MaxMP > 0 && character.MP < character.MaxMP)
-          ++character.MP;
-      }
-    }
-
-    _idleTime = 0;
-    ++GS.Turn;
-
     Tile tile = GS.CurrMap.TileAt(GS.X, GS.Y);
 
     switch (tile.Feature)
@@ -128,12 +113,43 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
           app.Screens.Push(new PopupScreen(app, "An enormous ogre bars your path!"));
         }        
         break;
+      case Feature.Special3:
+        app.GameState.Say("You stand before a dilapidated tower constructed of mossy stones. A faded sign reads:");
+        app.GameState.Say("");
+        app.GameState.Say("\"For Magical Services, inquire within. Beware of dog.\"");
+        if (IsEncounter())
+          app.Screens.Push(new EncounterScreen(app)); 
+        break;
+      case Feature.Special4:
+        app.Screens.Push(new PortalScreen(app, "WizTowerEntrance"));
+        break;
       default:
         if (IsEncounter())
-          app.Screens.Push(new EncounterScreen(app));        
+          app.Screens.Push(new EncounterScreen(app));
         break;
     }
+  }
 
+  void ResolveTurn()
+  {
+    // I feel like in OG Bard's Tale you didn't regenerate spell points when
+    // moving, only when you were idle but I'm going to do it every 10 turns
+    // in town (during daytime). Easier to code and track and makes more sense
+    // to me?
+    if (app.GameState.DayTime && app.GameState.CurrLevel == 0 && (_idleTime > 10_000 || GS.Turn % 10 == 0))
+    {
+      foreach (var character in app.GameState.Party.Members.OfType<Character>())
+      {
+        if (character.MaxMP > 0 && character.MP < character.MaxMP)
+          ++character.MP;
+      }
+    }
+
+    if (IsEncounter())
+      app.Screens.Push(new EncounterScreen(app));
+
+    _idleTime = 0;
+    ++GS.Turn;
     GS.Party.Buffs = [.. GS.Party.Buffs.Where(b => b.ExpiresOn > GS.Turn)];
   }
 
