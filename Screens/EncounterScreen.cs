@@ -95,7 +95,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
           if (app.GameState.Party.Members[_slot] is Character c) 
           {
             _pendingAction = BattleAction.CastSpell;
-            app.Screens.Push(new ChooseSpellScreen(app, c, true, this) { Caption = _caption, Image = _image });
+            app.Screens.Push(new ChooseSpellScreen(app, c, SpellContext.Combat, this) { Caption = _caption, Image = _image });
           }
           _availableActions = [];
           break;

@@ -163,7 +163,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       else
       {
         _caster = c;
-        app.Screens.Push(new ChooseSpellScreen(app, c, false, this));
+        app.Screens.Push(new ChooseSpellScreen(app, c, SpellContext.Exploring, this));
       }
     }
   }

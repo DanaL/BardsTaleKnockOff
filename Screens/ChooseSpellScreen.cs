@@ -13,7 +13,7 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-class ChooseSpellScreen(App app, Character c, bool combatSpells, ICastSpellScreen src) : IScreen
+class ChooseSpellScreen(App app, Character c, SpellContext context, ICastSpellScreen src) : IScreen
 {
   public string Image { get; set; } = "";
   public string Caption { get; set; } = "";
@@ -106,7 +106,7 @@ class ChooseSpellScreen(App app, Character c, bool combatSpells, ICastSpellScree
   {
     List<string> lines = [ "Cast which: ", "" ];
 
-    _spells = [.. Spells.SpellsFor(c).Where(s => s.Combat == combatSpells)];
+    _spells = [.. Spells.SpellsFor(c).Where(s => s.Context == context || s.Context == SpellContext.Both)];
     if (_filter != "")
     {
       _spells = [.. _spells.Where(s => s.Code.StartsWith(_filter))];
