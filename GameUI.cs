@@ -265,6 +265,7 @@ unsafe class GameUI
 
     bool light = false;
     bool softStep = false;
+    bool eye = false;
     Dir facing = Dir.None;
     foreach (var b in gs.Party.Buffs)
     {
@@ -274,9 +275,11 @@ unsafe class GameUI
         softStep = true;
       if (b.Buff == Buff.Compass)
         facing = gs.Facing;
+      if (b.Buff == Buff.AreaEnchant)
+        eye = true;
     }
     
-    DrawStatusIcons(new(light, softStep, facing));
+    DrawStatusIcons(new(light, softStep, eye, facing));
   }
 
   void DrawRosterLine(string slot, Character? c, int left, int y)

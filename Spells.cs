@@ -36,6 +36,7 @@ class Spells
     new SpellInfo("SCSI","Scry Site", 1, 2, 0, SpellDuration.NA, SpellContext.Exploring, Role.Magician, SpellTarget.None),
     new SpellInfo("WIST","Wither Strike", 2, 5, 0, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
     new SpellInfo("MAGA","Mage Gaunlets", 2, 5, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
+    new SpellInfo("AREN","Area Enchant", 2, 5, 3, SpellDuration.Short, SpellContext.Exploring, Role.Magician, SpellTarget.None),
 
     new SpellInfo("PHBL","Phase Blur", 1, 2, 0, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.FullParty),
     new SpellInfo("HYIM","Hyponotic Image", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.Monsters),
@@ -74,6 +75,12 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         caster.MP -= spell.Cost;
         if (!caster.Buffs.Any(b => b.Buff == Buff.AirArmour))
           caster.Buffs.Add(new TempBuff(Buff.AirArmour, ulong.MaxValue, true));
+        break;
+      case "AREN":        
+        caster.MP -= spell.Cost;
+        // Once I've implemented more of the detector spells, AREN replaces any that are active
+        gs.Party.Buffs = [.. gs.Party.Buffs.Where(b => b.Buff != Buff.AreaEnchant)];
+        gs.Party.Buffs.Add(new TempBuff(Buff.AreaEnchant, gs.Turn + DURATION_SHORT, false));
         break;
       case "BASK":
         if (target is not null)
