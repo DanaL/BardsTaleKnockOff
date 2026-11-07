@@ -77,7 +77,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     switch (spell.Code)
     {
       case "ARFI":
-        Arfi(caster, monsterGroup, spell.Cost, rng, gs);
+        msgBuffer.AddRange(Arfi(caster, monsterGroup, spell.Cost, rng, gs));
         break;
       case "AIAR":
         caster.MP -= spell.Cost;
@@ -350,8 +350,9 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     return msgs;
   }
 
-  public void Arfi(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
+  public List<string> Arfi(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
   {
+    List<string> lines = [];
     caster.MP -= cost;
     if (foes[monsterGroup].Count > 0)
     {
@@ -361,8 +362,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
       var save = m.RollSavingThrow(caster.MagicPower, rng);
       if (save == SaveResult.Success)
       {
-        gs.Say("But they resist!");
-        return;
+        return [ "But they resist!" ];
       }
       else if (save == SaveResult.Partial)
       {
@@ -373,7 +373,9 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
       q.Enqueue($"{Util.CalcName(m).DefArticle().Capitalize()} is fried for {dmg} hp!");
       battle.DamageMonster(monsterGroup, targetNum, dmg, gs, q);
       while (q.Count > 0)
-        gs.Say(q.Dequeue());
+        lines.Add(q.Dequeue());
     }
+
+    return lines;
   }
 }
