@@ -285,12 +285,17 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
         case BattleAction.CastSpell:
           if (choice.Spell is not null)
           {
-            string s = $"{c.Name} casts {choice.Spell.Code}";
+            string s;
+            if (choice.Spell.Code == "SMTE")
+              s = $"{c.Name} smites";
+            else
+              s = $"{c.Name} casts {choice.Spell.Code} on";
+
             if (choice.Spell.Target == SpellTarget.Monsters)
             {
               group = _battle.Foes[choice.Group];
               monster = group[0].Name.ToLower();
-              monster = $" on the {monster.Pluralize()}";
+              monster = $" the {monster.Pluralize()}";
               s += monster;
             }
             else if (choice.Spell.Target == SpellTarget.PartyMember && app.GameState.Party.Members[choice.PartySlot] is Character target)

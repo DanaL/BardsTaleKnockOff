@@ -184,6 +184,11 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
       lines.AddRange("", "Spells:");      
       lines.Add($"Trickster: {c.TricksterSpellLevel}");
     }
+    else if (c.Role == Role.Paladin)
+    {
+      lines.AddRange("", "Spells:");      
+      lines.Add($"Paladin: {c.PaladinSpellLevel}");
+    }
     else
     {
       lines.AddRange("", "Spells:");      

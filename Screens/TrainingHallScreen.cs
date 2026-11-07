@@ -148,6 +148,9 @@ class LearnSpellsScreen(App app, Character c) : IScreen
             case Role.Trickster:
               c.TricksterSpellLevel += 1;
               break;
+            case Role.Paladin:
+              c.PaladinSpellLevel += 1;
+              break;
           }
         }
         break;
@@ -161,6 +164,7 @@ class LearnSpellsScreen(App app, Character c) : IScreen
     Role.Sorcerer => c.SorcererSpellLevel,
     Role.Wizard => c.WizardSpellLevel,
     Role.Trickster => c.TricksterSpellLevel,
+    Role.Paladin => c.PaladinSpellLevel,
     _ => int.MaxValue
   };
 
@@ -224,7 +228,20 @@ class ChangeClassScreen(App app, Character c, HashSet<Role> options) : IScreen
         app.Screens.Pop();
         app.Screens.Push(new PopupScreen(app, $"{c.Name} has taken up the path of the Trickster!"));
         break;
+      case SDL_Scancode.SDL_SCANCODE_P:
+        ChangeToPaladin();
+        app.Screens.Pop();
+        app.Screens.Push(new PopupScreen(app, $"{c.Name} has taken up the Paladin's path!"));
+        break;
     }
+  }
+
+  void ChangeToPaladin()
+  {
+    c.Role = Role.Paladin;
+    c.BaseMP = app.Rng.Next(4, 9);
+    c.MP = c.MaxMP;
+    c.PaladinSpellLevel = 1;
   }
 
   void ChangeToTrickster()

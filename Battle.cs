@@ -163,14 +163,18 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
             }
               
             s += ".";
-            Messages.Enqueue(s);
-
+            
             if (c.MP < choice.Spell.Cost) 
             {
+              Messages.Enqueue(s);
               Messages.Enqueue($"But they have insufficient Magic Points!");
             }
             else
             {
+              // Skip the message for Smite because I think "So-and-so casts SMTE on..."
+              // looks goofy
+              if (spell.Code != "SMTE")
+                Messages.Enqueue(s);
               SpellResolver sr = new(Foes, this);
               var msgs = sr.Cast(choice.Spell, c, rng, choice.Group, partyTarget, gs);
               foreach (string m in msgs)
@@ -459,27 +463,16 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     }
   }
 
-  void PlayerMeleeAttack(Character c, int monsterGroup)
+  public void PlayerMeleeAttack(Character c, int monsterGroup)
   {
     if (Foes[monsterGroup].Count == 0)
       return;
 
-    Monster target = Foes[monsterGroup][0];
-    Item? weapon = c.ReadiedWeapon;
-     string s = weapon is not null ? $"{c.Name} attacks " : $"{c.Name} punches ";
-     s += target.Name.IndefArticle().ToLower();
-     int attacks = c.NumOfMeleeAttacks;
-     if (attacks > 1)
-      s += $" {attacks} times ";
-
-    int strMod = Character.StatToMod(c.Str);
-
-    int hits = 0;
-    int dmg = 0;
     bool hiding = false;
     bool vorpalPlating = false;
     bool mageGauntlets = false;
     bool battleSkill = false;
+    bool smiting = false;
     foreach (var buff in c.Buffs)
     {
       if (buff.Buff == Buff.Hiding)
@@ -490,8 +483,31 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         mageGauntlets = true;
       else if (buff.Buff == Buff.BattleSkill)
         battleSkill = true;
+      else if (buff.Buff == Buff.Smite)
+        smiting = true;
     }
 
+    Monster target = Foes[monsterGroup][0];
+    Item? weapon = c.ReadiedWeapon;
+
+    string verb;
+    if (weapon is null)
+      verb = "punches";
+    else if (smiting)
+      verb = "smites";
+    else
+      verb = "attacks";
+    
+     string s = $"{c.Name} {verb} {target.Name.IndefArticle().ToLower()}";
+     int attacks = c.NumOfMeleeAttacks;
+     if (attacks > 1)
+      s += $" {attacks} times ";
+
+    int strMod = Character.StatToMod(c.Str);
+
+    int hits = 0;
+    int dmg = 0;
+    
     for (int j = 0; j < c.NumOfMeleeAttacks; j++)
     {
       int roll = rng.Next(1, 21) + strMod;
@@ -500,12 +516,12 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
       if (hiding)
         roll += 3;
-
       if (c.Condition == "OLD")
          roll -= 10;
-
       if (battleSkill)
         roll += 4;
+      if (smiting)
+        roll += 3;
 
       int toHitTarget = c.THAC0 - target.AC;
       foreach (var buff in target.Buffs)
@@ -527,7 +543,9 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
           dmg += rng.Next(4, 17);
         if (battleSkill)
           dmg += 4;
-          
+        if (smiting)
+          dmg += rng.Next(1, 9) * int.Max(1, c.Level / 2);
+
         if (weapon is null) 
         {
           dmg += 1;

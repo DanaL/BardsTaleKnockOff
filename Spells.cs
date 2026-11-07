@@ -20,6 +20,7 @@ record SpellInfo(string Code, string Name, int Level, int Cost, int Range, Spell
 class Spells
 {
   static List<SpellInfo> _spells = [
+    // Conjurer
     new SpellInfo("MAFL","Mage Flame", 1, 2, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
     new SpellInfo("ARFI","Arc Fire", 1, 3, 0, SpellDuration.NA, SpellContext.Combat, Role.Conjurer, SpellTarget.Monsters),
     new SpellInfo("SOSH","Sorcerer Shield", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Conjurer, SpellTarget.Self),
@@ -29,6 +30,7 @@ class Spells
     new SpellInfo("BASK","Battleskill", 2, 4, 0, SpellDuration.Combat, SpellContext.Combat, Role.Conjurer, SpellTarget.PartyMember),
     new SpellInfo("WOHL","Word of Healing", 2, 4, 0, SpellDuration.NA, SpellContext.Both, Role.Conjurer, SpellTarget.PartyMember),
 
+    // Magician
     new SpellInfo("VOPL","Vorpal Plating", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("AIAR","Air Armour", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.Self),
     new SpellInfo("STLI","Steel Light", 1, 2, 2, SpellDuration.Short, SpellContext.Exploring, Role.Magician, SpellTarget.None),
@@ -38,9 +40,14 @@ class Spells
     new SpellInfo("MAGA","Mage Gaunlets", 2, 5, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("AREN","Area Enchant", 2, 5, 3, SpellDuration.Short, SpellContext.Exploring, Role.Magician, SpellTarget.None),
 
+    // Trickster
     new SpellInfo("PHBL","Phase Blur", 1, 2, 0, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.FullParty),
     new SpellInfo("HYIM","Hyponotic Image", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.Monsters),
-    new SpellInfo("SOST","Soft Step", 1, 2, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Trickster, SpellTarget.None)
+    new SpellInfo("SOST","Soft Step", 1, 2, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Trickster, SpellTarget.None),
+
+    // Paladin
+    new SpellInfo("WOHL","Word of Healing", 1, 4, 0, SpellDuration.NA, SpellContext.Both, Role.Paladin, SpellTarget.PartyMember),
+    new SpellInfo("SMTE","Smite", 1, 3, 0, SpellDuration.NA, SpellContext.Combat, Role.Paladin, SpellTarget.Monsters),
   ];
 
   public static List<SpellInfo> SpellsFor(Character c)
@@ -52,6 +59,7 @@ class Spells
     spells.AddRange(_spells.Where(s => (s.Role & Role.Sorcerer) == Role.Sorcerer && s.Level <= c.SorcererSpellLevel));
     spells.AddRange(_spells.Where(s => (s.Role & Role.Wizard) == Role.Wizard && s.Level <= c.WizardSpellLevel));
     spells.AddRange(_spells.Where(s => (s.Role & Role.Trickster) == Role.Trickster && s.Level <= c.TricksterSpellLevel));
+    spells.AddRange(_spells.Where(s => (s.Role & Role.Paladin) == Role.Paladin && s.Level <= c.PaladinSpellLevel));
 
     return [.. spells.OrderBy(s => s.Level).ThenBy(s => s.Name)];
   }
@@ -132,6 +140,14 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         {
           var (h, m) = gs.CurrTime();
           gs.Say($"The time is {h}:{m.ToString().PadLeft(2, '0')}.");
+        }
+        break;
+      case "SMTE":
+        caster.MP -= spell.Cost;
+        if (foes[monsterGroup].Count > 0)
+        {
+          caster.Buffs.Add(new TempBuff(Buff.Smite, gs.Turn, true));
+          battle.PlayerMeleeAttack(caster, monsterGroup);
         }
         break;
       case "SOSH":

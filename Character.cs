@@ -144,9 +144,17 @@ class Character
     }
   }
 
-  public int MaxSpellLevel => Role == Role.Trickster ? Level >= 9 ? 3 : Level >= 5 ? 2 : 1
-                                : int.Clamp((int)Math.Round(Level / 2.0, MidpointRounding.AwayFromZero), 1, 13);
-
+  public int MaxSpellLevel
+  {
+    get
+    {
+      if (Role == Role.Trickster || Role == Role.Paladin)
+        return Level >= 9 ? 3 : Level >= 5 ? 2 : 1;
+      else
+        return int.Clamp((int)Math.Round(Level / 2.0, MidpointRounding.AwayFromZero), 1, 13);
+    }
+  }
+  
   public InvSlot?[] Inventory { get; init; } = new InvSlot?[INVENTORY_SLOTS];
 
   public string ReceiveDmg(int dmg)
@@ -233,7 +241,7 @@ class Character
 
   public SaveResult RollSavingThrow(int monsterRank, Rng rng)
   {
-    int roll = monsterRank + rng.Next(8);
+    int roll = monsterRank + rng.Next(8);    
     int margin = MagicPower - roll;
 
     if (margin < 0)
