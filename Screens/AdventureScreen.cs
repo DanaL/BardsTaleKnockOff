@@ -71,10 +71,9 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
   void CheckLocation()
   {
-    Tile tile = GS.CurrMap.TileAt(GS.X, GS.Y);
     _idleTime = 0;
 
-    switch (tile.Feature)
+    switch (GS.CurrTile.Feature)
     {
       case Feature.Guild:
         Serialize.WriteSaveGame(app);
@@ -128,11 +127,44 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case Feature.Special5:
         app.Screens.Push(new PortalScreen(app, "WizTowerExit"));
         break;
+      case Feature.Trap_Dart0:
+        DartTrap0();
+        break;
       default:
         if (IsEncounter())
           app.Screens.Push(new EncounterScreen(app));
         break;
     }
+  }
+
+  void DartTrap0()
+  {
+    app.Screens.Push(new PopupScreen(app, "A trap!!"));
+
+    
+    if (GS.Party.Members[0] is Character c)
+    {
+      // Once I have implemented slot S, a monster occupying it will be
+      // hit before the character in slot 1.
+      GS.Say($"A trap! Darts fly at {c.Name}!");
+
+      int dmg = app.Rng.Next(1, 5) + app.Rng.Next(1, 5) + app.Rng.Next(1, 5) + app.Rng.Next(1, 5);
+      SaveResult save = c.RollSavingThrow(1, app.Rng);
+      if (save == SaveResult.Success) 
+      {
+        GS.Say("But they avoid being hit!");
+        return;
+      }        
+      else if (save == SaveResult.Partial)
+      {
+        dmg /= 2;
+      }
+
+      GS.Say($"They are hit for {dmg} hp!");
+      string s = c.ReceiveDmg(dmg);
+      if (!string.IsNullOrEmpty(s))
+        GS.Say(s);
+    }    
   }
 
   void ResolveTurn()
