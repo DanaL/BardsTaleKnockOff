@@ -194,7 +194,8 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
     _idleTime = 0;
     ++GS.Turn;
-    GS.Party.Buffs = [.. GS.Party.Buffs.Where(b => b.ExpiresOn > GS.Turn)];    
+    GS.Party.Buffs = [.. GS.Party.Buffs.Where(b => b.ExpiresOn > GS.Turn)];
+    GS.Party.MoveIncapacitatedToBack();
   }
 
   void Divination()
