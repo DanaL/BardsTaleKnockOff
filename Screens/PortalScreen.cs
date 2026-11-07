@@ -24,7 +24,30 @@ class PortalScreen(App app, string portal) : IScreen
         SetExit();
         app.Screens.Pop();
         break;
+      case SDL_Scancode.SDL_SCANCODE_Y:
+        UsePortal();
+        app.Screens.Pop();
+        break;
     } 
+  }
+
+  void UsePortal()
+  {
+    switch (portal)
+    {
+      case "WizTowerEntrance":
+        app.GameState.X = 0;
+        app.GameState.Y = 0;
+        app.GameState.CurrLevel = 1;
+        app.GameState.Facing = Dir.South;
+        break;
+      case "WizTowerExit":
+        app.GameState.X = 1;
+        app.GameState.Y = 2;
+        app.GameState.CurrLevel = 0;
+        app.GameState.Facing = Dir.South;
+        break;
+    }
   }
 
   void SetExit()
@@ -46,6 +69,9 @@ class PortalScreen(App app, string portal) : IScreen
     {
       case "WizTowerEntrance":
         desc.AddRange("The tower interior smells of must and old burlap. Dusty stairs lead upward into darkness.", "", "Take the stairs? (y/n)");
+        break;
+      case "WizTowerExit":
+        desc.AddRange("Steps lead downward to the streets of Sarnath.", "", "Take the stairs? (y/n)");
         break;
     }
 

@@ -428,6 +428,8 @@ class EncounterScreen : IScreen
   {
     [0] = [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), 
                 (MonsterCatalog.FERAL_DOG, 8), (MonsterCatalog.CONJURER_0, 4) ],
+    [1] = [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), 
+                (MonsterCatalog.FERAL_DOG, 8), (MonsterCatalog.CONJURER_0, 4) ],
   };
 
   public EncounterScreen(App app)

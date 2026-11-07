@@ -123,6 +123,9 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case Feature.Special4:
         app.Screens.Push(new PortalScreen(app, "WizTowerEntrance"));
         break;
+      case Feature.Special5:
+        app.Screens.Push(new PortalScreen(app, "WizTowerExit"));
+        break;
       default:
         if (IsEncounter())
           app.Screens.Push(new EncounterScreen(app));
@@ -222,7 +225,8 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     if (app.GameState.Party.Buffs.Any(b => b.Buff == Buff.SoftStep))
       odds *= 2;
 
-    return app.Rng.Next(odds) == 0;
+    return false;
+    //return app.Rng.Next(odds) == 0;
   }
   
   public void Draw(GameUI ui)
