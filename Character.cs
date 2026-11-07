@@ -112,7 +112,9 @@ class Character
 
   public int NumOfMeleeAttacks => Role switch
   {
-    Role.Warrior or Role.Paladin or Role.Archer => Level / 5 + 1,
+    Role.Warrior => Level / 4 + 1,
+    Role.Paladin => Level / 5 + 1,
+    Role.Archer => Level / 7 + 1,
     _ => 1,
   };
 
