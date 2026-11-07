@@ -189,16 +189,17 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     int x = gs.X;
     int y = gs.Y;
 
-    for (int j = 0; j < 3; j++)
+    for (int j = 0; j < 4; j++)
     {
-      x += dx;
-      y += dy;
       Tile tile = gs.CurrMap.TileAt(x, y);
       if (tile.Feature.ToString().StartsWith("Trap_"))
       {
         Tile untrapped = tile with { Feature = Feature.None };
         gs.CurrMap.SetTile(x, y, untrapped);
       }
+
+      x += dx;
+      y += dy;
     }
   }
 
