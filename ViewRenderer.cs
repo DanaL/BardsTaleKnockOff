@@ -221,7 +221,7 @@ unsafe class ViewRenderer
     int py = gs.Y;
     Dir facing = gs.Facing;
     int viewRange = gs.ViewRange;
-    Dungeon map = gs.CurrMap;
+    DungeonLevel map = gs.CurrMap;
     _fade = DistanceFade.ToBlack;
     
     var (fx, fy) = facing.Delta();
@@ -322,7 +322,7 @@ unsafe class ViewRenderer
 
   // Sky bands from the top of the view down to the horizon, ground below it.
   // Whatever isn't covered by squares in view shows this.
-  void DrawBackground(Dungeon map, GameState gs, int originX, int originY)
+  void DrawBackground(DungeonLevel map, GameState gs, int originX, int originY)
   {
     Rgb[] bands;
     Rgb ground;

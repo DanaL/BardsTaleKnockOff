@@ -13,9 +13,11 @@ namespace BardsTaleKnockOff;
 
 class GameState
 {
-  public List<Dungeon> Maps { get; set; } = [];
+  public Dictionary<string, List<DungeonLevel>> Regions = [];
+  //public List<DungeonLevel> Maps { get; set; } = [];
   public Party Party { get; set; } = new Party();
 
+  public string CurrRegion { get; set; } = "";
   public int CurrLevel { get; set; }
   public int X { get; set; }
   public int Y { get; set; }
@@ -23,8 +25,8 @@ class GameState
   
   public ulong Turn { get; set; } = 0;
 
-  public Dungeon CurrMap => Maps[CurrLevel];
-  public Tile CurrTile => Maps[CurrLevel].TileAt(X, Y);
+  public DungeonLevel CurrMap => Regions[CurrRegion][CurrLevel];
+  public Tile CurrTile => CurrMap.TileAt(X, Y);
   
   // Text for the info panel, oldest first. The panel shows as many of the
   // most recent lines as fit.
@@ -83,13 +85,13 @@ class GameState
 
   public void TryMove(Dir dir)
   {
-    if (!Maps[CurrLevel].Passable(X, Y, dir))
+    if (!CurrMap.Passable(X, Y, dir))
     {
       Say("Ouch! You can't go that way.");
       return;
     }
     var (dx, dy) = dir.Delta();
-    X = Dungeon.Wrap(X + dx);
-    Y = Dungeon.Wrap(Y + dy);
+    X = DungeonLevel.Wrap(X + dx);
+    Y = DungeonLevel.Wrap(Y + dy);
   }
 }

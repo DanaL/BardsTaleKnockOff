@@ -34,11 +34,9 @@ unsafe class App(SDL_Window* window)
   public void NewGame()
   {
     string townMapPath = ResourcePath.GetDataFilePath("town.txt");
-    Dungeon town = MapLoader.Load(townMapPath);
-    GameState.Maps.Add(town);
-
-    Dungeon wiztower = MapLoader.Load(ResourcePath.GetDataFilePath("wiztower.txt"));
-    GameState.Maps.Add(wiztower);
+    DungeonLevel town = MapLoader.Load(townMapPath);
+    GameState.CurrRegion = "town";
+    GameState.Regions["town"] = [ town ];
   }
 
   // Switch typed-character events (IScreen.OnText) on or off. Leave it off

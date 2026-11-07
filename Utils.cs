@@ -184,12 +184,12 @@ static class ResourcePath
 
 static class MapLoader
 {
-  public static Dungeon Load(string path)
+  public static DungeonLevel Load(string path)
   {
-    Dungeon d = new();
-    for (int x = 0; x < Dungeon.Size; x++)
+    DungeonLevel d = new();
+    for (int x = 0; x < DungeonLevel.Size; x++)
     {
-      for (int y = 0; y < Dungeon.Size; y++)
+      for (int y = 0; y < DungeonLevel.Size; y++)
       {
         d.SetTile(x, y, new(Floor.Stone, Ceiling.Stone, Feature.None, Edge.PermWall, Edge.PermWall, Edge.PermWall, Edge.PermWall));
       }
