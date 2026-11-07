@@ -123,6 +123,9 @@ unsafe class GameUI
     if (icons.Light)
       Icon(0, "flame1.png");
     
+    if (icons.Eye)
+      Icon(2, "eye.png");
+      
     if (icons.Facing == Dir.North)
       Icon(3, "CompassN.png");
     else if (icons.Facing == Dir.South)

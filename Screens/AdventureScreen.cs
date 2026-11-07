@@ -37,18 +37,22 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         GS.TryMove(GS.Facing);
         CheckLocation();
         ResolveTurn();
+        Divination();
         break;
       case SDL_Scancode.SDL_SCANCODE_DOWN:
       case SDL_Scancode.SDL_SCANCODE_S:        
         GS.Facing = GS.Facing.Opposite();
+        Divination();
         break;
       case SDL_Scancode.SDL_SCANCODE_LEFT:
       case SDL_Scancode.SDL_SCANCODE_A:
         GS.Facing = GS.Facing.TurnLeft();
+        Divination();
         break;
       case SDL_Scancode.SDL_SCANCODE_RIGHT:
       case SDL_Scancode.SDL_SCANCODE_D:
         GS.Facing = GS.Facing.TurnRight();
+        Divination();
         break;
       case SDL_Scancode.SDL_SCANCODE_1:
       case SDL_Scancode.SDL_SCANCODE_2:
@@ -190,7 +194,35 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
     _idleTime = 0;
     ++GS.Turn;
-    GS.Party.Buffs = [.. GS.Party.Buffs.Where(b => b.ExpiresOn > GS.Turn)];
+    GS.Party.Buffs = [.. GS.Party.Buffs.Where(b => b.ExpiresOn > GS.Turn)];    
+  }
+
+  void Divination()
+  {
+    foreach (var buff in GS.Party.Buffs)
+    {
+      if (buff.Buff == Buff.AreaEnchant)
+        CheckAreaEnchant();
+    }
+  }
+
+  void CheckAreaEnchant()
+  {
+    var (dx, dy) = GS.Facing.Delta();
+    int x = GS.X;
+    int y = GS.Y;
+
+    for (int j = 0; j < 3; j++)
+    {
+      x += dx;
+      y += dy;
+      Tile tile = GS.CurrMap.TileAt(x, y);
+      if (tile.Feature == Feature.Special5 || tile.Feature == Feature.StairsUp || tile.Feature == Feature.StairsDown)
+      {
+        GS.Say("There are stairs nearby!");
+        break;
+      }
+    }
   }
 
   public void SpellChosen(SpellInfo spell)
