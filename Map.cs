@@ -79,7 +79,7 @@ class Dungeon
 
   public static int Wrap(int v) => ((v % Size) + Size) % Size;
   public Tile TileAt(int x, int y) => _tiles[Wrap(x), Wrap(y)];
-  public void SetTile(int x, int y, Tile tile) => _tiles[x, y] = tile;
+  public void SetTile(int x, int y, Tile tile) => _tiles[Wrap(x), Wrap(y)] = tile;
 
   // Can the party step from (x, y) through the given side?
   public bool Passable(int x, int y, Dir side)

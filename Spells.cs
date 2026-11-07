@@ -145,7 +145,10 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
           gs.Party.Buffs.Add(new TempBuff(Buff.SoftStep, gs.Turn + DURATION_MEDIUM, false));
         break;
       case "STLI":
-        Stli(caster, gs, spell.Cost);
+        Stli(caster, spell.Cost, gs);
+        break;
+      case "TRZP":
+        Trzp(caster, spell.Cost, gs);
         break;
       case "WIST":
         msgBuffer.AddRange(Wist(caster, monsterGroup, spell.Cost, rng));
@@ -177,6 +180,26 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
   static void ClearLightSources(Party party)
   {
     party.Buffs = [.. party.Buffs.Where(b => b.Buff != Buff.MageFlame && b.Buff != Buff.SteelLight)];
+  }
+
+  static void Trzp(Character caster, int cost, GameState gs)
+  {
+    caster.MP -= cost;
+    var (dx, dy) = gs.Facing.Delta();
+    int x = gs.X;
+    int y = gs.Y;
+
+    for (int j = 0; j < 3; j++)
+    {
+      x += dx;
+      y += dy;
+      Tile tile = gs.CurrMap.TileAt(x, y);
+      if (tile.Feature.ToString().StartsWith("Trap_"))
+      {
+        Tile untrapped = tile with { Feature = Feature.None };
+        gs.CurrMap.SetTile(x, y, untrapped);
+      }
+    }
   }
 
   List<string> Hyim(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
@@ -219,7 +242,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     gs.Party.Buffs.Add(new TempBuff(Buff.MageFlame, gs.Turn + 2000, false));
   }
 
-  public static void Stli(Character caster, GameState gs, int cost)
+  public static void Stli(Character caster, int cost, GameState gs)
   {
     ClearLightSources(gs.Party);
 
