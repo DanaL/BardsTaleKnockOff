@@ -72,6 +72,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
   void CheckLocation()
   {
     Tile tile = GS.CurrMap.TileAt(GS.X, GS.Y);
+    _idleTime = 0;
 
     switch (tile.Feature)
     {
@@ -140,17 +141,20 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     // moving, only when you were idle but I'm going to do it every 10 turns
     // in town (during daytime). Easier to code and track and makes more sense
     // to me?
-    if (app.GameState.DayTime && app.GameState.CurrLevel == 0 && (_idleTime > 10_000 || GS.Turn % 10 == 0))
+    if (_idleTime > 10_000)
     {
-      foreach (var character in app.GameState.Party.Members.OfType<Character>())
+      if (app.GameState.CurrLevel == 0 && app.GameState.DayTime && app.GameState.CurrLevel == 0)
       {
-        if (character.MaxMP > 0 && character.MP < character.MaxMP)
-          ++character.MP;
+        foreach (var character in app.GameState.Party.Members.OfType<Character>())
+        {
+          if (character.MaxMP > 0 && character.MP < character.MaxMP)
+            ++character.MP;
+        }
       }
-    }
 
-    if (IsEncounter())
-      app.Screens.Push(new EncounterScreen(app));
+      if (IsEncounter())
+        app.Screens.Push(new EncounterScreen(app));
+    }
 
     _idleTime = 0;
     ++GS.Turn;
@@ -226,8 +230,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     if (app.GameState.Party.Buffs.Any(b => b.Buff == Buff.SoftStep))
       odds *= 2;
 
-    return false;
-    //return app.Rng.Next(odds) == 0;
+    return app.Rng.Next(odds) == 0;
   }
   
   public void Draw(GameUI ui)
