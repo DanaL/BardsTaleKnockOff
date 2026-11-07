@@ -33,6 +33,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     {
       case SDL_Scancode.SDL_SCANCODE_UP:
       case SDL_Scancode.SDL_SCANCODE_W:
+        GS.Messages.Clear();
         GS.TryMove(GS.Facing);
         CheckLocation();
         ResolveTurn();
