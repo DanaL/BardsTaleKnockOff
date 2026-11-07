@@ -69,13 +69,14 @@ class PortalScreen(App app, string portal) : IScreen
     {
       case "WizTowerEntrance":
         desc.AddRange("The tower interior smells of must and old burlap. Dusty stairs lead upward into darkness.", "", "Take the stairs? (y/n)");
+        ui.DrawNoBackground("");
         break;
       case "WizTowerExit":
         desc.AddRange("Steps lead downward to the streets of Sarnath.", "", "Take the stairs? (y/n)");
+        ui.DrawDungeonView(app.GameState);
         break;
     }
-
-    ui.DrawNoBackground("");
+    
     ui.DrawTextPanel(desc);
     ui.DrawRoster(app.GameState);
   }
