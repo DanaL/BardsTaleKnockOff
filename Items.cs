@@ -16,7 +16,7 @@ namespace BardsTaleKnockOff;
 // because swords can't become rusty, buffed, etc. At least not yet. So for
 // the early stages of this project I'll just have a big lookup table.
 
-enum ItemType { Misc, Weapon, Armour, Gloves, Shield, Helmet, Ring }
+enum ItemType { Misc, Weapon, Armour, Gloves, Shield, Helmet, Ring, Bow, Ammunition }
 
 class Item
 {
@@ -31,6 +31,7 @@ class Item
   public int DamageDie { get; init; } = 0;
   public int DamageBonus { get; init; } = 0;
   public bool Useable { get; init; } = false;
+  public bool Stackable { get; init; } = false;
 
   public int SellValue => int.Max(Value / 4, 1);
 }
@@ -60,12 +61,17 @@ class ItemCatalog
   public const int BUCKLER = 16;
   public const int TOWER_SHIELD = 17;
   
+  public const int SHORTBOW = 19;
+  public const int LONGBOW = 20;
+
+  public const int ARROW = 21;
+
   const Role ALL = Role.Warrior | Role.Rogue | Role.Hunter | Role.Conjurer | Role.Magician
                       | Role.Sorcerer | Role.Wizard | Role.Trickster | Role.Archer | Role.Paladin;
   const Role NONCASTER = Role.Warrior | Role.Rogue | Role.Hunter | Role.Trickster | Role.Archer | Role.Paladin;
   const Role FIGHTER = Role.Warrior | Role.Archer | Role.Paladin;
 
-  public static Item Item(int num) => num switch
+  public static Item Item(int id) => id switch
   {
     TORCH => new() {  Id = TORCH, Name = "Torch", Type = ItemType.Misc, Value = 5, UseableBy = ALL, Useable = true },
     BROADSWORD => new() { Id = BROADSWORD, Name = "Broadsword", Type = ItemType.Weapon, Value = 80, DamageDie = 4, NumDamageDice = 2, UseableBy = FIGHTER | Role.Hunter },
@@ -84,7 +90,10 @@ class ItemCatalog
     BUCKLER => new() { Id = BUCKLER, Name = "Buckler", Type = ItemType.Shield, Value = 40, ACMod = 1, UseableBy = NONCASTER },
     TOWER_SHIELD => new() { Id = TOWER_SHIELD, Name = "Tower Shield", Type = ItemType.Shield, Value = 100, ACMod = 2, UseableBy = FIGHTER },
     MACE => new() { Id = MACE, Name = "Mace", Type = ItemType.Weapon, Value = 60, DamageDie = 8, NumDamageDice = 1, UseableBy = NONCASTER },
-    _ => throw new Exception($"Item {num} is not defined!")
+    SHORTBOW => new() { Id = SHORTBOW, Name = "Shortbow", Type = ItemType.Bow, Value = 50, UseableBy = NONCASTER },
+    LONGBOW => new() { Id = LONGBOW, Name = "Longbow", Type = ItemType.Bow, Value = 100, UseableBy = Role.Warrior | Role.Archer },
+    ARROW => new() { Id = ARROW, Name = "Arrow", Type = ItemType.Ammunition, Value = 2, UseableBy = NONCASTER, Stackable = true },
+    _ => throw new Exception($"Item {id} is not defined!")
   };
   
   public static bool Use(Item item, GameState gs)

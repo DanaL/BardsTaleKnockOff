@@ -21,7 +21,7 @@ enum Role
   Paladin = 1 << 9
 }
 
-record struct InvSlot(int Id, bool Equipped);
+record struct InvSlot(int Id, bool Equipped, int Count = 1);
 
 class Character
 {
@@ -173,13 +173,26 @@ class Character
 
   public bool InventoryFull => !Inventory.Any(s => s is null);
 
-  public bool AddItem(int id)
+  public bool AddItem(int id, int count)
   {
+    Item item = ItemCatalog.Item(id);
+    if (item.Stackable)
+    {
+      for (int j = 0; j < INVENTORY_SLOTS; j++) 
+      {
+        if (Inventory[j] is InvSlot islot && islot.Id == id) 
+        {
+          Inventory[j] = islot with { Count = islot.Count + count };
+          return true;
+        }
+      }
+    }
+    
     int slot = Array.IndexOf(Inventory, null);
     if (slot < 0)
       return false;
-    Inventory[slot] = new(id, false);
-
+    Inventory[slot] = new(id, false, count);
+    
     return true;
   }
 

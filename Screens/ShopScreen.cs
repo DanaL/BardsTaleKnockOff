@@ -13,7 +13,7 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-class PurchaseScreen(App app, Character character, List<Item> inventory) : IScreen
+class PurchaseScreen(App app, Character character, List<(Item, int)> inventory) : IScreen
 {
   const int VISIBLE_ROWS = 20;
 
@@ -43,7 +43,9 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
 
   void CheckPurchase()
   {
-    Item item = inventory[_cursor];
+    Item item = inventory[_cursor].Item1;
+    int count = inventory[_cursor].Item2;
+    int price = item.Value * count;
     if (item.Value > character.Gold)
     {
       _status = $"{character.Name} cannot afford that!";
@@ -54,9 +56,12 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
     }
     else
     {
-      character.Gold -= item.Value;
-      character.AddItem(item.Id);
-      app.Screens.Push(new PopupScreen(app, $"{character.Name} purchases the {item.Name.ToLower()} for {item.Value} gp."));
+      character.Gold -= price;
+      character.AddItem(item.Id, count);
+      string n = item.Name.ToLower();
+      if (count > 1)
+        n = $"{n.Pluralize()} ({count})";
+      app.Screens.Push(new PopupScreen(app, $"{character.Name} purchases the {n} for {price} gp."));
     }
   }
 
@@ -81,9 +86,13 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
     {
       highlight = _cursor + 2;
       bool anyCannotUse = false;
-      foreach (var item in inventory)
+      foreach (var (item, count) in inventory)
       {
-        string s = $"{item.Name} - ${item.Value}";
+        int price = item.Value * count;
+        string s = item.Name;
+        if (count > 1)
+          s += $" ({count})";
+        s += $" - ${price}";
 
         if (!item.UseableBy.HasFlag(character.Role)) 
         {
@@ -115,7 +124,7 @@ class PurchaseScreen(App app, Character character, List<Item> inventory) : IScre
 class ShoppeScreen : IScreen, IInventorySelectionScreen
 {
   readonly App _app;
-  List<Item> _inventory = [];
+  List<(Item, int)> _inventory = [];
 
   const int MAIN = 0;
   const int MENU = 1;
@@ -131,23 +140,26 @@ class ShoppeScreen : IScreen, IInventorySelectionScreen
 
     // The shop always has some items in stock and later will stock items
     // the player sells them
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.DAGGER));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.MACE));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.STAFF));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.SHORTSWORD));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.BROADSWORD));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.HALBERD));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.ROBES));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.LEATHER_ARMOUR));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.CHAIN_MAIL));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.SPLINT_MAIL));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.PLATE_ARMOUR));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.GAUNTLETS));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.LEATHER_GLOVES));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.HELM));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.BUCKLER));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.TOWER_SHIELD));
-    _inventory.Add(ItemCatalog.Item(ItemCatalog.TORCH));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.DAGGER), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.MACE), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.STAFF), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.SHORTSWORD), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.BROADSWORD), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.HALBERD), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.SHORTBOW), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.LONGBOW), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.ARROW), 10));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.ROBES), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.LEATHER_ARMOUR), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.CHAIN_MAIL),1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.SPLINT_MAIL), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.PLATE_ARMOUR), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.GAUNTLETS), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.LEATHER_GLOVES), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.HELM), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.BUCKLER), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.TOWER_SHIELD), 1));
+    _inventory.Add((ItemCatalog.Item(ItemCatalog.TORCH), 1));
   }
 
   public void OnKey(SDL_KeyboardEvent key)
@@ -244,9 +256,11 @@ class ShoppeScreen : IScreen, IInventorySelectionScreen
     int idx = _shopper.Inventory.IndexOf(slot);
     if (idx != -1)
     {
-      _shopper.Inventory[idx] = null;
-      _shopper.Gold += item.SellValue;
-      _app.Screens.Push(new PopupScreen(_app, $"{_shopper.Name} sells {item.Name.DefArticle()} for {item.SellValue} gp."));
+      int sellValue = item.SellValue * slot.Count;
+      string n = slot.Count == 1 ? item.Name : $"{item.Name.Pluralize()} ({slot.Count})";
+      _shopper.Inventory[idx] = null;      
+      _app.Screens.Push(new PopupScreen(_app, $"{_shopper.Name} sells {n.DefArticle()} for {sellValue} gp."));
+      _shopper.Gold += sellValue;
     }
   }
 

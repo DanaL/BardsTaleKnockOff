@@ -48,7 +48,7 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
       case SDL_Scancode.SDL_SCANCODE_KP_ENTER:
       case SDL_Scancode.SDL_SCANCODE_RETURN:
         if (_verify && _items[_cursor].Item1.Equipped)
-        {
+        {          
           string n = _items[_cursor].Item2.Name.DefArticle();          
           _app.Screens.Push(new ConfirmScreen(_app, $"Really {_verb} {n}?", ItemSelected));
         }

@@ -20,12 +20,12 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
   List<(InvSlot, Item)> _items = [];
   
   static readonly ItemType[] EquipOrder =
-    [ItemType.Weapon, ItemType.Armour, ItemType.Shield, ItemType.Helmet, ItemType.Gloves, ItemType.Ring];
+    [ ItemType.Weapon, ItemType.Armour, ItemType.Shield, ItemType.Helmet, ItemType.Gloves, ItemType.Ring, ItemType.Bow ];
 
   public void OnKey(SDL_KeyboardEvent key)
   {
     _status = "";
-
+    string n;
     switch (key.key)
     {
       case SDL_Keycode.SDLK_UP:
@@ -41,7 +41,10 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
         break;
       case SDL_Keycode.SDLK_D:
         var (slot, item) = _items[_cursor];
-        app.Screens.Push(new ConfirmScreen(app, $"Discard the {item.Name}?", () =>
+        n = item.Name;
+        if (slot.Count > 1)
+          n += $" {slot.Count}";
+        app.Screens.Push(new ConfirmScreen(app, $"Discard the {n}?", () =>
         {
           DiscardItem(slot, item);
         }));
@@ -70,6 +73,12 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
   {
     var (_, item) = _items[_cursor];
 
+    if (item.Type == ItemType.Ammunition)
+    {
+      app.Screens.Push(new PopupScreen(app, "Those are for combat!"));
+      return;
+    }
+
     if (!item.Useable)
     {
       app.Screens.Push(new PopupScreen(app, "You know no use for that item."));
@@ -97,7 +106,10 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
     }
     else
     {
-      app.Screens.Push(new PopupScreen(app, $"You discard the {item.Name}."));
+      string n = item.Name;
+      if (slot.Count > 1)
+        n += $" ({slot.Count})";
+      app.Screens.Push(new PopupScreen(app, $"You discard the {n}."));
 
       character.Inventory[_cursor] = null;
       GetInv();
@@ -110,7 +122,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
   void ToggleGear()
   {
     var (slot, item) = _items[_cursor];
-    if (item.Type == ItemType.Misc)
+    if (item.Type == ItemType.Misc || item.Type == ItemType.Ammunition)
     {
       _status = "That cannot be equipped.";
     }
@@ -180,17 +192,22 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
       bool anyCannotUse = false;
       foreach (var i in _items.Where(s => s.Item1.Equipped))
       {
-        lines.Add($"§{i.Item2.Name}");
+        string n = i.Item2.Name;
+        if (i.Item1.Count > 1)
+          n += $" ({i.Item1.Count})";
+        lines.Add($"§{n}");
       }
       foreach (var i in _items.Where(s => !s.Item1.Equipped))
       {
-        string s = $"{i.Item2.Name}";
+        string n = i.Item2.Name;
+        if (i.Item1.Count > 1)
+          n += $" ({i.Item1.Count})";
         if (!i.Item2.UseableBy.HasFlag(character.Role))
         {
-          s += " *";
+          n += " *";
           anyCannotUse = true;
         }
-        lines.Add(s);
+        lines.Add(n);
       }
 
       if (anyCannotUse)
@@ -226,7 +243,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
       return;
     }
 
-    var (_, item) = _items[_cursor];
+    var (slot, item) = _items[_cursor];
 
     character.Inventory[_cursor] = null;
     GetInv();
@@ -234,7 +251,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
     if (_cursor >= _items.Count)
       _cursor = _items.Count - 1;
 
-    tradeTo.AddItem(item.Id);
+    tradeTo.AddItem(item.Id, slot.Count);
     app.Screens.Push(new PopupScreen(app, $"{character.Name} gives {item.Name.DefArticle()} to {tradeTo.Name}."));
   }
 
