@@ -13,11 +13,11 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-class ChooseMonsterGroupScreen(App app, Character c, List<MonsterGroup> foes, IMonsterPickScreen src) : IScreen
+class ChooseMonsterGroupScreen(App app, Character c, int range, List<MonsterGroup> foes, IMonsterPickScreen src) : IScreen
 {
   public string Image { get; set; } = "";
   public string Caption { get; set; } = "";
-  public int Range { get; set; } = 10;
+  public int _range = range;
 
   HashSet<SDL_Scancode> _groups = [];
 
@@ -46,7 +46,7 @@ class ChooseMonsterGroupScreen(App app, Character c, List<MonsterGroup> foes, IM
 
     for (int j = 0; j < foes.Count; j++)
     {
-      if (foes[j].Distance > Range && !hiding)
+      if (foes[j].Distance > _range && !hiding)
         break;
       char ch = (char) ('a' + j);
       int n = foes[j].Count;

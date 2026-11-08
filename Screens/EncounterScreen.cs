@@ -15,7 +15,7 @@ namespace BardsTaleKnockOff;
 
 // The display and input side of a fight: collects each character's action,
 // then shows the round's messages one at a time. The rules live in Battle.
-class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickScreen, IInventorySelectionScreen
+class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickScreen, IInventorySelectionScreen
 {
   // if the player flees some special encounters, like a guarded door, we
   // might want to move them to a different location
@@ -41,10 +41,11 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
   ulong _nextMsgAt = 0;
   const ulong MsgDelayMS = 600;
 
-  readonly Battle _battle = new(app.GameState, app.Rng, foes);
-
+  readonly Battle _battle;
+  readonly App _app;
+  readonly List<MonsterGroup> _foes;
   int _slot = 0;
-  int _state = PICK_ACTION;  
+  int _state;
   HashSet<SDL_Scancode> _availableActions = [];
 
   List<BattleChoice> _choices = [];
@@ -53,12 +54,28 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
   int _chosenInvIdx = -1;
   Item? _itemToUse = null;
 
-  string _image = foes[0].Image;
-  string _caption = foes[0].Name;
+  string _image;
+  string _caption;
+
+  public BattleScreen(App app, List<MonsterGroup> foes, bool partyAdvance)
+  {
+    _app = app;
+    _foes = foes;
+    _battle = new(app.GameState, app.Rng, foes);
+    _state = PICK_ACTION;
+    _image = foes[0].Image;
+    _caption = foes[0].Name;
+
+    if (partyAdvance)
+    {
+      _battle.StartRound(_choices, true);
+      _state = RESOLVING_COMBAT;
+    }
+  }
 
   void Reset()
   {
-    app.GameState.Messages.Clear();
+    _app.GameState.Messages.Clear();
     _choices.Clear();    
     _slot = 0;
     _state = PICK_ACTION;
@@ -80,9 +97,9 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
             _choices.Add(new(_slot, BattleAction.MeleeAttack, 0, -1, null, -1));
             next = true;
           }
-          else if (app.GameState.Party.Members[_slot] is Character mc)
+          else if (_app.GameState.Party.Members[_slot] is Character mc)
           {
-            app.Screens.Push(new ChooseMonsterGroupScreen(app, mc, _battle.Foes, this) { Caption = _caption, Image = _image });
+            _app.Screens.Push(new ChooseMonsterGroupScreen(_app, mc, 10, _battle.Foes, this) { Caption = _caption, Image = _image });
             _pendingAction = BattleAction.MeleeAttack;
           }
           break;
@@ -95,19 +112,19 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
           _choices.Add(new(_slot, BattleAction.HideInShadows, 0, -1, null, -1));
           break;
         case CAST_SPELL_KEY:
-          if (app.GameState.Party.Members[_slot] is Character c) 
+          if (_app.GameState.Party.Members[_slot] is Character c) 
           {
             _pendingAction = BattleAction.CastSpell;
-            app.Screens.Push(new ChooseSpellScreen(app, c, SpellContext.Combat, this) { Caption = _caption, Image = _image });
+            _app.Screens.Push(new ChooseSpellScreen(_app, c, SpellContext.Combat, this) { Caption = _caption, Image = _image });
           }
           _availableActions = [];
           break;
         case USE_ITEM_KEY:
-          if (app.GameState.Party.Members[_slot] is Character uc) 
+          if (_app.GameState.Party.Members[_slot] is Character uc) 
           {
             _pendingAction = BattleAction.UseItem;
-            InventorySelectionOptions iopts = new(app, uc, "Use which?", false, "Use", InventoryLabel.None, true);
-            app.Screens.Push(new InventorySelectionScreen(iopts, this) { Caption = _caption, Image = _image });
+            InventorySelectionOptions iopts = new(_app, uc, "Use which?", false, "Use", InventoryLabel.None, true);
+            _app.Screens.Push(new InventorySelectionScreen(iopts, this) { Caption = _caption, Image = _image });
           }
           _availableActions = [];
           break;          
@@ -117,7 +134,7 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
       {
         ++_slot;
         _availableActions = [];
-        if (_slot >= app.GameState.Party.Alive)
+        if (_slot >= _app.GameState.Party.Alive)
           _state = CONFIRM;
       }
     }
@@ -126,7 +143,7 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
       switch (key.scancode)
       {
         case SDL_Scancode.SDL_SCANCODE_Y:
-          _battle.StartRound(_choices);
+          _battle.StartRound(_choices, false);
           _state = RESOLVING_COMBAT;
           break;
         case SDL_Scancode.SDL_SCANCODE_N:
@@ -144,29 +161,34 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
     }
     else if (_state == END_OF_ROUND && key.scancode == SDL_Scancode.SDL_SCANCODE_R)
     {
-      _state = Util.TryToFlee(app.Rng) ? FLED : FAILED_TO_FLEE;      
+      _state = Util.TryToFlee(_app.Rng) ? FLED : FAILED_TO_FLEE;      
+    }
+    else if (_state == END_OF_ROUND && key.scancode == SDL_Scancode.SDL_SCANCODE_A && _foes[0].Distance > 10)
+    {
+      _battle.StartRound(_choices, true);
+      _state = RESOLVING_COMBAT;
     }
     else if (_state == VICTORY && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
-      app.GameState.Party.ClearCombatBuffs();
-      app.GameState.Messages.Clear();
-      app.Screens.Pop();
+      _app.GameState.Party.ClearCombatBuffs();
+      _app.GameState.Messages.Clear();
+      _app.Screens.Pop();
       if (!string.IsNullOrEmpty(VictoryMessage))
-        app.GameState.Say(VictoryMessage);
+        _app.GameState.Say(VictoryMessage);
     }
     else if (_state == FLED && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
       if (RetreatLoc.X != -1 && RetreatLoc.Y != -1)
       {
-        app.GameState.X = RetreatLoc.X;
-        app.GameState.Y = RetreatLoc.Y;
-        app.GameState.Facing = app.GameState.Facing.Opposite();
-        app.Screens.Pop(); // This is to make sure the special encounter screen is popped off the stack
+        _app.GameState.X = RetreatLoc.X;
+        _app.GameState.Y = RetreatLoc.Y;
+        _app.GameState.Facing = _app.GameState.Facing.Opposite();
+        _app.Screens.Pop(); // This is to make sure the special encounter screen is popped off the stack
       }
 
-      app.GameState.Party.ClearCombatBuffs();
-      app.GameState.Messages.Clear();
-      app.Screens.Pop();
+      _app.GameState.Party.ClearCombatBuffs();
+      _app.GameState.Messages.Clear();
+      _app.Screens.Pop();
     }
     else if (_state == FAILED_TO_FLEE && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
@@ -199,33 +221,40 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
 
           if (_battle.Messages.Count > 0)
           {
-            app.GameState.Say(_battle.Messages.Dequeue());
+            _app.GameState.Say(_battle.Messages.Dequeue());
             _nextMsgAt = now + MsgDelayMS;
           }
           else
           {
-            app.GameState.Say("");
+            _app.GameState.Say("");
             if (_battle.Foes.Any(g => g.Count > 0))
             {
-              app.GameState.Say("You still face:");
+              _app.GameState.Say("You still face:");
               foreach (var group in _battle.Foes.Where(g => g.Count > 0))
               {
                 string gn = group.Count == 1 ? group.Name : group.Name.Pluralize();
-                app.GameState.Say($"{group.Count} {gn} ({group.Distance}')");
+                _app.GameState.Say($"{group.Count} {gn} ({group.Distance}')");
               }
-              app.GameState.Say("");
+              _app.GameState.Say("");
             }
 
             _state = PostRound();
           }
         }
-        ui.DrawTextPanel(app.GameState.Messages);
+        ui.DrawTextPanel(_app.GameState.Messages);
         break;
       case END_OF_ROUND:
-        ui.DrawTextPanel([.. app.GameState.Messages,"F)ight", "R)un away"]);
+        lines = [.. _app.GameState.Messages];
+        if (_foes[0].Distance > 10)
+        {
+          lines.Add("A) Advance");
+        }
+        lines.AddRange("F) Fight", "R) Run away");
+
+        ui.DrawTextPanel(lines);
         break;
       case VICTORY:
-        ui.DrawTextPanel([.. app.GameState.Messages,"- press space to continue -"]);
+        ui.DrawTextPanel([.. _app.GameState.Messages,"- press space to continue -"]);
         break;
       case FLED:
         ui.DrawTextPanel(["You flee the battle!", "", "- press space to continue -"]);
@@ -236,7 +265,7 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
     }
 
     ui.DrawImage(_image, _caption, null);
-    ui.DrawRoster(app.GameState);
+    ui.DrawRoster(_app.GameState);
   }
 
   int PostRound()
@@ -257,10 +286,10 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
   {
     var (xpPerChar, goldPerChar) = _battle.AwardSpoils();
 
-    app.GameState.Say("You emerge victorious from battle!");
-    app.GameState.Say("");
+    _app.GameState.Say("You emerge victorious from battle!");
+    _app.GameState.Say("");
     string gp = goldPerChar == 1 ? "a single gold piece" : $"{goldPerChar} gold pieces";
-    app.GameState.Say($"Each survivor receives {xpPerChar} XP and {gp}!");
+    _app.GameState.Say($"Each survivor receives {xpPerChar} XP and {gp}!");
 
     _image = "treasure.png";
     _caption = "Victory!";
@@ -272,7 +301,7 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
 
     foreach (var choice in _choices)
     {
-      if (app.GameState.Party.Members[choice.PartySlot] is not Character c)
+      if (_app.GameState.Party.Members[choice.PartySlot] is not Character c)
         continue;
 
       string monster;
@@ -326,7 +355,7 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
               monster = $" the {monster.Pluralize()}";
               s += monster;
             }
-            else if (choice.Spell.Target == SpellTarget.PartyMember && app.GameState.Party.Members[choice.TargetPartySlot] is Character target)
+            else if (choice.Spell.Target == SpellTarget.PartyMember && _app.GameState.Party.Members[choice.TargetPartySlot] is Character target)
             {
               s += $" on {target.Name}";
             }
@@ -346,14 +375,14 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
   {
     List<string> lines = [];
 
-    if (app.GameState.Party.Members[_slot] is Character c)
+    if (_app.GameState.Party.Members[_slot] is Character c)
     {
       string n = c.Name;
       if (c.Buffs.Any(b => b.Buff == Buff.Hiding))
         n += " (hiding)";
       lines.AddRange($"{n} has these actions available:", "", "", "", "", "");
 
-      bool foesInMelee = foes[0].Distance == 10;
+      bool foesInMelee = _foes[0].Distance == 10;
       if (foesInMelee && (_slot < 3 || c.Buffs.Any(b => b.Buff == Buff.Hiding))) 
       {
         _availableActions.Add(ATTACK_KEY);
@@ -392,7 +421,7 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
     _pendingSpell = null;
     _itemToUse = null;
     _chosenInvIdx = -1;
-    if (_slot >= app.GameState.Party.Alive)
+    if (_slot >= _app.GameState.Party.Alive)
       _state = CONFIRM;
     else
       _state = PICK_ACTION;
@@ -405,10 +434,10 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
       case SpellTarget.PartyMember:
         _pendingAction = BattleAction.CastSpell;
         _pendingSpell = spell;
-        app.Screens.Push(new ChoosePartyMemberScreen(app, this, $"Cast {spell.Code} on whom") { Caption = _caption, Image = _image });
+        _app.Screens.Push(new ChoosePartyMemberScreen(_app, this, $"Cast {spell.Code} on whom") { Caption = _caption, Image = _image });
         break;
       case SpellTarget.Monsters:
-        if (app.GameState.Party.Members[_slot] is Character c)
+        if (_app.GameState.Party.Members[_slot] is Character c)
         {
           if (_battle.Foes.Count == 1)
           {
@@ -419,7 +448,7 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
           {
             _pendingAction = BattleAction.CastSpell;
             _pendingSpell = spell;
-            app.Screens.Push(new ChooseMonsterGroupScreen(app, c, _battle.Foes, this) { Caption = _caption, Image = _image, Range = 90 });          
+            _app.Screens.Push(new ChooseMonsterGroupScreen(_app, c, 90, _battle.Foes, this) { Caption = _caption, Image = _image });          
           }          
         }
         
@@ -456,19 +485,19 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
     if (_battle.Foes.Count == 1)
     {
       _choices.Add(new(_slot, BattleAction.ShootBow, 0, -1, null, invIdx));
-      app.Screens.Pop(); 
+      _app.Screens.Pop(); 
       ActionChosen();
     }
     else
     {
       _pendingAction = BattleAction.ShootBow;
-      app.Screens.Replace(new ChooseMonsterGroupScreen(app, c, _battle.Foes, this) { Caption = _caption, Image = _image, Range = 90 });  
+      _app.Screens.Replace(new ChooseMonsterGroupScreen(_app, c, 90, _battle.Foes, this) { Caption = _caption, Image = _image });  
     }    
   }
 
   public void ItemSelected(InvSlot slot, Item item, int invIdx)
   {
-    if (app.GameState.Party.Members[_slot] is not Character c)
+    if (_app.GameState.Party.Members[_slot] is not Character c)
       return;
 
     _chosenInvIdx = invIdx;
@@ -480,7 +509,7 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
     }
     else
     {
-      app.Screens.Pop(); // Unlike Character or Spell selection screens, the Inv Select screen doesn't pop itself
+      _app.Screens.Pop(); // Unlike Character or Spell selection screens, the Inv Select screen doesn't pop itself
       _choices.Add(new(_slot, BattleAction.UseItem, -1, -1, null, invIdx));
       ActionChosen();
     }
@@ -496,9 +525,10 @@ class EncounterScreen : IScreen
   const int MONSTERS_SURPRISED = 2;
   const int FAILED_TO_FLEE = 3;
   const int FLED = 4;
-
-  int _state = PRELUDE;
   
+  int _state = PRELUDE;
+  bool _advance = false;
+
   readonly List<MonsterGroup> _groups = [];
   readonly string _blurb;
 
@@ -532,10 +562,10 @@ class EncounterScreen : IScreen
     }
     
     _groups = [];
-    _groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng), MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng), MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng)], Distance = 10});
-    _groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.FERAL_DOG, app.Rng) ], Distance = 10});
+    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng), MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng), MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng)], Distance = 10});
+    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.FERAL_DOG, app.Rng) ], Distance = 10});
     _groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng), MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng)], Distance = 30});
-    _groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng), MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng), MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng)], Distance = 40});
+    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng), MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng), MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng)], Distance = 40});
     
     List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g.Name : g.Name.Pluralize())} ({g.Distance}')")];
     string desc = summaries.Count switch
@@ -577,7 +607,11 @@ class EncounterScreen : IScreen
     }
     else if ((_state == PRELUDE && key.scancode == SDL_Scancode.SDL_SCANCODE_F) || _state == FAILED_TO_FLEE)
     {
-      _app.Screens.Replace(new BattleScreen(_app, _groups));
+      _app.Screens.Replace(new BattleScreen(_app, _groups, false));
+    }
+    else if (_state == PRELUDE && _advance && key.scancode == SDL_Scancode.SDL_SCANCODE_A)
+    {
+      _app.Screens.Replace(new BattleScreen(_app, _groups, true));
     }
   }
 
@@ -585,12 +619,24 @@ class EncounterScreen : IScreen
   {
     List<string> lines = [ _blurb, ""];
 
-    if (_state == PRELUDE)
-      lines.Add("Will your stalwart band elect to (F)ight for (R)un?");
+    if (_state == PRELUDE) 
+    {
+      lines.AddRange("Will your stalwart band elect to: ", "");
+      if (_groups[0].Distance > 10) 
+      {
+        lines.Add("(A) Advance");
+        _advance = true;
+      }
+      lines.AddRange("(F) Fight", "(R) Run");
+    }
     else if (_state == FAILED_TO_FLEE)
+    {
       lines.AddRange("You were unable to escape!", "", "Press any key to continue");
+    }
     else if (_state == FLED)
+    {
       lines.AddRange("Discretion is the better part of valour...", "", "Press any key to continue");
+    }
 
     string image = _groups[0].Image;
     string monsterName = _groups[0].Name;

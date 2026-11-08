@@ -53,7 +53,38 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
   public bool RoundOver => _actions.Count == 0 && _actingGroup < 0;
 
-  public void StartRound(IEnumerable<BattleChoice> choices)
+  public void StartRound(IEnumerable<BattleChoice> choices, bool partyAdvance)
+  {
+    if (partyAdvance)
+    {
+      Messages.Enqueue("The party advances");
+      foreach (var mg in foes)
+      {
+        if (mg.Distance > 10)
+          mg.Distance -= 10;
+      }
+    }
+    else
+    {
+      DoPartyChoices(choices);
+    }
+
+    int advInitiative = 1000; // groups advancing always happens after everyone else has acted
+    for (int n = 0; n < Foes.Count; n++)
+    {
+      if (Foes[n].Distance == 10 || Foes[n].Monsters[0].HasFlag(MonsterFlag.Ranged))      
+      {
+        int roll = rng.Next(1, 24);
+        _actions.Enqueue(new(n, BattleAction.MonsterAction, n, -1, null, -1), -roll);        
+      }
+      else
+      {
+        _actions.Enqueue(new(n, BattleAction.MonstersAdvance, n, -1, null, -1), advInitiative++);
+      }      
+    }
+  }
+
+  public void DoPartyChoices(IEnumerable<BattleChoice> choices)
   {
     foreach (var choice in choices)
     {
@@ -74,20 +105,6 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
           _actions.Enqueue(choice, Initiative(c));
           break;
       }
-    }
-
-    int advInitiative = 1000; // groups advancing always happens after everyone else has acted
-    for (int n = 0; n < Foes.Count; n++)
-    {
-      if (Foes[n].Distance == 10 || Foes[n].Monsters[0].HasFlag(MonsterFlag.Ranged))      
-      {
-        int roll = rng.Next(1, 24);
-        _actions.Enqueue(new(n, BattleAction.MonsterAction, n, -1, null, -1), -roll);        
-      }
-      else
-      {
-        _actions.Enqueue(new(n, BattleAction.MonstersAdvance, n, -1, null, -1), advInitiative++);
-      }      
     }
   }
 
