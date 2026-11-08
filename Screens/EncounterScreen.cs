@@ -92,7 +92,7 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
       switch (key.scancode)
       {
         case ATTACK_KEY:
-          if (_battle.Foes.Count == 1)
+          if (_battle.Foes.Count == 1 && _battle.Foes[0].Distance == 10)
           {
             _choices.Add(new(_slot, BattleAction.MeleeAttack, 0, -1, null, -1));
             next = true;
@@ -439,7 +439,7 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
       case SpellTarget.Monsters:
         if (_app.GameState.Party.Members[_slot] is Character c)
         {
-          if (_battle.Foes.Count == 1)
+          if (_battle.Foes.Count == 1 && _battle.Foes[0].Distance <= spell.Range)
           {
             _choices.Add(new(_slot, BattleAction.CastSpell, 0, -1, spell, -1));
             ActionChosen();
@@ -448,7 +448,7 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
           {
             _pendingAction = BattleAction.CastSpell;
             _pendingSpell = spell;
-            _app.Screens.Push(new ChooseMonsterGroupScreen(_app, c, 90, _battle.Foes, this) { Caption = _caption, Image = _image });          
+            _app.Screens.Push(new ChooseMonsterGroupScreen(_app, c, spell.Range, _battle.Foes, this) { Caption = _caption, Image = _image });          
           }          
         }
         
@@ -564,7 +564,7 @@ class EncounterScreen : IScreen
     _groups = [];
     //_groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng), MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng), MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng)], Distance = 10});
     //_groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.FERAL_DOG, app.Rng) ], Distance = 10});
-    _groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng), MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng)], Distance = 30});
+    _groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng), MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng)], Distance = 90});
     //_groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng), MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng), MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng)], Distance = 40});
     
     List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g.Name : g.Name.Pluralize())} ({g.Distance}')")];

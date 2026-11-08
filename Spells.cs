@@ -22,10 +22,10 @@ class Spells
   static List<SpellInfo> _spells = [
     // Conjurer
     new SpellInfo("MAFL","Mage Flame", 1, 2, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
-    new SpellInfo("ARFI","Arc Fire", 1, 3, 0, SpellDuration.NA, SpellContext.Combat, Role.Conjurer, SpellTarget.Monsters),
+    new SpellInfo("ARFI","Arc Fire", 1, 3, 30, SpellDuration.NA, SpellContext.Combat, Role.Conjurer, SpellTarget.Monsters),
     new SpellInfo("SOSH","Sorcerer Shield", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Conjurer, SpellTarget.Self),
     new SpellInfo("TRZP","Trap Zap", 1, 2, 3, SpellDuration.NA, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
-    new SpellInfo("FRFO","Freeze Foes", 2, 3, 0, SpellDuration.NA, SpellContext.Combat, Role.Conjurer, SpellTarget.Monsters),
+    new SpellInfo("FRFO","Freeze Foes", 2, 3, 90, SpellDuration.NA, SpellContext.Combat, Role.Conjurer, SpellTarget.Monsters),
     new SpellInfo("MACO","Magic Compass", 2, 3, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
     new SpellInfo("BASK","Battleskill", 2, 4, 0, SpellDuration.Combat, SpellContext.Combat, Role.Conjurer, SpellTarget.PartyMember),
     new SpellInfo("WOHL","Word of Healing", 2, 4, 0, SpellDuration.NA, SpellContext.Both, Role.Conjurer, SpellTarget.PartyMember),
@@ -33,21 +33,21 @@ class Spells
     // Magician
     new SpellInfo("VOPL","Vorpal Plating", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("AIAR","Air Armour", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.Self),
-    new SpellInfo("STLI","Steel Light", 1, 2, 2, SpellDuration.Short, SpellContext.Exploring, Role.Magician, SpellTarget.None),
-    new SpellInfo("HOWA","Holy Water", 2, 4, 0, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
+    new SpellInfo("STLI","Steel Light", 1, 2, 2, SpellDuration.Short, SpellContext.Exploring, Role.Magician, SpellTarget.None),    
     new SpellInfo("SCSI","Scry Site", 1, 2, 0, SpellDuration.NA, SpellContext.Exploring, Role.Magician, SpellTarget.None),
-    new SpellInfo("WIST","Wither Strike", 2, 5, 0, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
+    new SpellInfo("HOWA","Holy Water", 2, 4, 30, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
+    new SpellInfo("WIST","Wither Strike", 2, 5, 20, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
     new SpellInfo("MAGA","Mage Gaunlets", 2, 5, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("AREN","Area Enchant", 2, 5, 3, SpellDuration.Short, SpellContext.Exploring, Role.Magician, SpellTarget.None),
 
     // Trickster
     new SpellInfo("PHBL","Phase Blur", 1, 2, 0, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.FullParty),
-    new SpellInfo("HYIM","Hyponotic Image", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.Monsters),
+    new SpellInfo("HYIM","Hyponotic Image", 1, 3, 90, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.Monsters),
     new SpellInfo("SOST","Soft Step", 1, 2, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Trickster, SpellTarget.None),
 
     // Paladin
     new SpellInfo("WOHL","Word of Healing", 1, 4, 0, SpellDuration.NA, SpellContext.Both, Role.Paladin, SpellTarget.PartyMember),
-    new SpellInfo("SMTE","Smite", 1, 3, 0, SpellDuration.NA, SpellContext.Combat, Role.Paladin, SpellTarget.Monsters),
+    new SpellInfo("SMTE","Smite", 1, 3, 10, SpellDuration.NA, SpellContext.Combat, Role.Paladin, SpellTarget.Monsters),
   ];
 
   public static List<SpellInfo> SpellsFor(Character c)

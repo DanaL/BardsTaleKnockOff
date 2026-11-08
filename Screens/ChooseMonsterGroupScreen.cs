@@ -55,6 +55,11 @@ class ChooseMonsterGroupScreen(App app, Character c, int range, List<MonsterGrou
       _groups.Add(SDL_Scancode.SDL_SCANCODE_A + j);
     }
     
+    if (_groups.Count == 0)
+    {
+      lines = [ "There are no valid targets!"];
+      
+    }
     ui.DrawImage(Image, Caption, null);
     ui.DrawTextPanel(lines);
     ui.DrawRoster(app.GameState);
