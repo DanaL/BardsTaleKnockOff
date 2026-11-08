@@ -119,10 +119,17 @@ unsafe class GameUI
   // party's active spells/effects, top to bottom. Slot 0 is the light
   // (flame) icon.
   void DrawStatusIcons(StatusIcons icons)
-  {
-    if (icons.Light)
-      Icon(0, "flame1.png");
-    
+  {    
+    switch (icons.Light)
+    {
+      case Flame.Fire:
+        Icon(0, "flame1.png");
+        break;
+      case Flame.Blue:
+        Icon(0, "blueflame.png");
+        break;
+    }
+
     if (icons.Eye)
       Icon(2, "eye.png");
       
@@ -266,14 +273,16 @@ unsafe class GameUI
       y += TextRenderer.BaseLineHeight;
     }
 
-    bool light = false;
+    Flame light = Flame.None;
     bool softStep = false;
     bool eye = false;
     Dir facing = Dir.None;
     foreach (var b in gs.Party.Buffs)
     {
-      if (b.Buff == Buff.MageFlame || b.Buff == Buff.SteelLight)
-        light = true;
+      if (b.Buff == Buff.MageFlame)
+        light = Flame.Fire;
+      if (b.Buff == Buff.SteelLight)
+        light = Flame.Blue;
       if (b.Buff == Buff.SoftStep)
         softStep = true;
       if (b.Buff == Buff.Compass)
