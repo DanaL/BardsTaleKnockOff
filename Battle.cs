@@ -14,7 +14,7 @@ namespace BardsTaleKnockOff;
 // Use Item not implemented yet...
 enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell, UseItem, ShootBow, Advance }
 
-record struct BattleChoice(int PartySlot, BattleAction Action,  int Group, int TargetPartySlot, SpellInfo? Spell, InvSlot? InvSlotToUse);
+record struct BattleChoice(int PartySlot, BattleAction Action,  int Group, int TargetPartySlot, SpellInfo? Spell, int InvIdx);
 
 enum RoundResult { Continue, Victory }
 
@@ -70,11 +70,11 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       if (n < 2 || Foes[n][0].HasFlag(MonsterFlag.Ranged))
       {
         int roll = rng.Next(1, 24);
-        _actions.Enqueue(new(n, BattleAction.MonsterAction, n, -1, null, null), -roll);        
+        _actions.Enqueue(new(n, BattleAction.MonsterAction, n, -1, null, -1), -roll);        
       }
       else if (GroupsToPass(n, Foes[n].Count))
       {
-        _actions.Enqueue(new(n, BattleAction.Advance, n, -1, null, null), advInitiative++);
+        _actions.Enqueue(new(n, BattleAction.Advance, n, -1, null, -1), advInitiative++);
       }      
     }
 
@@ -147,12 +147,12 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
           }
           break;
         case BattleAction.ShootBow:
-          if (choice.InvSlotToUse is InvSlot ammoSlot)
-            CharacterBowShot(c, ammoSlot, choice.Group);
+          if (choice.InvIdx != -1)
+            CharacterBowShot(c, choice.InvIdx, choice.Group);
           break;
         case BattleAction.UseItem:
-          if (choice.InvSlotToUse is InvSlot invSlot)
-            CharacterUseItem(c, invSlot, choice.Group, gs);
+          if (choice.InvIdx != -1)
+            CharacterUseItem(c, choice.InvIdx, gs);
           break;
         case BattleAction.CastSpell:
           if (choice.Spell is SpellInfo spell)
@@ -194,21 +194,11 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     }
   }
 
-  void CharacterUseItem(Character c, InvSlot invSlot, int monsterGroup, GameState gs)
+  void CharacterUseItem(Character c, int invIdx, GameState gs)
   {
-    int idx = -1;
-    for (int j = 0; j < Character.INVENTORY_SLOTS; j++)
-    {
-      if (c.Inventory[j] == invSlot)
-      {
-        idx = j;
-        break;
-      }
-    }
-
-    if (idx == -1)
+    if (c.Inventory[invIdx] is not InvSlot invSlot)
       return;
-        
+
     Item item = ItemCatalog.Item(invSlot.Id);   
     bool consumed = ItemCatalog.Use(item, gs);
 
@@ -216,7 +206,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     if (!consumed)
       return;
 
-    c.Inventory[idx] = invSlot.Count == 1 ? null : invSlot with { Count = invSlot.Count - 1};
+    c.Inventory[invIdx] = invSlot.Count == 1 ? null : invSlot with { Count = invSlot.Count - 1};
   }
 
   // Advance the clock, expire buffs, move the fallen to the back and drop
@@ -496,25 +486,15 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     }
   }
 
-  public void CharacterBowShot(Character c, InvSlot ammoSlot, int monsterGroup)
+  public void CharacterBowShot(Character c, int invIdx, int monsterGroup)
   {
     if (Foes[monsterGroup].Count == 0)
       return;
 
-    int idx = -1;
-    for (int j = 0; j < Character.INVENTORY_SLOTS; j++)
-    {
-      if (c.Inventory[j] == ammoSlot)
-      {
-        idx = j;
-        break;
-      }
-    }
-
-    if (c.EquippedBow is not Item bow)
+    if (c.Inventory[invIdx] is not InvSlot ammoSlot)
       return;
 
-    if (idx == -1)
+    if (c.EquippedBow is not Item bow)
       return;
 
     Item ammo = ItemCatalog.Item(ammoSlot.Id);
@@ -552,11 +532,10 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     }
 
     string s = $"{c.Name} shoots at {target.Name.IndefArticle().ToLower()}";
-    int dmg = 0;
     bool criticalHit = false;
     if (roll >= toHitTarget)
     {      
-      dmg += archerBonus + bow.DamageBonus;
+      int dmg = archerBonus + bow.DamageBonus + dexMod;
       if (battleSkill)
         dmg += 4;
       for (int k = 0; k < bow.NumDamageDice; k++)
@@ -583,9 +562,9 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
     // Consume the ammunition
     if (ammoSlot.Count > 1)
-      c.Inventory[idx] = ammoSlot with { Count = ammoSlot.Count - 1 };
+      c.Inventory[invIdx] = ammoSlot with { Count = ammoSlot.Count - 1 };
     else
-      c.Inventory[idx] = null;
+      c.Inventory[invIdx] = null;
   }
 
   public void CharacterMeleeAttack(Character c, int monsterGroup)

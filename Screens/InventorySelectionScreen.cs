@@ -68,7 +68,18 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
   
   void ItemSelected() 
   { 
-    src.ItemSelected(_items[_cursor].Item1, _items[_cursor].Item2);
+    // We need to return the actual index in the character's inventory
+    int idx = -1;
+    for (int j = 0; j < Character.INVENTORY_SLOTS; j++)
+    {
+      if (_character.Inventory[j] == _items[_cursor].Item1)
+      {
+        idx = j;
+        break;
+      }
+    }
+
+    src.ItemSelected(_items[_cursor].Item1, _items[_cursor].Item2, idx);
     GetInv();
     if (_cursor >= _items.Count)
       _cursor = _items.Count - 1;

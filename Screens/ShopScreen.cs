@@ -248,17 +248,16 @@ class ShoppeScreen : IScreen, IInventorySelectionScreen
     ui.DrawRoster(_app.GameState);
   }
 
-  public void ItemSelected(InvSlot slot, Item item)
+  public void ItemSelected(InvSlot slot, Item item, int invIdx)
   {
     if (_shopper is null)
       return;
 
-    int idx = _shopper.Inventory.IndexOf(slot);
-    if (idx != -1)
+    if (invIdx != -1)
     {
       int sellValue = item.SellValue * slot.Count;
       string n = slot.Count == 1 ? item.Name : $"{item.Name.Pluralize()} ({slot.Count})";
-      _shopper.Inventory[idx] = null;      
+      _shopper.Inventory[invIdx] = null;      
       _app.Screens.Push(new PopupScreen(_app, $"{_shopper.Name} sells {n.DefArticle()} for {sellValue} gp."));
       _shopper.Gold += sellValue;
     }

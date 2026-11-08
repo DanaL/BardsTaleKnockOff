@@ -33,7 +33,7 @@ interface IScreen
 
 interface IInventorySelectionScreen
 {
-  void ItemSelected(InvSlot slot, Item item);
+  void ItemSelected(InvSlot slot, Item item, int invIdx);
   void AbortSelection();
 }
 
