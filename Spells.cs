@@ -65,7 +65,7 @@ class Spells
   }
 }
 
-class SpellResolver(List<List<Monster>> foes, Battle battle)
+class SpellResolver(List<MonsterGroup> foes, Battle battle)
 {
   const int DURATION_SHORT = 1000;
   const int DURATION_MEDIUM = 2000;
@@ -224,7 +224,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     List<string> msgs = [];
 
     caster.MP -= cost;
-    foreach (Monster m in foes[monsterGroup])
+    foreach (Monster m in foes[monsterGroup].Monsters)
     {
       if (m.RollSavingThrow(caster.MagicPower, rng) == SaveResult.Success)
       {
@@ -274,7 +274,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     if (foes[monsterGroup].Count > 0)
     {
       int targetNum = rng.Next(foes[monsterGroup].Count);
-      Monster m = foes[monsterGroup][targetNum];
+      Monster m = foes[monsterGroup].Monsters[targetNum];
       
       if (!m.HasFlag(MonsterFlag.Undead))
       {
@@ -310,7 +310,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     List<string> msgs = [];
 
     caster.MP -= cost;
-    foreach (Monster m in foes[monsterGroup])
+    foreach (Monster m in foes[monsterGroup].Monsters)
     {
       if (m.RollSavingThrow(caster.MagicPower, rng) == SaveResult.Success)
       {
@@ -335,7 +335,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     if (foes[monsterGroup].Count > 0)
     {
       int targetNum = rng.Next(foes[monsterGroup].Count);
-      Monster m = foes[monsterGroup][targetNum];
+      Monster m = foes[monsterGroup].Monsters[targetNum];
       if (m.RollSavingThrow(caster.MagicPower, rng) == SaveResult.Success)
       {
         msgs.Add($"But {m.Name.DefArticle()} resists!");
@@ -358,7 +358,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
     {
       int targetNum = rng.Next(foes[monsterGroup].Count);
       int dmg = rng.Next(1, 5) * caster.Level;
-      Monster m = foes[monsterGroup][targetNum];
+      Monster m = foes[monsterGroup].Monsters[targetNum];
       var save = m.RollSavingThrow(caster.MagicPower, rng);
       if (save == SaveResult.Success)
       {

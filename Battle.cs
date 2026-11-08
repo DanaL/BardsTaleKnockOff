@@ -18,6 +18,16 @@ record struct BattleChoice(int PartySlot, BattleAction Action,  int Group, int T
 
 enum RoundResult { Continue, Victory }
 
+class MonsterGroup
+{
+  public int Distance { get; set; }
+  public List<Monster> Monsters { get; set; } = [];
+
+  public string Name => Monsters[0].Name;
+  public string Image => Monsters[0].Image;
+  public int Count => Monsters.Count;
+}
+
 // The rules of combat. BattleScreen collects the party's choices and paces
 // the messages; this class decides what actually happens.
 //
@@ -25,9 +35,9 @@ enum RoundResult { Continue, Victory }
 // repeatedly until RoundOver, then EndRound(). Each action is resolved on its
 // own so the screen can show its messages before the next one changes the
 // party or the monsters.
-class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
+class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 {
-  public List<List<Monster>> Foes { get; private set; } = foes;
+  public List<MonsterGroup> Foes { get; private set; } = foes;
 
   // Messages describing what happened, for the screen to show in order
   public Queue<string> Messages { get; } = new();
@@ -67,7 +77,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     int advInitiative = 1000; // groups advancing always happens after everyone else has acted
     for (int n = 0; n < Foes.Count; n++)
     {
-      if (n < 2 || Foes[n][0].HasFlag(MonsterFlag.Ranged))
+      if (n < 2 || Foes[0].Monsters[0].HasFlag(MonsterFlag.Ranged))
       {
         int roll = rng.Next(1, 24);
         _actions.Enqueue(new(n, BattleAction.MonsterAction, n, -1, null, -1), -roll);        
@@ -85,7 +95,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
       for (int j = 0; j < n; j++)
       {
-        if (Foes[j][0].HasFlag(MonsterFlag.Ranged))
+        if (Foes[j].Monsters[0].HasFlag(MonsterFlag.Ranged))
           return true;
       }
       
@@ -100,10 +110,10 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
   {
     if (_actingGroup >= 0)
     {
-      List<Monster> group = Foes[_actingGroup];
+      MonsterGroup group = Foes[_actingGroup];
       if (_actingMonster < group.Count)
       {
-        MonsterAction(group[_actingMonster++], _actingGroup);
+        MonsterAction(group.Monsters[_actingMonster++], _actingGroup);
         return;
       }
 
@@ -166,7 +176,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
             else if (choice.Spell.Target == SpellTarget.Monsters && Foes[choice.Group].Count > 0)
             {
               var g = Foes[choice.Group];
-              string mn = g.Count == 1 ? g[0].Name.DefArticle() : $"some {g[0].Name.Pluralize()}";
+              string mn = g.Count == 1 ? g.Name.DefArticle() : $"some {g.Name.Pluralize()}";
               s += $" on {mn}";
             }
               
@@ -222,9 +232,9 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     {
       member.Buffs = [.. member.Buffs.Where(b => b.ExpiresOn > gs.Turn)];
     }
-    foreach (var group in Foes)
+    foreach (var mg in Foes)
     {
-      foreach (var monster in group)
+      foreach (var monster in mg.Monsters)
         monster.Buffs = [.. monster.Buffs.Where(b => b.ExpiresOn > gs.Turn)];
     }
 
@@ -261,8 +271,8 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
   void AdvanceGroup(int groupNum)
   {
-    var group = Foes[groupNum];
-    string s = group.Count > 1 ? group[0].Name.Pluralize() : group[0].Name;
+    var mg = Foes[groupNum];
+    string s = mg.Count > 1 ? mg.Name.Pluralize() : mg.Name;
 
     (Foes[groupNum], Foes[groupNum - 1]) = (Foes[groupNum - 1], Foes[groupNum]);
     
@@ -509,7 +519,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         battleSkill = true;
     }
 
-    Monster target = Foes[monsterGroup][0];
+    Monster target = Foes[monsterGroup].Monsters[0];
     int dexMod = Character.StatToMod(c.Dex);
     int archerBonus = c.Role == Role.Archer ? 1 + c.Level / 4 : 0;
 
@@ -591,7 +601,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         smiting = true;
     }
 
-    Monster target = Foes[monsterGroup][0];
+    Monster target = Foes[monsterGroup].Monsters[0];
     Item? weapon = c.ReadiedWeapon;
 
     string verb;
@@ -697,7 +707,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
   // so when damaging a whole group, loop from the back.
   public bool DamageMonster(int group, int targetNum, int dmg, GameState gs, Queue<string> msgQ)
   {
-    Monster m = Foes[group][targetNum];
+    Monster m = Foes[group].Monsters[targetNum];
     if (dmg >= m.HP)
     {
       msgQ.Enqueue($"{m.Name.DefArticle().ToLower().Capitalize()} is killed!");
@@ -713,10 +723,10 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
   public void KillMonster(int group, int index, GameState gs)
   {
-    Monster m = Foes[group][index];
+    Monster m = Foes[group].Monsters[index];
     _xpWon += m.XP;
     _goldWon += m.Gold;
-    Foes[group].RemoveAt(index);
+    Foes[group].Monsters.RemoveAt(index);
 
     if (m.DefeatFact is Fact fact)
       gs.FactDb[fact.Key] = fact;

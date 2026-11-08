@@ -13,7 +13,7 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-class ChooseMonsterGroupScreen(App app, Character c, List<List<Monster>> foes, IMonsterPickScreen src) : IScreen
+class ChooseMonsterGroupScreen(App app, Character c, List<MonsterGroup> foes, IMonsterPickScreen src) : IScreen
 {
   public string Image { get; set; } = "";
   public string Caption { get; set; } = "";
@@ -43,11 +43,11 @@ class ChooseMonsterGroupScreen(App app, Character c, List<List<Monster>> foes, I
     List<string> lines = [ "Which group:", ""];
 
     int n = foes[0].Count;
-    string m = n == 1 ? foes[0][0].Name : foes[0][0].Name.Pluralize();
+    string m = n == 1 ? foes[0].Name : foes[0].Name.Pluralize();
     lines.Add($"a) {n} {m}");
 
     n = foes[1].Count;
-    m = n == 1 ? foes[1][0].Name : foes[1][0].Name.Pluralize();
+    m = n == 1 ? foes[1].Name : foes[1].Name.Pluralize();
     lines.Add($"b) {n} {m}");
 
     _groups = [ SDL_Scancode.SDL_SCANCODE_A, SDL_Scancode.SDL_SCANCODE_B ];
@@ -57,14 +57,14 @@ class ChooseMonsterGroupScreen(App app, Character c, List<List<Monster>> foes, I
       if (foes.Count > 2)
       {
         n = foes[2].Count;
-        m = n == 1 ? foes[2][0].Name : foes[2][0].Name.Pluralize();
+        m = n == 1 ? foes[2].Name : foes[2].Name.Pluralize();
         lines.Add($"c) {n} {m}");
         _groups.Add(SDL_Scancode.SDL_SCANCODE_C);
       }
       if (foes.Count > 3) 
       {
         n = foes[3].Count;
-        m = n == 1 ? foes[3][0].Name : foes[3][0].Name.Pluralize();
+        m = n == 1 ? foes[3].Name : foes[3].Name.Pluralize();
         lines.Add($"d) {n} {m}");
         _groups.Add(SDL_Scancode.SDL_SCANCODE_D);
       }

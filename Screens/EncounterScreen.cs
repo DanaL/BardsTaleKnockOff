@@ -15,7 +15,7 @@ namespace BardsTaleKnockOff;
 
 // The display and input side of a fight: collects each character's action,
 // then shows the round's messages one at a time. The rules live in Battle.
-class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickScreen, IInventorySelectionScreen
+class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickScreen, IInventorySelectionScreen
 {
   // if the player flees some special encounters, like a guarded door, we
   // might want to move them to a different location
@@ -53,8 +53,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
   int _chosenInvIdx = -1;
   Item? _itemToUse = null;
 
-  string _image = foes[0][0].Image;
-  string _caption = foes[0][0].Name;
+  string _image = foes[0].Image;
+  string _caption = foes[0].Name;
 
   void Reset()
   {
@@ -210,7 +210,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
               app.GameState.Say("You still face:");
               foreach (var group in _battle.Foes.Where(g => g.Count > 0))
               {
-                string gn = group.Count == 1 ? group[0].Name : group[0].Name.Pluralize();
+                string gn = group.Count == 1 ? group.Name : group.Name.Pluralize();
                 app.GameState.Say($"{group.Count} {gn}");
               }
               app.GameState.Say("");
@@ -247,8 +247,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
       return VICTORY;
     }
 
-    _image = _battle.Foes[0][0].Image;
-    _caption = _battle.Foes[0][0].Name;
+    _image = _battle.Foes[0].Image;
+    _caption = _battle.Foes[0].Name;
 
     return END_OF_ROUND;
   }
@@ -276,7 +276,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
         continue;
 
       string monster;
-      List<Monster> group;
+      MonsterGroup group;
       switch (choice.Action)
       {
         case BattleAction.Defend:
@@ -287,7 +287,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
           break;
         case BattleAction.MeleeAttack:
           group = _battle.Foes[choice.Group];
-          monster = group[0].Name.ToLower();
+          monster = group.Name.ToLower();
           if (group.Count == 0)
             monster = monster.IndefArticle();
           else
@@ -298,7 +298,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
            if (choice.InvIdx != -1)
             {
               group = _battle.Foes[choice.Group];
-              monster = group[0].Name.DefArticle().ToLower();
+              monster = group.Name.DefArticle().ToLower();
               if (group.Count > 1)
                 monster = monster.Pluralize();
               lines.Add($"{c.Name} shoots at {monster}.");
@@ -322,7 +322,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
             if (choice.Spell.Target == SpellTarget.Monsters)
             {
               group = _battle.Foes[choice.Group];
-              monster = group[0].Name.ToLower();
+              monster = group.Name.ToLower();
               monster = $" the {monster.Pluralize()}";
               s += monster;
             }
@@ -498,7 +498,7 @@ class EncounterScreen : IScreen
 
   int _state = PRELUDE;
   
-  readonly List<List<Monster>> _groups = [];
+  readonly List<MonsterGroup> _groups = [];
   readonly string _blurb;
 
   // Monster tables
@@ -532,7 +532,7 @@ class EncounterScreen : IScreen
     
     //_groups = [ [ MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng), MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng) ] ];
 
-    List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g[0].Name : g[0].Name.Pluralize())}")];
+    List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g.Name : g.Name.Pluralize())}")];
     string desc = summaries.Count switch
     {
       0 => "",
@@ -550,12 +550,12 @@ class EncounterScreen : IScreen
     };
   }
 
-  static List<Monster> GenGroup(int monsterId, int num, Rng rng)
+  static MonsterGroup GenGroup(int monsterId, int num, Rng rng)
   {
-    List<Monster> monsters = [];
+    MonsterGroup monsters = new() { Distance = 10 };
     int count = rng.Next(num) + 1;
     for (int j = 0; j < count; j++)
-      monsters.Add(MonsterCatalog.Get(monsterId, rng));
+      monsters.Monsters.Add(MonsterCatalog.Get(monsterId, rng));
 
     return monsters;
   }
@@ -587,8 +587,8 @@ class EncounterScreen : IScreen
     else if (_state == FLED)
       lines.AddRange("Discretion is the better part of valour...", "", "Press any key to continue");
 
-    string image = _groups[0][0].Image;
-    string monsterName = _groups[0][0].Name;
+    string image = _groups[0].Image;
+    string monsterName = _groups[0].Name;
 
     ui.DrawImage(image, monsterName, null);
     ui.DrawTextPanel(lines);
