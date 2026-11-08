@@ -88,9 +88,21 @@ class Character
         return null;
     }
   }
+  
+  public Item? EquippedBow
+  {
+    get
+    {
+      foreach (var s in Inventory.OfType<InvSlot>())
+      {
+        if (s.Equipped && ItemCatalog.Item(s.Id) is Item item && item.Type == ItemType.Bow)
+          return item;
+      }
 
-  public bool EquippedBow => Inventory.OfType<InvSlot>().Any(s => s.Equipped && ItemCatalog.Item(s.Id).Type == ItemType.Bow);
-
+      return null;
+    }
+  }
+  
   public int AC
   {
     get
@@ -184,7 +196,7 @@ class Character
         var item = ItemCatalog.Item(slot.Id);
         if (item.Useable && item.Type != ItemType.Ammunition)
           return true;
-        else if (item.Type == ItemType.Ammunition && EquippedBow)
+        else if (item.Type == ItemType.Ammunition && EquippedBow is not null)
           return true;
       }
 

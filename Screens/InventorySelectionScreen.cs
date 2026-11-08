@@ -85,7 +85,7 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
 
   void GetInv()
   {
-    bool bow = _character.EquippedBow;
+    bool bow = _character.EquippedBow is not null;
 
     _items.Clear();
     foreach (var slot in _character.Inventory.OfType<InvSlot>())

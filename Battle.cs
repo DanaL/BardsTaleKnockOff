@@ -12,9 +12,9 @@
 namespace BardsTaleKnockOff;
 
 // Use Item not implemented yet...
-enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell, UseItem, Advance }
+enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell, UseItem, ShootBow, Advance }
 
-record struct BattleChoice(int Slot, BattleAction Action,  int Group, int PartySlot, SpellInfo? Spell, InvSlot? InvSlotToUse);
+record struct BattleChoice(int PartySlot, BattleAction Action,  int Group, int TargetPartySlot, SpellInfo? Spell, InvSlot? InvSlotToUse);
 
 enum RoundResult { Continue, Victory }
 
@@ -45,7 +45,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
   {
     foreach (var choice in choices)
     {
-      if (gs.Party.Members[choice.Slot] is not Character c || c.Incapacitated)
+      if (gs.Party.Members[choice.PartySlot] is not Character c || c.Incapacitated)
         continue;
 
       switch (choice.Action)
@@ -125,7 +125,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     }
     else
     {
-      if (gs.Party.Members[choice.Slot] is not Character c || c.Incapacitated)
+      if (gs.Party.Members[choice.PartySlot] is not Character c || c.Incapacitated)
         return;
 
       switch (choice.Action)
@@ -146,6 +146,10 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
             c.Buffs = [.. c.Buffs.Where(b => b.Buff != Buff.Hiding )];
           }
           break;
+        case BattleAction.ShootBow:
+          if (choice.InvSlotToUse is InvSlot ammoSlot)
+            CharacterBowShot(c, ammoSlot, choice.Group);
+          break;
         case BattleAction.UseItem:
           if (choice.InvSlotToUse is InvSlot invSlot)
             CharacterUseItem(c, invSlot, choice.Group, gs);
@@ -153,7 +157,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
         case BattleAction.CastSpell:
           if (choice.Spell is SpellInfo spell)
           {
-            Character? partyTarget = choice.PartySlot >= 0 ? gs.Party.Members[choice.PartySlot] : null;
+            Character? partyTarget = choice.TargetPartySlot >= 0 ? gs.Party.Members[choice.TargetPartySlot] : null;
             string s = $"{c.Name} casts {spell.Code}";
             if (choice.Spell.Target == SpellTarget.PartyMember && partyTarget is not null)
             {
@@ -204,8 +208,8 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
 
     if (idx == -1)
       return;
-    
-    Item item = ItemCatalog.Item(invSlot.Id);    
+        
+    Item item = ItemCatalog.Item(invSlot.Id);   
     bool consumed = ItemCatalog.Use(item, gs);
 
     Messages.Enqueue($"{c.Name} uses {item.Name.IndefArticle()}");
@@ -492,6 +496,98 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     }
   }
 
+  public void CharacterBowShot(Character c, InvSlot ammoSlot, int monsterGroup)
+  {
+    if (Foes[monsterGroup].Count == 0)
+      return;
+
+    int idx = -1;
+    for (int j = 0; j < Character.INVENTORY_SLOTS; j++)
+    {
+      if (c.Inventory[j] == ammoSlot)
+      {
+        idx = j;
+        break;
+      }
+    }
+
+    if (c.EquippedBow is not Item bow)
+      return;
+
+    if (idx == -1)
+      return;
+
+    Item ammo = ItemCatalog.Item(ammoSlot.Id);
+
+    bool hiding = false;
+    bool battleSkill = false;    
+    foreach (var buff in c.Buffs)
+    {
+      if (buff.Buff == Buff.Hiding)
+        hiding = true;
+      else if (buff.Buff == Buff.BattleSkill)
+        battleSkill = true;
+    }
+
+    Monster target = Foes[monsterGroup][0];
+    int dexMod = Character.StatToMod(c.Dex);
+    int archerBonus = c.Role == Role.Archer ? 1 + c.Level / 4 : 0;
+
+    int roll = rng.Next(1, 21) + dexMod + bow.AttackBonus + archerBonus;
+    
+    if (hiding)
+      roll += 3;
+    if (c.Condition == "OLD")
+      roll -= 10;
+    if (battleSkill)
+      roll += 4;
+    
+    int toHitTarget = c.THAC0 - target.AC;
+    foreach (var buff in target.Buffs)
+    {
+      if (buff.Buff == Buff.FreezeFoe)
+        toHitTarget -= 2;
+      else if (buff.Buff == Buff.Invisibility)
+        toHitTarget += 5;
+    }
+
+    string s = $"{c.Name} shoots at {target.Name.IndefArticle().ToLower()}";
+    int dmg = 0;
+    bool criticalHit = false;
+    if (roll >= toHitTarget)
+    {      
+      dmg += archerBonus + bow.DamageBonus;
+      if (battleSkill)
+        dmg += 4;
+      for (int k = 0; k < bow.NumDamageDice; k++)
+        dmg += rng.Next(bow.DamageDie) + 1;
+      criticalHit = c.CritChance > 0 && rng.Next(256) < c.CritChance;
+
+      s+= criticalHit ? $" and hits, killing it instantly!" : $" and hits for {dmg} dmg!";
+      Messages.Enqueue(s);
+
+      int monsterHit = rng.Next(Foes[monsterGroup].Count);
+      if (criticalHit)
+        KillMonster(monsterGroup, monsterHit, gs);
+      else
+        DamageMonster(monsterGroup, monsterHit, dmg, gs, Messages);
+    } 
+    else
+    {
+      s += " but misses!";
+      Messages.Enqueue(s);
+    }
+    
+    // If you attack from hiding, you are no longer hiding
+    c.Buffs = [.. c.Buffs.Where(b => b.Buff != Buff.Hiding)];
+
+    // Consume the ammunition
+    if (ammoSlot.Count > 1)
+      c.Inventory[idx] = ammoSlot with { Count = ammoSlot.Count - 1 };
+    else
+      c.Inventory[idx] = null;
+  }
+
   public void CharacterMeleeAttack(Character c, int monsterGroup)
   {
     if (Foes[monsterGroup].Count == 0)
@@ -533,7 +629,6 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       s += $" {attacks} times ";
 
     int strMod = Character.StatToMod(c.Str);
-
     int hits = 0;
     int dmg = 0;
     

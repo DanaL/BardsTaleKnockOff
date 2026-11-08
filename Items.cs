@@ -90,8 +90,8 @@ class ItemCatalog
     BUCKLER => new() { Id = BUCKLER, Name = "Buckler", Type = ItemType.Shield, Value = 40, ACMod = 1, UseableBy = NONCASTER },
     TOWER_SHIELD => new() { Id = TOWER_SHIELD, Name = "Tower Shield", Type = ItemType.Shield, Value = 100, ACMod = 2, UseableBy = FIGHTER },
     MACE => new() { Id = MACE, Name = "Mace", Type = ItemType.Weapon, Value = 60, DamageDie = 8, NumDamageDice = 1, UseableBy = NONCASTER },
-    SHORTBOW => new() { Id = SHORTBOW, Name = "Shortbow", Type = ItemType.Bow, Value = 50, UseableBy = NONCASTER },
-    LONGBOW => new() { Id = LONGBOW, Name = "Longbow", Type = ItemType.Bow, Value = 100, UseableBy = Role.Warrior | Role.Archer },
+    SHORTBOW => new() { Id = SHORTBOW, Name = "Shortbow", Type = ItemType.Bow, Value = 50, DamageDie = 6, NumDamageDice = 1, UseableBy = NONCASTER },
+    LONGBOW => new() { Id = LONGBOW, Name = "Longbow", Type = ItemType.Bow, Value = 100, DamageDie = 8, NumDamageDice = 1, UseableBy = Role.Warrior | Role.Archer },
     ARROW => new() { Id = ARROW, Name = "Arrow", Type = ItemType.Ammunition, Value = 2, UseableBy = NONCASTER, Useable = true, Stackable = true },
     _ => throw new Exception($"Item {id} is not defined!")
   };

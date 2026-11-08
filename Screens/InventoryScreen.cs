@@ -144,7 +144,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
 
       _items[_cursor] = (new(item.Id, !slot.Equipped), item);
       RecalcInventory();
-    }    
+    }
   }
 
   void RecalcInventory()

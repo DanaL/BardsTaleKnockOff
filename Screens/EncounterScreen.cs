@@ -272,7 +272,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
 
     foreach (var choice in _choices)
     {
-      if (app.GameState.Party.Members[choice.Slot] is not Character c)
+      if (app.GameState.Party.Members[choice.PartySlot] is not Character c)
         continue;
 
       string monster;
@@ -294,20 +294,20 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
             monster = $"the {monster.Pluralize()}";
           lines.Add($"{c.Name} attacks {monster}.");          
           break;
+        case BattleAction.ShootBow:
+           if (choice.InvSlotToUse is not null)
+            {
+              group = _battle.Foes[choice.Group];
+              monster = group[0].Name.DefArticle().ToLower();
+              if (group.Count > 1)
+                monster = monster.Pluralize();
+              lines.Add($"{c.Name} shoots at {monster}.");
+            }
+          break;
         case BattleAction.UseItem:
           if (choice.InvSlotToUse is not null && _itemToUse is not null)
           {
-            if (_itemToUse.Type == ItemType.Ammunition)
-            {
-              group = _battle.Foes[choice.Group];
-              monster = group[0].Name.ToLower();
-              monster = $" the {monster.Pluralize()}";
-              lines.Add($"{c.Name} shoots at {monster}.");
-            }
-            else
-            {
-              lines.Add($"{c.Name} uses {_itemToUse.Name.IndefArticle()}.");
-            }
+            lines.Add($"{c.Name} uses {_itemToUse.Name.IndefArticle()}.");
           }
           break;
         case BattleAction.CastSpell:
@@ -326,7 +326,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
               monster = $" the {monster.Pluralize()}";
               s += monster;
             }
-            else if (choice.Spell.Target == SpellTarget.PartyMember && app.GameState.Party.Members[choice.PartySlot] is Character target)
+            else if (choice.Spell.Target == SpellTarget.PartyMember && app.GameState.Party.Members[choice.TargetPartySlot] is Character target)
             {
               s += $" on {target.Name}";
             }
@@ -389,6 +389,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
     ++_slot;
     _availableActions = [];
     _pendingSpell = null;
+    _invSlotToUse = null;
+    _itemToUse = null;
     if (_slot >= app.GameState.Party.Alive)
       _state = CONFIRM;
     else
@@ -430,13 +432,13 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
 
   public void MonsterGroupChosen(int monsterGroup)
   {
-    _choices.Add(new(_slot, _pendingAction, monsterGroup, -1, _pendingSpell, null));
+    _choices.Add(new(_slot, _pendingAction, monsterGroup, -1, _pendingSpell, _invSlotToUse));
     ActionChosen();
   }
 
   public void CharacterChosen(int partySlot)
   {
-    _choices.Add(new(_slot, _pendingAction, -1, partySlot, _pendingSpell, null));
+    _choices.Add(new(_slot, _pendingAction, -1, partySlot, _pendingSpell, _invSlotToUse));
     ActionChosen();
   }
 
@@ -446,6 +448,21 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
     _pendingSpell = null;
     _invSlotToUse = null;
     _itemToUse = null;
+  }
+
+  void SetupBowShot(Character c, InvSlot invSlot)
+  {
+    if (_battle.Foes.Count == 1)
+    {
+      _choices.Add(new(_slot, BattleAction.ShootBow, 0, -1, null, invSlot));
+      app.Screens.Pop(); 
+      ActionChosen();
+    }
+    else
+    {
+      _pendingAction = BattleAction.ShootBow;
+      app.Screens.Replace(new ChooseMonsterGroupScreen(app, c, _battle.Foes, this) { Caption = _caption, Image = _image, AllGroups = true });  
+    }    
   }
 
   public void ItemSelected(InvSlot slot, Item item)
@@ -458,7 +475,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
 
     if (item.Type == ItemType.Ammunition)
     {
-      app.Screens.Replace(new ChooseMonsterGroupScreen(app, c, _battle.Foes, this) { Caption = _caption, Image = _image, AllGroups = true });          
+      SetupBowShot(c, slot);           
     }
     else
     {
