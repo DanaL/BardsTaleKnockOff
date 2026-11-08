@@ -665,7 +665,8 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     if (c.Condition == "OLD")
       dmg /= 4;
 
-    bool criticalHit = hits > 0 && (hiding || (c.CritChance > 0 && rng.Next(256) < c.CritChance));
+    // Archers only crit with bows
+    bool criticalHit = hits > 0 && (hiding || (c.CritChance > 0 && c.Role != Role.Archer && rng.Next(256) < c.CritChance));
       
     if (hiding)
       s = $"{c.Name} leaps from the shadows";

@@ -221,7 +221,7 @@ class ChangeClassScreen(App app, Character c, HashSet<Role> options) : IScreen
       case SDL_Scancode.SDL_SCANCODE_H:
         ChangeToHunter();
         app.Screens.Pop();
-        app.Screens.Push(new PopupScreen(app, $"{c.Name} has taken up the path of the Hunter!"));
+        app.Screens.Push(new PopupScreen(app, $"{c.Name} has begun following the way of the Hunter!"));
         break;
       case SDL_Scancode.SDL_SCANCODE_T:
         ChangeToTrickster();
@@ -233,7 +233,18 @@ class ChangeClassScreen(App app, Character c, HashSet<Role> options) : IScreen
         app.Screens.Pop();
         app.Screens.Push(new PopupScreen(app, $"{c.Name} has taken up the Paladin's path!"));
         break;
+      case SDL_Scancode.SDL_SCANCODE_A:
+        ChangeToArcher();
+        app.Screens.Pop();
+        app.Screens.Push(new PopupScreen(app, $"{c.Name} has become an Archer!"));
+        break;
     }
+  }
+
+  void ChangeToArcher()
+  {
+    c.Role = Role.Archer;
+    c.CritChance = 51;
   }
 
   void ChangeToPaladin()

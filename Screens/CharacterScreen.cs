@@ -170,7 +170,10 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
     if (c.CritChance > 0)
     {
       int adjusted = c.CritChance * 100 / 255;
-      lines.Add($"Critical hit: {adjusted}%");
+      string s = $"Critical hit: {adjusted}%";
+      if (c.Role == Role.Archer)
+        s += " (archers only crit with bows)";
+      lines.Add(s);
     }
 
     lines.AddRange("", $"Gold: {c.Gold}");
