@@ -15,7 +15,7 @@ namespace BardsTaleKnockOff;
 
 // The display and input side of a fight: collects each character's action,
 // then shows the round's messages one at a time. The rules live in Battle.
-class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickScreen
+class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickScreen, IInventorySelectionScreen
 {
   // if the player flees some special encounters, like a guarded door, we
   // might want to move them to a different location
@@ -28,6 +28,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
   const SDL_Scancode DEFEND_KEY = SDL_Scancode.SDL_SCANCODE_D;
   const SDL_Scancode HIDE_KEY = SDL_Scancode.SDL_SCANCODE_H;
   const SDL_Scancode CAST_SPELL_KEY = SDL_Scancode.SDL_SCANCODE_C;
+  const SDL_Scancode USE_ITEM_KEY = SDL_Scancode.SDL_SCANCODE_U;
 
   const int PICK_ACTION = 0;
   const int CONFIRM = 1;
@@ -49,6 +50,8 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
   List<BattleChoice> _choices = [];
   BattleAction _pendingAction = BattleAction.Defend;
   SpellInfo? _pendingSpell = null;
+  InvSlot? _invSlotToUse = null;
+  Item? _itemToUse = null;
 
   string _image = foes[0][0].Image;
   string _caption = foes[0][0].Name;
@@ -74,7 +77,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
         case ATTACK_KEY:
           if (_battle.Foes.Count == 1)
           {
-            _choices.Add(new(_slot, BattleAction.MeleeAttack, 0, -1));
+            _choices.Add(new(_slot, BattleAction.MeleeAttack, 0, -1, null, null));
             next = true;
           }
           else if (app.GameState.Party.Members[_slot] is Character mc)
@@ -85,11 +88,11 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
           break;
         case DEFEND_KEY:
           next = true;
-          _choices.Add(new(_slot, BattleAction.Defend, 0, -1));
+          _choices.Add(new(_slot, BattleAction.Defend, 0, -1, null, null));
           break;
         case HIDE_KEY:
           next = true;
-          _choices.Add(new(_slot, BattleAction.HideInShadows, 0, -1));
+          _choices.Add(new(_slot, BattleAction.HideInShadows, 0, -1, null, null));
           break;
         case CAST_SPELL_KEY:
           if (app.GameState.Party.Members[_slot] is Character c) 
@@ -99,6 +102,15 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
           }
           _availableActions = [];
           break;
+        case USE_ITEM_KEY:
+          if (app.GameState.Party.Members[_slot] is Character uc) 
+          {
+            _pendingAction = BattleAction.UseItem;
+            InventorySelectionOptions iopts = new(app, uc, "Use which?", false, "Use", InventoryLabel.None, true);
+            app.Screens.Push(new InventorySelectionScreen(iopts, this) { Caption = _caption, Image = _image });
+          }
+          _availableActions = [];
+          break;          
       }
 
       if (next)
@@ -282,6 +294,22 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
             monster = $"the {monster.Pluralize()}";
           lines.Add($"{c.Name} attacks {monster}.");          
           break;
+        case BattleAction.UseItem:
+          if (choice.InvSlotToUse is not null && _itemToUse is not null)
+          {
+            if (_itemToUse.Type == ItemType.Ammunition)
+            {
+              group = _battle.Foes[choice.Group];
+              monster = group[0].Name.ToLower();
+              monster = $" the {monster.Pluralize()}";
+              lines.Add($"{c.Name} shoots at {monster}.");
+            }
+            else
+            {
+              lines.Add($"{c.Name} uses {_itemToUse.Name.IndefArticle()}.");
+            }
+          }
+          break;
         case BattleAction.CastSpell:
           if (choice.Spell is not null)
           {
@@ -328,22 +356,28 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
       if (_slot < 3 || c.Buffs.Any(b => b.Buff == Buff.Hiding)) 
       {
         _availableActions.Add(ATTACK_KEY);
-        lines.Add("A)ttack foes");
+        lines.Add("A) Attack foes");
       }
 
       if (c.MaxMP > 0)
       {
         _availableActions.Add(CAST_SPELL_KEY);
-        lines.Add("C)ast spell");
+        lines.Add("C) Cast spell");
       }
 
       if (c.HideInShadows > 0)
       {
-        lines.AddRange($"H)ide in shadows ({c.HideInShadows}% chance)");
+        lines.AddRange($"H) Hide in shadows ({c.HideInShadows}% chance)");
         _availableActions.Add(HIDE_KEY);
       }
 
-      lines.AddRange("D)efend");
+      if (c.UseableItems)
+      {
+        lines.AddRange("U) Use item");
+        _availableActions.Add(USE_ITEM_KEY);
+      }
+        
+      lines.AddRange("D) Defend");
       _availableActions.Add(DEFEND_KEY);
     }
     
@@ -375,7 +409,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
         {
           if (_battle.Foes.Count == 1)
           {
-            _choices.Add(new(_slot, BattleAction.CastSpell, 0, -1, spell));
+            _choices.Add(new(_slot, BattleAction.CastSpell, 0, -1, spell, null));
             ActionChosen();
           }
           else
@@ -388,7 +422,7 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
         
         break;
       default:
-        _choices.Add(new(_slot, _pendingAction, -1, -1, spell));
+        _choices.Add(new(_slot, _pendingAction, -1, -1, spell, null));
         ActionChosen();
         break;
     }
@@ -396,13 +430,13 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
 
   public void MonsterGroupChosen(int monsterGroup)
   {
-    _choices.Add(new(_slot, _pendingAction, monsterGroup, -1, _pendingSpell));
+    _choices.Add(new(_slot, _pendingAction, monsterGroup, -1, _pendingSpell, null));
     ActionChosen();
   }
 
   public void CharacterChosen(int partySlot)
   {
-    _choices.Add(new(_slot, _pendingAction, -1, partySlot, _pendingSpell));
+    _choices.Add(new(_slot, _pendingAction, -1, partySlot, _pendingSpell, null));
     ActionChosen();
   }
 
@@ -410,6 +444,28 @@ class BattleScreen(App app, List<List<Monster>> foes) : IScreen, ICastSpellScree
   {
     _state = PICK_ACTION;
     _pendingSpell = null;
+    _invSlotToUse = null;
+    _itemToUse = null;
+  }
+
+  public void ItemSelected(InvSlot slot, Item item)
+  {
+    if (app.GameState.Party.Members[_slot] is not Character c)
+      return;
+
+    _invSlotToUse = slot;
+    _itemToUse = item;
+
+    if (item.Type == ItemType.Ammunition)
+    {
+      app.Screens.Replace(new ChooseMonsterGroupScreen(app, c, _battle.Foes, this) { Caption = _caption, Image = _image, AllGroups = true });          
+    }
+    else
+    {
+      app.Screens.Pop(); // Unlike Character or Spell selection screens, the Inv Select screen doesn't pop itself
+      _choices.Add(new(_slot, BattleAction.UseItem, -1, -1, null, _invSlotToUse));
+      ActionChosen();
+    }
   }
 }
 

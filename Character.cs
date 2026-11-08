@@ -9,6 +9,8 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.Runtime.CompilerServices;
+
 namespace BardsTaleKnockOff;
 
 enum Lineage { Human, Orc, Dwarf, Gnome, Elf, Goblin }
@@ -86,6 +88,8 @@ class Character
         return null;
     }
   }
+
+  public bool EquippedBow => Inventory.OfType<InvSlot>().Any(s => s.Equipped && ItemCatalog.Item(s.Id).Type == ItemType.Bow);
 
   public int AC
   {
@@ -169,6 +173,23 @@ class Character
     }
 
     return "";
+  }
+
+  public bool UseableItems
+  {
+    get
+    {
+      foreach (var slot in Inventory.OfType<InvSlot>())
+      {
+        var item = ItemCatalog.Item(slot.Id);
+        if (item.Useable && item.Type != ItemType.Ammunition)
+          return true;
+        else if (item.Type == ItemType.Ammunition && EquippedBow)
+          return true;
+      }
+
+      return false;
+    }
   }
 
   public bool InventoryFull => !Inventory.Any(s => s is null);

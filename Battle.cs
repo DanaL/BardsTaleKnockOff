@@ -12,9 +12,9 @@
 namespace BardsTaleKnockOff;
 
 // Use Item not implemented yet...
-enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell, Advance }
+enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell, UseItem, Advance }
 
-record struct BattleChoice(int Slot, BattleAction Action,  int Group, int PartySlot, SpellInfo? Spell = null);
+record struct BattleChoice(int Slot, BattleAction Action,  int Group, int PartySlot, SpellInfo? Spell, InvSlot? InvSlotToUse);
 
 enum RoundResult { Continue, Victory }
 
@@ -48,19 +48,19 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       if (gs.Party.Members[choice.Slot] is not Character c || c.Incapacitated)
         continue;
 
-      if (choice.Action == BattleAction.Defend)
+      switch (choice.Action)
       {
-        c.Buffs.Add(new TempBuff(Buff.Defending, gs.Turn, true));
-        Messages.Enqueue($"{c.Name} defends.");
-      }
-      else if (choice.Action == BattleAction.MeleeAttack || choice.Action == BattleAction.CastSpell)
-      {
-        _actions.Enqueue(choice, Initiative(c));
-      }
-      else if (choice.Action == BattleAction.HideInShadows)
-      {
-        // Hide in shadows should happen before other actions
-        _actions.Enqueue(choice, -int.MaxValue);
+        case BattleAction.Defend:
+          c.Buffs.Add(new TempBuff(Buff.Defending, gs.Turn, true));
+          Messages.Enqueue($"{c.Name} defends.");
+          break;
+        case BattleAction.HideInShadows:
+          // Hide in shadows should happen before other actions
+          _actions.Enqueue(choice, -int.MaxValue);
+          break;
+        default:
+          _actions.Enqueue(choice, Initiative(c));
+          break;
       }
     }
 
@@ -70,11 +70,11 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       if (n < 2 || Foes[n][0].HasFlag(MonsterFlag.Ranged))
       {
         int roll = rng.Next(1, 24);
-        _actions.Enqueue(new(n, BattleAction.MonsterAction, n, -1), -roll);        
+        _actions.Enqueue(new(n, BattleAction.MonsterAction, n, -1, null, null), -roll);        
       }
       else if (GroupsToPass(n, Foes[n].Count))
       {
-        _actions.Enqueue(new(n, BattleAction.Advance, n, -1), advInitiative++);
+        _actions.Enqueue(new(n, BattleAction.Advance, n, -1, null, null), advInitiative++);
       }      
     }
 
@@ -131,7 +131,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
       switch (choice.Action)
       {
         case BattleAction.MeleeAttack:
-          PlayerMeleeAttack(c, choice.Group);
+          CharacterMeleeAttack(c, choice.Group);
           break;
         case BattleAction.HideInShadows:
           int roll = rng.Next(0, 100) + 1;
@@ -145,6 +145,10 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
             Messages.Enqueue($"{c.Name} fails to hide!");
             c.Buffs = [.. c.Buffs.Where(b => b.Buff != Buff.Hiding )];
           }
+          break;
+        case BattleAction.UseItem:
+          if (choice.InvSlotToUse is InvSlot invSlot)
+            CharacterUseItem(c, invSlot, choice.Group, gs);
           break;
         case BattleAction.CastSpell:
           if (choice.Spell is SpellInfo spell)
@@ -184,6 +188,31 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
           break;
       }
     }
+  }
+
+  void CharacterUseItem(Character c, InvSlot invSlot, int monsterGroup, GameState gs)
+  {
+    int idx = -1;
+    for (int j = 0; j < Character.INVENTORY_SLOTS; j++)
+    {
+      if (c.Inventory[j] == invSlot)
+      {
+        idx = j;
+        break;
+      }
+    }
+
+    if (idx == -1)
+      return;
+    
+    Item item = ItemCatalog.Item(invSlot.Id);    
+    bool consumed = ItemCatalog.Use(item, gs);
+
+    Messages.Enqueue($"{c.Name} uses {item.Name.IndefArticle()}");
+    if (!consumed)
+      return;
+
+    c.Inventory[idx] = invSlot.Count == 1 ? null : invSlot with { Count = invSlot.Count - 1};
   }
 
   // Advance the clock, expire buffs, move the fallen to the back and drop
@@ -463,7 +492,7 @@ class Battle(GameState gs, Rng rng, List<List<Monster>> foes)
     }
   }
 
-  public void PlayerMeleeAttack(Character c, int monsterGroup)
+  public void CharacterMeleeAttack(Character c, int monsterGroup)
   {
     if (Foes[monsterGroup].Count == 0)
       return;

@@ -147,7 +147,7 @@ class SpellResolver(List<List<Monster>> foes, Battle battle)
         if (foes[monsterGroup].Count > 0)
         {
           caster.Buffs.Add(new TempBuff(Buff.Smite, gs.Turn, true));
-          battle.PlayerMeleeAttack(caster, monsterGroup);
+          battle.CharacterMeleeAttack(caster, monsterGroup);
         }
         break;
       case "SOSH":

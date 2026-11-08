@@ -18,12 +18,15 @@ namespace BardsTaleKnockOff;
 
 enum InventoryLabel { None, Price, SellPrice };
 
-record InventorySelectionOptions(App App, Character C, string Prompt, bool VerifyEquipped, string Verb, InventoryLabel Label);
+record InventorySelectionOptions(App App, Character C, string Prompt, bool VerifyEquipped, string Verb, InventoryLabel Label, bool UseableOnly = false);
 
 class InventorySelectionScreen(InventorySelectionOptions options, IInventorySelectionScreen src) : IScreen
 {
+  public string Image { get; set; } = "";
+  public string Caption { get; set; } = "";
+
   App _app = options.App;
-  Character _shopper = options.C;
+  Character _character = options.C;
   string _prompt = options.Prompt;
   bool _verify = options.VerifyEquipped;
   string _verb = options.Verb;
@@ -80,7 +83,23 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
       _cursor = _items.Count - 1;
   }
 
-  void GetInv() => _items = [.. _shopper.Inventory.OfType<InvSlot>().Select(iv => (iv, ItemCatalog.Item(iv.Id)))];
+  void GetInv()
+  {
+    bool bow = _character.EquippedBow;
+
+    _items.Clear();
+    foreach (var slot in _character.Inventory.OfType<InvSlot>())
+    {
+      Item item = ItemCatalog.Item(slot.Id);
+
+      if (options.UseableOnly && !item.Useable)
+        continue;
+      else if (options.UseableOnly && item.Type == ItemType.Ammunition && !bow)
+        continue;
+
+      _items.Add((slot, item));
+    }    
+  }
 
   public void Draw(GameUI ui)
   {
@@ -91,7 +110,7 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
 
     if (_items.Count == 0)
     {
-      lines.Add($"{_shopper.Name} is empty handed.");
+      lines.Add($"{_character.Name} is empty handed.");
     }
     else
     {
@@ -106,16 +125,17 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
         };
         lines.Add($"§{n}");
       }
-      foreach (var i in _items.Where(s => !s.Item1.Equipped))
+      foreach (var (invslot, item) in _items.Where(s => !s.Item1.Equipped))
       {
+        string name = invslot.Count == 1 ? item.Name : $"{item.Name} ({invslot.Count})";
         string s = _label switch
         {
-          InventoryLabel.Price => $"{i.Item2.Name} ({i.Item2.Value} gp)",
-          InventoryLabel.SellPrice => $"{i.Item2.Name} ({i.Item2.SellValue} gp)",
-          _ => i.Item2.Name
+          InventoryLabel.Price => $"{name} ({item.Value} gp)",
+          InventoryLabel.SellPrice => $"{name} ({item.SellValue} gp)",
+          _ => name
         };
         
-        if (!i.Item2.UseableBy.HasFlag(_shopper.Role))
+        if (!item.UseableBy.HasFlag(_character.Role))
         {
           s += " *";
           anyCannotUse = true;
@@ -136,7 +156,11 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
       highlight = _cursor + 2;
     }
 
-    ui.DrawNoBackground("");
+    if (Image != "")
+      ui.DrawImage(Image, Caption, null);
+    else
+      ui.DrawDungeonView(_app.GameState);
+    
     ui.DrawTextPanel(lines, highlight);
     ui.DrawRoster(_app.GameState);
   }  

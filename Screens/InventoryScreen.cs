@@ -85,8 +85,6 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
       return;
     }
 
-    // Eventually I'm going to want to (nicely) prevent the user from using a
-    // combat-specific item outside of combat
     bool consumed = ItemCatalog.Use(item, app.GameState);
     if (consumed)
     {
