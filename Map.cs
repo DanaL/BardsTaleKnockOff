@@ -14,7 +14,7 @@ namespace BardsTaleKnockOff;
 enum Ceiling : byte { None, Stone }
 enum Floor : byte { Stone, Dirt }
 
-enum Edge : byte { Open, PermWall, Wall, StoneDoor }
+enum Edge : byte { Open, PermWall, Wall, StoneDoor, IllusoryWall }
 
 static class EdgeExt
 {
@@ -23,13 +23,14 @@ static class EdgeExt
     Edge.PermWall => "walls.png",
     Edge.Wall => "walls.png",
     Edge.StoneDoor => "doors.png",
+    Edge.IllusoryWall => "walls.png",
     _ => null
   };
 }
 
 // Something standing in the middle of a square, drawn as a sprite that fills
 // the square (e.g. a tree). Unlike edges, these belong to the square itself.
-enum Feature : byte { None, Tree, Guild, House, Shop, Special1, Special2, Special3, Special4, Special5, 
+enum Feature : byte { None, Tree, Guild, House, Shop, Special1, Special2, Special4, Special5,                      
                       StairsUp, StairsDown, Tavern, Temple, TrainingHall, Trap_Dart0 }
 
 static class FeatureExt
@@ -76,7 +77,8 @@ class DungeonLevel
   public bool Indoors { get; set; } = true;
   public const int Size = 22;
   readonly Tile[,] _tiles = new Tile[Size, Size];
-
+  public Dictionary<(int, int), string> Messages { get; } = [];
+  
   public static int Wrap(int v) => ((v % Size) + Size) % Size;
   public Tile TileAt(int x, int y) => _tiles[Wrap(x), Wrap(y)];
   public void SetTile(int x, int y, Tile tile) => _tiles[Wrap(x), Wrap(y)] = tile;
@@ -92,6 +94,7 @@ class DungeonLevel
       Dir.East => tile.EdgeE,
       _ => tile.EdgeW
     };
+
     if (edge == Edge.Wall || edge == Edge.PermWall)
       return false;
     

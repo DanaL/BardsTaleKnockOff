@@ -198,17 +198,30 @@ static class MapLoader
 
     var lines = File.ReadAllLines(path);
     d.Indoors = lines[0] != "outdoors";
+    bool inMessages = false;
     foreach (string line in lines.Skip(1))
     {
       if (string.IsNullOrWhiteSpace(line))
         continue;
 
-      // Format: x,y:Floor,Ceiling,Feature,EdgeN,EdgeS,EdgeE,EdgeW
-      string[] pieces = line.Split(':');
+      if (line.Trim().Equals("#messages", StringComparison.OrdinalIgnoreCase))
+      {
+        inMessages = true;
+        continue;
+      }
+
+      string[] pieces = line.Split(':', 2);
       string[] coords = pieces[0].Split(',');
       int x = int.Parse(coords[0]);
       int y = int.Parse(coords[1]);
 
+      if (inMessages)
+      {
+        d.Messages[(x, y)] = pieces[1].Trim().Replace("\\n", "\n");
+        continue;
+      }
+
+      // Format: x,y:Floor,Ceiling,Feature,EdgeN,EdgeS,EdgeE,EdgeW
       string[] f = pieces[1].Split(',');
 
       Tile tile = new(

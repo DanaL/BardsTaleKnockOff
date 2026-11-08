@@ -36,7 +36,6 @@ class PortalScreen(App app, string portal) : IScreen
     switch (portal)
     {
       case "WizTowerEntrance":
-
         DungeonLevel wiztower = MapLoader.Load(ResourcePath.GetDataFilePath("wiztower.txt"));
         app.GameState.CurrRegion = "wiztower";
         app.GameState.Regions["wiztower"] = [ wiztower ];

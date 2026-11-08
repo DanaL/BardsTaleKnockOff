@@ -106,8 +106,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
           app.Screens.Push(new PopupScreen(app, "To the east is a yawning portal, beyond which adventure beckons. An ogre lumbers back and forth, blocking your access."));
         }
         break;
-      case Feature.Special2:
-        app.GameState.Say("A sinister aura emanates from the portal to the east.");
+      case Feature.Special2:        
         if (!GS.FactDb.ContainsKey("TownOgreSlain"))
         {
           Monster ogre = MonsterCatalog.Get(MonsterCatalog.OGRE, app.Rng);
@@ -117,13 +116,6 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
           app.Screens.Push(new BattleScreen(app, [ new() { Monsters = [ ogre ], Distance = 10}], false) { RetreatLoc = (19, 8), VictoryMessage = "A sinister aura emanates from the portal to the east." });          
           app.Screens.Push(new PopupScreen(app, "An enormous ogre bars your path!"));
         }        
-        break;
-      case Feature.Special3:
-        app.GameState.Say("You stand before a dilapidated tower constructed of mossy stones. A faded sign reads:");
-        app.GameState.Say("");
-        app.GameState.Say("\"For Magical Services, inquire within. Beware of dog.\"");
-        if (IsEncounter())
-          app.Screens.Push(new EncounterScreen(app)); 
         break;
       case Feature.Special4:
         app.Screens.Push(new PortalScreen(app, "WizTowerEntrance"));
@@ -138,6 +130,12 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         if (IsEncounter())
           app.Screens.Push(new EncounterScreen(app));
         break;
+    }
+
+    if (app.GameState.CurrMap.Messages.TryGetValue((app.GameState.X, app.GameState.Y), out var msg))
+    {
+      foreach (string s in msg.Split('\n'))
+        app.GameState.Say(s);
     }
   }
 
