@@ -17,7 +17,7 @@ class ChooseMonsterGroupScreen(App app, Character c, List<MonsterGroup> foes, IM
 {
   public string Image { get; set; } = "";
   public string Caption { get; set; } = "";
-  public bool MeleeOnly { get; set; } = true;
+  public int Range { get; set; } = 10;
 
   HashSet<SDL_Scancode> _groups = [];
 
@@ -46,7 +46,7 @@ class ChooseMonsterGroupScreen(App app, Character c, List<MonsterGroup> foes, IM
 
     for (int j = 0; j < foes.Count; j++)
     {
-      if (MeleeOnly && foes[j].Distance > 10 && !hiding)
+      if (foes[j].Distance > Range && !hiding)
         break;
       char ch = (char) ('a' + j);
       int n = foes[j].Count;

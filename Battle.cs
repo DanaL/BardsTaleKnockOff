@@ -9,10 +9,12 @@
 // with this software. If not,
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.Text.RegularExpressions;
+
 namespace BardsTaleKnockOff;
 
 // Use Item not implemented yet...
-enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell, UseItem, ShootBow, Advance }
+enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell, UseItem, ShootBow, MonstersAdvance }
 
 record struct BattleChoice(int PartySlot, BattleAction Action,  int Group, int TargetPartySlot, SpellInfo? Spell, int InvIdx);
 
@@ -77,29 +79,15 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     int advInitiative = 1000; // groups advancing always happens after everyone else has acted
     for (int n = 0; n < Foes.Count; n++)
     {
-      if (n < 2 || Foes[0].Monsters[0].HasFlag(MonsterFlag.Ranged))
+      if (Foes[n].Distance == 10 || Foes[n].Monsters[0].HasFlag(MonsterFlag.Ranged))      
       {
         int roll = rng.Next(1, 24);
         _actions.Enqueue(new(n, BattleAction.MonsterAction, n, -1, null, -1), -roll);        
       }
-      else if (GroupsToPass(n, Foes[n].Count))
+      else
       {
-        _actions.Enqueue(new(n, BattleAction.Advance, n, -1, null, -1), advInitiative++);
+        _actions.Enqueue(new(n, BattleAction.MonstersAdvance, n, -1, null, -1), advInitiative++);
       }      
-    }
-
-    bool GroupsToPass(int n, int size)
-    {
-      if (Foes[n-1].Count < size)
-        return true;
-
-      for (int j = 0; j < n; j++)
-      {
-        if (Foes[j].Monsters[0].HasFlag(MonsterFlag.Ranged))
-          return true;
-      }
-      
-      return false;
     }
   }
 
@@ -129,7 +117,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
       _actingGroup = choice.Group;
       _actingMonster = 0;
     }
-    else if (choice.Action == BattleAction.Advance)
+    else if (choice.Action == BattleAction.MonstersAdvance)
     {
       AdvanceGroup(choice.Group);
     }
@@ -274,13 +262,40 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
   }
 
   void AdvanceGroup(int groupNum)
-  {
+  {    
     var mg = Foes[groupNum];
-    string s = mg.Count > 1 ? mg.Name.Pluralize() : mg.Name;
 
-    (Foes[groupNum], Foes[groupNum - 1]) = (Foes[groupNum - 1], Foes[groupNum]);
+    // Cases:
+    // 1) You are the first group and > 10' feet
+    // 2) There is more than a 10' gap between you and the next group
+    // 3) Check if you can swap with the next group down the line
+
+    if (groupNum == 0 && mg.Distance > 10)
+    {
+      mg.Distance -= 10;
+      Msg(mg);
+      return;
+    }
+
+    var otherGroup = Foes[groupNum - 1];
+    if (mg.Distance - otherGroup.Distance > 10 || groupNum == 1)
+    {
+      mg.Distance -= 10;
+      Msg(mg);
+    }
+    else if (otherGroup.Count == 0 || otherGroup.Monsters[0].HasFlag(MonsterFlag.Ranged) || otherGroup.Distance > 10)
+    {      
+      mg.Distance -= 10;
+      otherGroup.Distance += 10;
+      Msg(mg);
+      (Foes[groupNum], Foes[groupNum - 1]) = (Foes[groupNum - 1], Foes[groupNum]);
+    }
     
-    Messages.Enqueue($"{s.DefArticle().Capitalize()} advance!");
+    void Msg(MonsterGroup mg)
+    {
+      string s = mg.Count > 1 ? mg.Name.Pluralize() : mg.Name;
+      Messages.Enqueue($"{s.DefArticle().Capitalize()} advance!");
+    }
   }
 
   void MonsterAction(Monster m, int group)
