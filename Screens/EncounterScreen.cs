@@ -353,7 +353,8 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
         n += " (hiding)";
       lines.AddRange($"{n} has these actions available:", "", "", "", "", "");
 
-      if (_slot < 3 || c.Buffs.Any(b => b.Buff == Buff.Hiding)) 
+      bool foesInMelee = foes[0].Distance == 10;
+      if (foesInMelee && (_slot < 3 || c.Buffs.Any(b => b.Buff == Buff.Hiding))) 
       {
         _availableActions.Add(ATTACK_KEY);
         lines.Add("A) Attack foes");
@@ -418,7 +419,7 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
           {
             _pendingAction = BattleAction.CastSpell;
             _pendingSpell = spell;
-            app.Screens.Push(new ChooseMonsterGroupScreen(app, c, _battle.Foes, this) { Caption = _caption, Image = _image, AllGroups = true });          
+            app.Screens.Push(new ChooseMonsterGroupScreen(app, c, _battle.Foes, this) { Caption = _caption, Image = _image, MeleeOnly = false });          
           }          
         }
         
@@ -461,7 +462,7 @@ class BattleScreen(App app, List<MonsterGroup> foes) : IScreen, ICastSpellScreen
     else
     {
       _pendingAction = BattleAction.ShootBow;
-      app.Screens.Replace(new ChooseMonsterGroupScreen(app, c, _battle.Foes, this) { Caption = _caption, Image = _image, AllGroups = true });  
+      app.Screens.Replace(new ChooseMonsterGroupScreen(app, c, _battle.Foes, this) { Caption = _caption, Image = _image, MeleeOnly = false });  
     }    
   }
 
@@ -530,9 +531,12 @@ class EncounterScreen : IScreen
       _groups.Add(GenGroup(monsterId2, count2, app.Rng));
     }
     
-    //_groups = [ [ MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng), MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng) ] ];
-
-    List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g.Name : g.Name.Pluralize())}")];
+    _groups = [];
+    _groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng), MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng), MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng)], Distance = 10});
+    _groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng), MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng)], Distance = 30});
+    _groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng), MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng), MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng)], Distance = 40});
+    
+    List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g.Name : g.Name.Pluralize())} ({g.Distance}')")];
     string desc = summaries.Count switch
     {
       0 => "",

@@ -242,7 +242,11 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
     gs.Party.MoveIncapacitatedToBack();
 
-    Foes = [.. Foes.Where(g => g.Count > 0)];
+    for (int j = Foes.Count - 1; j >= 0; j--)
+    {
+      if (Foes[j].Count == 0)
+        Foes.RemoveAt(j);
+    }
 
     return Foes.Count == 0 ? RoundResult.Victory : RoundResult.Continue;
   }

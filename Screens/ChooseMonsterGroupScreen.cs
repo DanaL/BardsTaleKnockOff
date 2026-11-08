@@ -17,7 +17,7 @@ class ChooseMonsterGroupScreen(App app, Character c, List<MonsterGroup> foes, IM
 {
   public string Image { get; set; } = "";
   public string Caption { get; set; } = "";
-  public bool AllGroups { get; set; } = false;
+  public bool MeleeOnly { get; set; } = true;
 
   HashSet<SDL_Scancode> _groups = [];
 
@@ -42,34 +42,19 @@ class ChooseMonsterGroupScreen(App app, Character c, List<MonsterGroup> foes, IM
   {
     List<string> lines = [ "Which group:", ""];
 
-    int n = foes[0].Count;
-    string m = n == 1 ? foes[0].Name : foes[0].Name.Pluralize();
-    lines.Add($"a) {n} {m}");
+    bool hiding = c.Buffs.Any(b => b.Buff == Buff.Hiding);
 
-    n = foes[1].Count;
-    m = n == 1 ? foes[1].Name : foes[1].Name.Pluralize();
-    lines.Add($"b) {n} {m}");
-
-    _groups = [ SDL_Scancode.SDL_SCANCODE_A, SDL_Scancode.SDL_SCANCODE_B ];
-
-    if (AllGroups || c.Buffs.Any(b => b.Buff == Buff.Hiding))
+    for (int j = 0; j < foes.Count; j++)
     {
-      if (foes.Count > 2)
-      {
-        n = foes[2].Count;
-        m = n == 1 ? foes[2].Name : foes[2].Name.Pluralize();
-        lines.Add($"c) {n} {m}");
-        _groups.Add(SDL_Scancode.SDL_SCANCODE_C);
-      }
-      if (foes.Count > 3) 
-      {
-        n = foes[3].Count;
-        m = n == 1 ? foes[3].Name : foes[3].Name.Pluralize();
-        lines.Add($"d) {n} {m}");
-        _groups.Add(SDL_Scancode.SDL_SCANCODE_D);
-      }
+      if (MeleeOnly && foes[j].Distance > 10 && !hiding)
+        break;
+      char ch = (char) ('a' + j);
+      int n = foes[j].Count;
+      string m = n == 1 ? foes[j].Name : foes[j].Name.Pluralize();
+      lines.Add($"{ch}) {n} {m} ({foes[j].Distance}')");      
+      _groups.Add(SDL_Scancode.SDL_SCANCODE_A + j);
     }
-
+    
     ui.DrawImage(Image, Caption, null);
     ui.DrawTextPanel(lines);
     ui.DrawRoster(app.GameState);
