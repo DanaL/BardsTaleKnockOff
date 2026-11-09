@@ -9,8 +9,6 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-using System.Runtime.CompilerServices;
-
 namespace BardsTaleKnockOff;
 
 enum Lineage { Human, Orc, Dwarf, Gnome, Elf, Goblin }
@@ -132,6 +130,14 @@ class Character
     Role.Paladin => Level / 5 + 1,
     Role.Archer => Level / 7 + 1,
     _ => 1,
+  };
+
+  public int DisarmTrap => Role switch
+  {
+    Role.Rogue => int.Min(30 + Level * 5, 99),
+    Role.Trickster => int.Min(45 + (Level - 3) * 3, 99),
+    Role.Hunter => 45,
+    _ => 0
   };
 
   public int HideInShadows

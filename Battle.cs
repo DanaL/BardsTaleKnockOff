@@ -50,6 +50,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
   int _xpWon = 0;
   int _goldWon = 0;
+  int _monstersDefeated = 0;
 
   public bool RoundOver => _actions.Count == 0 && _actingGroup < 0;
 
@@ -58,7 +59,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     if (partyAdvance)
     {
       Messages.Enqueue("The party advances");
-      foreach (var mg in foes)
+      foreach (var mg in Foes)
       {
         if (mg.Distance > 10)
           mg.Distance -= 10;
@@ -259,7 +260,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
   // Share out the XP and gold won among the survivors. Returns each
   // survivor's share.
   // Eventually, I need to add finding the occasional item!
-  public (int XP, int Gold) AwardSpoils()
+  public (int XP, int Gold, int MonstersDefeated) AwardSpoils()
   {
     // If gold given is less than the # of alive characters, I'm giving a
     // little extra gold but who cares...
@@ -275,7 +276,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
       }
     }
 
-    return (xpPerChar, goldPerChar);
+    return (xpPerChar, goldPerChar, _monstersDefeated);
   }
 
   void AdvanceGroup(int groupNum)
@@ -762,6 +763,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     Monster m = Foes[group].Monsters[index];
     _xpWon += m.XP;
     _goldWon += m.Gold;
+    ++_monstersDefeated;
     Foes[group].Monsters.RemoveAt(index);
 
     if (m.DefeatFact is Fact fact)

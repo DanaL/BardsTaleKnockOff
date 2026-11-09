@@ -117,6 +117,16 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
           app.Screens.Push(new PopupScreen(app, "An enormous ogre bars your path!"));
         }        
         break;
+      case Feature.Special3:
+        if (!GS.FactDb.ContainsKey("TutorialChestFound"))
+        {
+          app.Screens.Push(new TreasureChestScreen(app, app.Rng.Next(300, 501), 1));
+        }
+        else if (IsEncounter())
+        {
+          app.Screens.Push(new EncounterScreen(app));
+        }
+        break;
       case Feature.Special4:
         app.Screens.Push(new PortalScreen(app, "WizTowerEntrance"));
         break;
@@ -142,29 +152,12 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
   void DartTrap0()
   {
     app.Screens.Push(new PopupScreen(app, "A trap!!"));
-
     
     if (GS.Party.Members[0] is Character c)
     {
       // Once I have implemented slot S, a monster occupying it will be
       // hit before the character in slot 1.
-      GS.Say($"A trap! Darts fly at {c.Name}!");
-
-      int dmg = app.Rng.Next(1, 5) + app.Rng.Next(1, 5) + app.Rng.Next(1, 5) + app.Rng.Next(1, 5);
-      SaveResult save = c.RollSavingThrow(1, app.Rng);
-      if (save == SaveResult.Success) 
-      {
-        GS.Say("But they avoid being hit!");
-        return;
-      }        
-      else if (save == SaveResult.Partial)
-      {
-        dmg /= 2;
-      }
-
-      GS.Say($"They are hit for {dmg} hp!");
-      string s = c.ReceiveDmg(dmg);
-      if (!string.IsNullOrEmpty(s))
+      foreach (string s in Traps.Darts0(c, GS, app.Rng))
         GS.Say(s);
     }    
   }

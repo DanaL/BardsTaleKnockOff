@@ -284,7 +284,7 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
 
   void Victory()
   {
-    var (xpPerChar, goldPerChar) = _battle.AwardSpoils();
+    var (xpPerChar, goldPerChar, monstersDefeated) = _battle.AwardSpoils();
 
     _app.GameState.Say("You emerge victorious from battle!");
     _app.GameState.Say("");

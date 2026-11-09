@@ -46,6 +46,7 @@ class ItemCatalog
   public const int HALBERD = 6;
   public const int STAFF = 7;
   public const int MACE = 18;
+  public const int WARAXE = 22;
 
   public const int ROBES = 8;
   public const int LEATHER_ARMOUR = 9;
@@ -76,6 +77,7 @@ class ItemCatalog
     TORCH => new() {  Id = TORCH, Name = "Torch", Type = ItemType.Misc, Value = 5, UseableBy = ALL, Useable = true },
     BROADSWORD => new() { Id = BROADSWORD, Name = "Broadsword", Type = ItemType.Weapon, Value = 80, DamageDie = 4, NumDamageDice = 2, UseableBy = FIGHTER | Role.Hunter },
     SHORTSWORD => new() { Id = SHORTSWORD, Name = "Shortsword", Type = ItemType.Weapon, Value = 30, DamageDie = 6, NumDamageDice = 1, UseableBy = Role.Warrior | Role.Paladin | Role.Archer | Role.Hunter | Role.Rogue | Role.Trickster },
+    WARAXE => new() { Id = WARAXE, Name = "War axe", Type = ItemType.Weapon, Value = 70, DamageDie = 8, NumDamageDice = 1, UseableBy = FIGHTER | Role.Hunter },
     DAGGER => new() { Id = DAGGER, Name = "Dagger", Type = ItemType.Weapon, Value = 20, DamageDie = 4, NumDamageDice = 1, UseableBy = ALL },
     HALBERD => new() { Id = HALBERD, Name = "Halberd", Type = ItemType.Weapon, Value = 200, DamageDie = 16, NumDamageDice = 1, UseableBy = FIGHTER | Role.Hunter },
     STAFF => new() { Id = STAFF, Name = "Staff", Type = ItemType.Weapon, Value = 30, DamageDie = 6, NumDamageDice = 1, UseableBy = ALL },

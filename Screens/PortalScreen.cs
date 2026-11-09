@@ -28,7 +28,7 @@ class PortalScreen(App app, string portal) : IScreen
         UsePortal();
         app.Screens.Pop();
         break;
-    } 
+    }
   }
 
   void UsePortal()
