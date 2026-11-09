@@ -28,7 +28,7 @@ class TreasureChestScreen : IScreen
   const int END = 3;
 
   int _state = MENU;
-  int _gold, _items;
+  int _gold, _items, _xp;
 
   // This is really only used right now for the 'tutorial' dungeon but maybe
   // I'll find a use for it in the main dungeon
@@ -39,11 +39,12 @@ class TreasureChestScreen : IScreen
     [ "wiztower" ] = [[ ItemCatalog.TORCH, ItemCatalog.TORCH, ItemCatalog.DAGGER , ItemCatalog.SHORTBOW, ItemCatalog.BROADSWORD, ItemCatalog.WARAXE, ItemCatalog.HALBERD, ItemCatalog.ARROW ]]
   };
 
-  public TreasureChestScreen(App app, int gold, int items)
+  public TreasureChestScreen(App app, int gold, int items, int xp)
   {
     _app = app;
     _gold = gold;
     _items = items;
+    _xp = xp;
 
     List<Trap> options = [ Trap.Darts0, Trap.Darts0, Trap.Darts0, Trap.PoisonNeedle0, Trap.Blades0 ];    
     _trap = options[_app.Rng.Next(options.Count)];
@@ -58,7 +59,10 @@ class TreasureChestScreen : IScreen
       {
         case SDL_Scancode.SDL_SCANCODE_I:
         case SDL_Scancode.SDL_SCANCODE_ESCAPE:
-          _app.Screens.Pop();
+          if (_xp > 0)
+            Ignore();
+          else
+            _app.Screens.Pop();
           break;
         case SDL_Scancode.SDL_SCANCODE_O:
           Triggered();
@@ -87,6 +91,23 @@ class TreasureChestScreen : IScreen
     {
       _app.Screens.Pop();
     }
+  }
+
+  void Ignore()
+  {
+    int xpPerChar = _xp / _app.GameState.Party.Alive;
+
+    _msgBuffer.Add("You ignore the treasure chest.");
+    _msgBuffer.Add($"Each character {xpPerChar} xp");
+    _msgBuffer.AddRange("", " - press any key to continue - ");
+  
+    for (int j = 0; j < Party.MAX_PARTY_SIZE; j++)
+    {
+      if (_app.GameState.Party.Members[j] is Character c && !c.Incapacitated) 
+        c.XP += xpPerChar;      
+    }
+
+    _state = END;
   }
 
   void Disarm(int charSlot)
@@ -123,12 +144,21 @@ class TreasureChestScreen : IScreen
     _msgBuffer.Add("You loot the chest!");
     
     int goldPerChar = int.Max(_gold / _app.GameState.Party.Alive, 1);
-    _msgBuffer.Add($"Each character receives {goldPerChar} gp.");
+    int xpPerChar = _xp / _app.GameState.Party.Alive;
+
+    string s = $"Each character receives {goldPerChar} gp";    
+    if (xpPerChar > 0)
+      s += $" and {xpPerChar} xp";
+    s += '.';
+    _msgBuffer.Add(s);
   
     for (int j = 0; j < Party.MAX_PARTY_SIZE; j++)
     {
-      if (_app.GameState.Party.Members[j] is Character c && !c.Incapacitated)
-        c.Gold += goldPerChar;    
+      if (_app.GameState.Party.Members[j] is Character c && !c.Incapacitated) 
+      {
+        c.Gold += goldPerChar;
+        c.XP += xpPerChar;
+      }
     }
 
     if (_items > 0)
@@ -137,7 +167,7 @@ class TreasureChestScreen : IScreen
       {
         var table = _tables[_app.GameState.CurrRegion][_app.GameState.CurrLevel];
         int itemId = table[_app.Rng.Next(table.Count)];
-        string s = GiveItem(itemId);
+        s = GiveItem(itemId);
         if (s != "")
           _msgBuffer.Add(s);
       }  

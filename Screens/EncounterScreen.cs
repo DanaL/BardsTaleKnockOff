@@ -170,9 +170,7 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
     }
     else if (_state == VICTORY && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
-      _app.GameState.Party.ClearCombatBuffs();
-      _app.GameState.Messages.Clear();
-      _app.Screens.Pop();
+      Cleanup();
       if (!string.IsNullOrEmpty(VictoryMessage))
         _app.GameState.Say(VictoryMessage);
     }
@@ -186,14 +184,19 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
         _app.Screens.Pop(); // This is to make sure the special encounter screen is popped off the stack
       }
 
-      _app.GameState.Party.ClearCombatBuffs();
-      _app.GameState.Messages.Clear();
-      _app.Screens.Pop();
+      Cleanup();
     }
     else if (_state == FAILED_TO_FLEE && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
       Reset();
     }
+  }
+
+  public void Cleanup()
+  {
+    _app.GameState.Party.ClearCombatBuffs();
+    _app.GameState.Messages.Clear();
+    _app.Screens.Pop();
   }
 
   public void Draw(GameUI ui)
@@ -284,15 +287,53 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
 
   void Victory()
   {
-    var (xpPerChar, goldPerChar, monstersDefeated) = _battle.AwardSpoils();
+    var (xp, gold, monstersDefeated) = _battle.AwardSpoils();
 
-    _app.GameState.Say("You emerge victorious from battle!");
-    _app.GameState.Say("");
-    string gp = goldPerChar == 1 ? "a single gold piece" : $"{goldPerChar} gold pieces";
-    _app.GameState.Say($"Each survivor receives {xpPerChar} XP and {gp}!");
+    if (_app.GameState.CurrRegion == "town" || _app.Rng.Next(8) == 0)
+    {        
+      // If gold given is less than the # of alive characters, I'm giving a
+      // little extra gold but who cares...
+      int goldPerChar = int.Max(gold / _app.GameState.Party.Alive, 1);
+      int xpPerChar = int.Max(xp / _app.GameState.Party.Alive, 1);
 
-    _image = "treasure.png";
-    _caption = "Victory!";
+      for (int j = 0; j < Party.MAX_PARTY_SIZE; j++)
+      {
+        if (_app.GameState.Party.Members[j] is Character c && !c.Incapacitated)
+        {
+          c.XP += xpPerChar;
+          c.Gold += goldPerChar;
+        }
+      }
+
+      _app.GameState.Say("You emerge victorious from battle!");
+      _app.GameState.Say("");
+      string gp = goldPerChar == 1 ? "a single gold piece" : $"{goldPerChar} gold pieces";
+      _app.GameState.Say($"Each survivor receives {xpPerChar} XP and {gp}!");
+      _image = "treasure.png";
+      _caption = "Victory!";
+    }
+    else
+    {
+      Cleanup();
+      TreasureChestScreen scr = new(_app, gold, ItemsFound(monstersDefeated), xp);
+      _app.Screens.Push(scr);
+    }
+  }
+
+  int ItemsFound(int monstersDefeated)
+  {
+    if (_app.GameState.CurrRegion == "town")
+      return 0;
+    
+    int max = _app.GameState.CurrLevel > 3 ? 2 : 1;
+    int items = 0;
+    for (int j = 0; j < monstersDefeated && items < max; j++)
+    {
+      if (_app.Rng.Next(8) == 0)
+        ++items;
+    }
+
+    return items;
   }
 
   List<string> Confirm()
@@ -366,7 +407,7 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
       }
     }
 
-    lines.AddRange("", "", "", "Y)es", "N)o");
+    lines.AddRange("", "", "", "Y) Yes", "N) No");
 
     return lines;
   }

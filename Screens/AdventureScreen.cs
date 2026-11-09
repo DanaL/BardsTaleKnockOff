@@ -120,7 +120,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case Feature.Special3:
         if (!GS.FactDb.ContainsKey("TutorialChestFound"))
         {
-          TreasureChestScreen scr = new(app, app.Rng.Next(300, 501), 1)
+          TreasureChestScreen scr = new(app, app.Rng.Next(300, 501), 1, 0)
           {
             OnLoot = () => { GS.FactDb.Add("TutorialChestFound", new FlagFact("TutorialChestFound", true)); }
           };

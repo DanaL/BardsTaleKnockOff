@@ -9,8 +9,6 @@
 // with this software. If not,
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-using System.Text.RegularExpressions;
-
 namespace BardsTaleKnockOff;
 
 // Use Item not implemented yet...
@@ -262,24 +260,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
   // Share out the XP and gold won among the survivors. Returns each
   // survivor's share.
   // Eventually, I need to add finding the occasional item!
-  public (int XP, int Gold, int MonstersDefeated) AwardSpoils()
-  {
-    // If gold given is less than the # of alive characters, I'm giving a
-    // little extra gold but who cares...
-    int goldPerChar = int.Max(_goldWon / gs.Party.Alive, 1);
-    int xpPerChar = int.Max(_xpWon / gs.Party.Alive, 1);
-
-    for (int j = 0; j < gs.Party.Count; j++)
-    {
-      if (gs.Party.Members[j] is Character c && !c.Incapacitated)
-      {
-        c.XP += xpPerChar;
-        c.Gold += goldPerChar;
-      }
-    }
-
-    return (xpPerChar, goldPerChar, _monstersDefeated);
-  }
+  public (int XP, int Gold, int MonstersDefeated) AwardSpoils() => (_xpWon, _goldWon, _monstersDefeated);
 
   void AdvanceGroup(int groupNum)
   {    
