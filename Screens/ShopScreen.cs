@@ -209,7 +209,7 @@ class ShoppeScreen : IScreen, IInventorySelectionScreen
           if (_shopper is not null) 
           {
             InventorySelectionOptions opt = new(_app, _shopper, "Sell which item?", true, "sell", InventoryLabel.SellPrice);
-            _app.Screens.Push(new InventorySelectionScreen(opt, this));
+            _app.Screens.Push(new InventorySelectionScreen(opt, this) { Image = ""} );
           }
           break;
       }

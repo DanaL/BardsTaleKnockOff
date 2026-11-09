@@ -22,7 +22,7 @@ record InventorySelectionOptions(App App, Character C, string Prompt, bool Verif
 
 class InventorySelectionScreen(InventorySelectionOptions options, IInventorySelectionScreen src) : IScreen
 {
-  public string Image { get; set; } = "";
+  public string? Image { get; set; } = null;
   public string Caption { get; set; } = "";
 
   App _app = options.App;
@@ -167,10 +167,12 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
       highlight = _cursor + 2;
     }
 
-    if (Image != "")
-      ui.DrawImage(Image, Caption, null);
-    else
+    if (Image is null)
       ui.DrawDungeonView(_app.GameState);
+    else if (Image == "")
+      ui.DrawNoBackground(Caption);
+    else
+      ui.DrawImage(Image, Caption, null);
     
     ui.DrawTextPanel(lines, highlight);
     ui.DrawRoster(_app.GameState);
