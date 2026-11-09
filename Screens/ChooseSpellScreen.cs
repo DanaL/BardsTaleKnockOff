@@ -79,19 +79,29 @@ class ChooseSpellScreen(App app, Character c, SpellContext context, ICastSpellSc
     _cursor += delta;
     _selection += delta;
     
-    if (_cursor < 0) 
+    if (_selection < 0) 
     {
-      _cursor = 0;
-      _offset = int.Max(0, _offset - 1);
-      _selection = 0;
+      // wrap to last spell and show last 'page' of spellbook
+      _offset = int.Max(0, _spells.Count - _displaySize);
+      _selection = _spells.Count - 1;      
+      _cursor = _selection - _offset;
+      
+      return;
     }
     
     if (_selection >= _spells.Count)
     {
-      _cursor -= delta;
-      _selection -= delta;
-
+      _cursor = 0;
+      _selection = 0;
+      _offset = 0;
       return;  
+    }
+
+    // If there are multiple pages and we scroll past the top
+    if (_cursor < 0)
+    {
+      _cursor = 0;
+      _offset -= 1;  
     }
 
     int maxRow = int.Min(_displaySize, _spells.Count);
