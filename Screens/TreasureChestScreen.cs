@@ -30,6 +30,10 @@ class TreasureChestScreen : IScreen
   int _state = MENU;
   int _gold, _items;
 
+  // This is really only used right now for the 'tutorial' dungeon but maybe
+  // I'll find a use for it in the main dungeon
+  public Action? OnLoot { get; set; } = null;
+
   static readonly Dictionary<string, List<List<int>>> _tables = new()
   {
     [ "wiztower" ] = [[ ItemCatalog.TORCH, ItemCatalog.TORCH, ItemCatalog.DAGGER , ItemCatalog.SHORTBOW, ItemCatalog.BROADSWORD, ItemCatalog.WARAXE, ItemCatalog.HALBERD, ItemCatalog.ARROW ]]
@@ -139,7 +143,10 @@ class TreasureChestScreen : IScreen
     } 
 
     _msgBuffer.AddRange("", " - press any key to continue - ");
-    _state = END;   
+    _state = END;
+
+    if (OnLoot is not null)
+      OnLoot();
   }
 
   string GiveItem(int itemId)
