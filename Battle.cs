@@ -635,7 +635,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
      string s = $"{c.Name} {verb} {target.Name.IndefArticle().ToLower()}";
      int attacks = c.NumOfMeleeAttacks;
      if (attacks > 1)
-      s += $" {attacks} times ";
+      s += $" {attacks} times";
 
     int strMod = Character.StatToMod(c.Str);
     int hits = 0;

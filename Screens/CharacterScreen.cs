@@ -161,7 +161,10 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
         s += $"+{dmgBonus}";
       else if (dmgBonus < 0)
         s += dmgBonus.ToString();
-      s += " dmg.";
+      s += " dmg";
+      if (c.NumOfMeleeAttacks > 1)
+        s += "/hit";
+      s += ".";
 
       lines.AddRange("", s);
     }
