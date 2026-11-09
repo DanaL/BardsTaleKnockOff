@@ -83,12 +83,17 @@ class HealingScreen(App app, Character c, int slot) : IScreen
       }
       else if (c.Condition == "DEAD")
       {
-        lines.Add($"{c.Name} is indeed in dire straits! But if the gods are willing, they may restored for the modest donation of {Invoice()} gold pieces.");
+        lines.Add($"{c.Name} is indeed in dire straits! But if the gods are willing, they may be restored for the modest donation of {Invoice()} gold pieces.");
         lines.AddRange("", $"{c.Name} has {c.Gold} gp.", "", $"H)eal {c.Name}");
       }
       else if (c.Condition == "OLD")
       {
-        lines.Add($"{c.Name} certainly needs some assitance! They may restored for the modest donation of {Invoice()} gold pieces.");
+        lines.Add($"{c.Name} certainly needs some assitance! They may be restored for the modest donation of {Invoice()} gold pieces.");
+        lines.AddRange("", $"{c.Name} has {c.Gold} gp.", "", $"H)eal {c.Name}");
+      }
+      else if (c.Condition == "POISONED")
+      {
+        lines.Add($"My stars and saints, you brought {c.Name} here just in time! They may be cleansed for the modest donation of {Invoice()} gold pieces.");
         lines.AddRange("", $"{c.Name} has {c.Gold} gp.", "", $"H)eal {c.Name}");
       }
       else if (c.HP < c.MaxHP)
@@ -139,6 +144,11 @@ class HealingScreen(App app, Character c, int slot) : IScreen
       c.Gold -= Invoice();
       c.Condition = "";
     }
+    else if (c.Condition == "POISONED")
+    {
+      c.Gold -= Invoice();
+      c.Condition = "";
+    }
     else
     {
       c.Gold -= Invoice();
@@ -156,6 +166,10 @@ class HealingScreen(App app, Character c, int slot) : IScreen
     else if (c.Condition == "OLD")
     {
       return int.Min(300 * c.Level, 3900);
+    }
+    else if (c.Condition == "POISONED")
+    {
+      return int.Min(500 * c.Level, 6500);
     }
     else 
     {
