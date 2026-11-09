@@ -574,12 +574,13 @@ class EncounterScreen : IScreen
   readonly string _blurb;
 
   // Monster tables
-  static readonly Dictionary<int, List<(int, int)>> _monsterTable = new()
+
+  static readonly Dictionary<string, List<List<(int, int)>>> _monsterTable = new()
   {
-    [0] = [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), 
-                (MonsterCatalog.FERAL_DOG, 8), (MonsterCatalog.CONJURER_0, 4) ],
-    [1] = [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), 
-                (MonsterCatalog.FERAL_DOG, 8), (MonsterCatalog.CONJURER_0, 4) ],
+    ["town"] =[ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), 
+                (MonsterCatalog.FERAL_DOG, 8), (MonsterCatalog.CONJURER_0, 4) ] ],
+    ["wiztower"] = [ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), (MonsterCatalog.FERAL_DOG, 8),
+                        (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4),  (MonsterCatalog.SPIDER, 4) ] ],
   };
 
   public EncounterScreen(App app)
@@ -587,19 +588,45 @@ class EncounterScreen : IScreen
     _app = app;
     _app.GameState.Messages.Clear();
 
-    List<(int, int)> monsterOptions = [.. _monsterTable[app.GameState.CurrLevel]];
-    if (app.GameState.CurrLevel == 0 && !app.GameState.DayTime)
+    var gs = app.GameState;
+    List<(int, int)> monsterOptions = [.. _monsterTable[gs.CurrRegion][gs.CurrLevel]];
+    if (gs.CurrRegion == "town" && !gs.DayTime)
       monsterOptions.AddRange((MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4));
     else if (_app.GameState.CurrTile.Feature == Feature.House)
       monsterOptions.Add((MonsterCatalog.SPIDER, 4));
 
     List<Monster> monsterGroup = [];
     (int monsterId, int count) = monsterOptions[app.Rng.Next(monsterOptions.Count)];
-    _groups.Add(GenGroup(monsterId, count, app.Rng));
-    if (app.GameState.CurrLevel == 0 && app.Rng.Next(4) == 0) 
+    _groups.Add(GenGroup(monsterId, count, 10, app.Rng));
+    if (gs.CurrRegion == "town" && app.Rng.Next(4) == 0) 
     {
       (int monsterId2, int count2) = monsterOptions[app.Rng.Next(monsterOptions.Count)];
-      _groups.Add(GenGroup(monsterId2, count2, app.Rng));
+      _groups.Add(GenGroup(monsterId2, count2, 10, app.Rng));
+    }
+    else if (gs.CurrRegion != "town")
+    {
+      int extraGroups = _app.Rng.Next(10) switch
+      {
+        < 2 => 0,
+        >= 2 and <= 6 => 1,
+        7 or 8 => 2,
+        _ => 3
+      };
+
+      int distance = 10;
+      for (int j = 0; j < extraGroups; j++)
+      {
+        (int mId, int cnt) = monsterOptions[app.Rng.Next(monsterOptions.Count)];
+        var group = GenGroup(mId, cnt, distance, app.Rng);
+        if (group.Monsters[0].HasFlag(MonsterFlag.Ranged))
+        {
+          int extraD = _app.Rng.Next(3) == 0 ? 20 : 10;
+          distance += extraD;
+          group.Distance += extraD;
+        }
+        _groups.Add(group);
+        distance += 10;
+      }      
     }
     
     //_groups = [];
@@ -626,9 +653,9 @@ class EncounterScreen : IScreen
     };
   }
 
-  static MonsterGroup GenGroup(int monsterId, int num, Rng rng)
+  static MonsterGroup GenGroup(int monsterId, int num, int distance, Rng rng)
   {
-    MonsterGroup monsters = new() { Distance = 10 };
+    MonsterGroup monsters = new() { Distance = distance };
     int count = rng.Next(num) + 1;
     for (int j = 0; j < count; j++)
       monsters.Monsters.Add(MonsterCatalog.Get(monsterId, rng));
