@@ -80,6 +80,8 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     switch (GS.CurrTile.Feature)
     {
       case Feature.Guild:
+        while (!GS.DayTime)
+          GS.Turn += GameState.TURNS_PER_HOUR;        
         Serialize.WriteSaveGame(app);
         app.Screens.Replace(new GuildScreen(app));
         break;
