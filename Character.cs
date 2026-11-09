@@ -173,7 +173,7 @@ class Character
     get
     {
       if (Role == Role.Trickster || Role == Role.Paladin)
-        return Level >= 9 ? 3 : Level >= 5 ? 2 : 1;
+        return Level >= 11 ? 3 : Level >= 7 ? 2 : 1;
       else
         return int.Clamp((int)Math.Round(Level / 2.0, MidpointRounding.AwayFromZero), 1, 13);
     }
