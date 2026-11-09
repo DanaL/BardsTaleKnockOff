@@ -113,6 +113,33 @@ unsafe class GameUI
       DrawNoBackground("It's dark!");
     else
       _view.Draw(gs, ViewRect.x, ViewRect.y);
+
+    if (gs.Alert >= DateTime.UtcNow)
+      BorderAlert();
+  }
+
+  void BorderAlert()
+  {
+    SDL_SetRenderDrawBlendMode(_renderer, SDL_BlendMode.SDL_BLENDMODE_BLEND);
+    var vr = ViewRect;
+    RectFrame(new Rgb(0x98, 0, 2), new SDL_Rect { x = vr.x, y = vr.y, w = vr.w, h = vr.h }, 160);
+    RectFrame(new Rgb(0x98, 0, 2), new SDL_Rect { x = vr.x + 1, y = vr.y + 1, w = vr.w - 2, h = vr.h - 2 }, 160);
+
+    RectFrame(new Rgb(0x88, 0, 0), new SDL_Rect { x = vr.x + 2, y = vr.y + 2, w = vr.w - 4, h = vr.h - 4}, 110);
+    RectFrame(new Rgb(0x88, 0, 0), new SDL_Rect { x = vr.x + 3, y = vr.y + 3, w = vr.w - 6, h = vr.h - 6}, 110);
+
+    RectFrame(new Rgb(0x46, 0, 0), new SDL_Rect { x = vr.x + 4, y = vr.y + 4, w = vr.w - 8, h = vr.h - 8 }, 60);
+    RectFrame(new Rgb(0x46, 0, 0), new SDL_Rect { x = vr.x + 5, y = vr.y + 5, w = vr.w - 10, h = vr.h - 10 }, 60);
+    SDL_SetRenderDrawBlendMode(_renderer, SDL_BlendMode.SDL_BLENDMODE_NONE);
+  }
+
+  // Outline of a rectangle. alpha < 255 is only see-through if the renderer's
+  // draw blend mode is SDL_BLENDMODE_BLEND.
+  void RectFrame(Rgb colour, SDL_Rect r, byte alpha = 255)
+  {
+    var rect = new SDL_FRect { x = r.x, y = r.y, w = r.w, h = r.h };
+    SDL_SetRenderDrawColor(_renderer, colour.R, colour.G, colour.B, alpha);
+    SDL_RenderRect(_renderer, &rect);
   }
 
   // The column of icons between the picture and the text panel showing the

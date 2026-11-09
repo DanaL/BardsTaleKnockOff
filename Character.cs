@@ -482,6 +482,7 @@ class Party
           string s = c.ReceiveDmg(1);
           if (s != "")
             gs.Say(s);
+          gs.Alert = DateTime.UtcNow.AddMilliseconds(500);
         }
       }
     }    

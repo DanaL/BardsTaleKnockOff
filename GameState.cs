@@ -16,6 +16,7 @@ class GameState
   public Dictionary<string, List<DungeonLevel>> Regions = [];
   //public List<DungeonLevel> Maps { get; set; } = [];
   public Party Party { get; set; } = new Party();
+  public DateTime Alert { get; set; } = DateTime.MinValue;
 
   public string CurrRegion { get; set; } = "";
   public int CurrLevel { get; set; }
