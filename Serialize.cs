@@ -1,4 +1,4 @@
-// {BardsTaleKnockoff} - A computer RPG
+// Some Other Tale - A computer RPG
 // Written in 2026 by Dana Larose <ywg.dana@gmail.com>
 //
 // To the extent possible under law, the author(s) have dedicated all copyright

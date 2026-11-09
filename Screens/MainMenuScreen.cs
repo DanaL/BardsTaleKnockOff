@@ -1,4 +1,4 @@
-// {BardsTaleKnockoff} - A computer RPG
+// Some Other Tale - A computer RPG
 // Written in 2026 by Dana Larose <ywg.dana@gmail.com>
 //
 // To the extent possible under law, the author(s) have dedicated all copyright
@@ -40,9 +40,9 @@ class MainMenuScreen(App app) : IScreen
 
   public void Draw(GameUI ui)
   {
-    ui.DrawNoBackground("Bard's Tale Knock-Off");
+    ui.DrawNoBackground("Some Other Tale");
     ui.DrawTextPanel([
-      "Welcome to Dana's Bard's Tale Knockoff!",
+      "Welcome to Some Other Tale, a crpg!",
       "",
       "L) Load campaign",
       "B) Begin new campaign",
