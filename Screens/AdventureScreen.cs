@@ -168,6 +168,13 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
   void ResolveTurn()
   {
+    app.GameState.Party.StatusEffects(app.GameState);
+
+    if (app.GameState.Party.Alive == 0)
+    {
+      // Uh-oh, TPK
+    }
+
     // I feel like in OG Bard's Tale you didn't regenerate spell points when
     // moving, only when you were idle but I'm going to do it every 10 turns
     // in town (during daytime). Easier to code and track and makes more sense

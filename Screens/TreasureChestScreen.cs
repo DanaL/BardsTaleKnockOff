@@ -47,6 +47,7 @@ class TreasureChestScreen : IScreen
 
     List<Trap> options = [ Trap.Darts0, Trap.Darts0, Trap.Darts0, Trap.PoisonNeedle0, Trap.Blades0 ];    
     _trap = options[_app.Rng.Next(options.Count)];
+    _trap = Trap.PoisonNeedle0;
   }
 
   public void OnKey(SDL_KeyboardEvent key)

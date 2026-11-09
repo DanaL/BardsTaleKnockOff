@@ -228,7 +228,9 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
   // Advance the clock, expire buffs, move the fallen to the back and drop
   // any monster groups that have been wiped out.
   public RoundResult EndRound()
-  {    
+  {
+    gs.Party.StatusEffects(gs);
+
     if (gs.Party.Alive == 0)
     {
       // Uh-oh, TPK

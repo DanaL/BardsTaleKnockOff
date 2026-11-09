@@ -470,4 +470,20 @@ class Party
     for (int i = 0; i < MAX_PARTY_SIZE; i++)
       Members[i] = i < ordered.Count ? ordered[i] : null;
   }
+
+  public void StatusEffects(GameState gs)
+  {
+    if (gs.Turn % 3 == 0)
+    {
+      foreach (var c in Members.OfType<Character>())
+      {
+        if (c.Condition == "POISONED")
+        {
+          string s = c.ReceiveDmg(1);
+          if (s != "")
+            gs.Say(s);
+        }
+      }
+    }    
+  }
 }
