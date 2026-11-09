@@ -89,9 +89,9 @@ class InventorySelectionScreen(InventorySelectionOptions options, IInventorySele
   {
     _cursor += delta;
     if (_cursor < 0)
-      _cursor = 0;
-    else if (_cursor >= _items.Count)
       _cursor = _items.Count - 1;
+    else if (_cursor >= _items.Count)
+      _cursor = 0;
   }
 
   void GetInv()

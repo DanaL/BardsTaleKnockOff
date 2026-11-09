@@ -168,9 +168,9 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
   {
     _cursor += delta;
     if (_cursor < 0)
-      _cursor = 0;
-    else if (_cursor >= _items.Count)
       _cursor = _items.Count - 1;
+    else if (_cursor >= _items.Count)
+      _cursor = 0;
   }
 
   void GetInv() => _items = [.. character.Inventory.OfType<InvSlot>().Select(iv => (iv, ItemCatalog.Item(iv.Id)))];
