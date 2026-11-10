@@ -138,14 +138,14 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
       case "SCSI":
         caster.MP -= spell.Cost;
         string s = "You are ";
-        if (gs.CurrLevel == 0)
+        if (gs.CurrRegion == "town")
           s += $"in town at X {gs.X}, Y {gs.Y}. ";
         else
-          s += $"on level {gs.CurrLevel} at X {gs.X}, Y {gs.Y}. ";
+          s += $"on level {gs.CurrLevel + 1} at X {gs.X}, Y {gs.Y}. ";
         s += $"You face {gs.Facing}.";
         gs.Say(s);
 
-        if (gs.CurrLevel == 0)
+        if (gs.CurrRegion == "town")
         {
           var (h, m) = gs.CurrTime();
           gs.Say($"The time is {h}:{m.ToString().PadLeft(2, '0')}.");
