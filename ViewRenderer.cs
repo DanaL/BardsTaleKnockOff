@@ -255,6 +255,7 @@ unsafe class ViewRenderer
     // must be drawn after the walls. Otherwise the walls stick out below the
     // floor and doors look like they're floating.
     _fogFar = WallZ(viewRange + 1);
+    _fogMin = !map.Indoors && gs.DayTime ? DaylightFogMin : 0f;
 
     for (int depth = viewRange; depth >= 0; depth--)
     {
@@ -268,7 +269,7 @@ unsafe class ViewRenderer
         var farTex = EdgeTexture(tile.EdgeForDir(facing));
         if (farTex != null)
         {
-          var farShade = twilight ? Shade.Fixed(EdgeWallLight) : Shade.Flat(WallZ(depth + 1));
+          var farShade = twilight ? Shade.Fixed(EdgeLight()) : Shade.Flat(WallZ(depth + 1));
           if (FrontWalls.TryGetValue((lat, depth), out var front))
             Blit(farTex, front, originX, originY, farShade);
           else if (depth >= 2)
@@ -379,6 +380,12 @@ unsafe class ViewRenderer
   // Distance at which everything is black. Set per frame from the view range.
   float _fogFar;
 
+  // The least light the fog leaves, as a fraction: 0 fades to black. Outdoors
+  // in daylight, distance only dims things a little rather than darkening them
+  // to nothing. Set per frame.
+  float _fogMin;
+  const float DaylightFogMin = 1.0f;
+
   // The depth-2 far wall is made from nearer, brighter art, so it's dimmed to
   // match the art's own darkening of squares two ahead.
   const byte FarWallLight = 190;
@@ -401,8 +408,15 @@ unsafe class ViewRenderer
     public static Shade Side(float wallX) => new(ShadeKind.Side, wallX);
   }
 
-  byte Fogged(byte light, float z) =>
-    (byte)MathF.Round(light * Math.Clamp((_fogFar - z) / FogLength, 0f, 1f));
+  byte Fogged(byte light, float z)
+  {
+    float t = Math.Clamp((_fogFar - z) / FogLength, 0f, 1f);
+    return (byte)MathF.Round(light * (_fogMin + (1 - _fogMin) * t));
+  }
+
+  // Light for the far wall at the edge of the view range: never darker than
+  // the fog's minimum.
+  byte EdgeLight() => (byte)Math.Max(EdgeWallLight, MathF.Round(_fogMin * 255));
 
   // Floors are half a square below eye level (ceilings half above), so a row
   // d pixels from the horizon is at z = Fy / 2d.

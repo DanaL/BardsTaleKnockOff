@@ -49,7 +49,7 @@ class GameState
     {
       int range = 0;
       
-      if (!CurrMap.Indoors)
+      if (CurrRegion == "town")
       {
         range = DayTime ? 3 : 1;
       }
@@ -57,12 +57,11 @@ class GameState
       foreach (var buff in Party.Buffs)
       {
         if (buff.Buff == Buff.MageFlame)
-          range = int.Max(3, range);
+          range = int.Max(2, range);
         else if (buff.Buff == Buff.SteelLight)
-          range = int.Max(4, range);        
+          range = int.Max(2, range);        
       }
 
-      // 3 until/unless I implement vision to range 4...
       return int.Clamp(range, 0, 4);
     }
   }
