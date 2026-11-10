@@ -313,7 +313,18 @@ class Character
     switch (Role)
     {
       case Role.Warrior:
+        newHP = rng.Next(4, 17);
+        CritChance += rng.Next(1, 32);
+        if (nextLevel % 2 == 0)
+          AbilityPoints += 1;
+        if (nextLevel == 7 || nextLevel == 11)
+          AbilityPoints += 1;
+        break;
       case Role.Paladin:
+        newHP = rng.Next(4, 17);
+        if (nextLevel % 2 == 0)
+          AbilityPoints += 1;
+        break;
       case Role.Archer:
         newHP = rng.Next(4, 17);
         CritChance += rng.Next(1, 32);
