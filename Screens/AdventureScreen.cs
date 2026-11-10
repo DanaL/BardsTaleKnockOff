@@ -177,7 +177,8 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
     if (app.GameState.Party.Alive == 0)
     {
-      // Uh-oh, TPK
+      app.Screens.Replace(new TPKScreen(app));
+      return;
     }
 
     // I feel like in OG Bard's Tale you didn't regenerate spell points when

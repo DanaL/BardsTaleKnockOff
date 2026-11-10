@@ -38,6 +38,7 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
   const int VICTORY = 4;
   const int FLED = 6;
   const int FAILED_TO_FLEE = 7;
+  const int DEFEAT = -1;
 
   ulong _nextMsgAt = 0;
   const ulong MsgDelayMS = 600;
@@ -187,6 +188,10 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
     {
       Reset();
     }
+    else if (_state == DEFEAT)
+    {
+       _app.Screens.Replace(new TPKScreen(_app));
+    }
   }
 
   void SetUpRetreat()
@@ -250,19 +255,22 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
           }
           else
           {
-            _app.GameState.Say("");
-            if (_battle.Foes.Any(g => g.Count > 0))
-            {
-              _app.GameState.Say("You still face:");
-              foreach (var group in _battle.Foes.Where(g => g.Count > 0))
-              {
-                string gn = group.Count == 1 ? group.Name : group.Name.Pluralize();
-                _app.GameState.Say($"{group.Count} {gn} ({group.Distance}')");
-              }
-              _app.GameState.Say("");
-            }
-
             _state = PostRound();
+
+            if (_state != DEFEAT)
+            {
+              _app.GameState.Say("");
+              if (_battle.Foes.Any(g => g.Count > 0))
+              {
+                _app.GameState.Say("You still face:");
+                foreach (var group in _battle.Foes.Where(g => g.Count > 0))
+                {
+                  string gn = group.Count == 1 ? group.Name : group.Name.Pluralize();
+                  _app.GameState.Say($"{group.Count} {gn} ({group.Distance}')");
+                }
+                _app.GameState.Say("");
+              } 
+            }
           }
         }
         ui.DrawTextPanel(_app.GameState.Messages);
@@ -278,16 +286,19 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
         ui.DrawTextPanel(lines);
         break;
       case VICTORY:
-        ui.DrawTextPanel([.. _app.GameState.Messages,"- press space to continue -"]);
+        ui.DrawTextPanel([.. _app.GameState.Messages," - press space to continue -" ]);
         break;
       case FLED:
         if (_abortBattleMessage != "")
-          ui.DrawTextPanel([_abortBattleMessage, "", "- press space to continue -"]);
+          ui.DrawTextPanel([_abortBattleMessage, "",  "- press space to continue - "]);
         else
-          ui.DrawTextPanel(["You flee the battle!", "", "- press space to continue -"]);
+          ui.DrawTextPanel(["You flee the battle!", "", " - press space to continue - "]);
         break;
       case FAILED_TO_FLEE:
-        ui.DrawTextPanel(["You are unable to escape!", "", "- press space to continue -"]);
+        ui.DrawTextPanel(["You are unable to escape!", "", " - press space to continue - "]);
+        break;
+      case DEFEAT:
+        ui.DrawTextPanel(_app.GameState.Messages);
         break;
     }
 
@@ -297,10 +308,19 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
 
   int PostRound()
   {
-    if (_battle.EndRound() == RoundResult.Victory)
+    var result = _battle.EndRound();
+    if (result == RoundResult.Victory)
     {
       Victory();
       return VICTORY;
+    }
+    else if (result == RoundResult.TPK)
+    {
+      _app.GameState.Say("");
+      _app.GameState.Say("Your party as been defeated!");
+      _app.GameState.Say("");
+      _app.GameState.Say(" - press space to continue - ");
+      return DEFEAT;
     }
 
     _image = _battle.Foes[0].Image;

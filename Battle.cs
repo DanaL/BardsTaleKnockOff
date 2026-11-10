@@ -16,7 +16,7 @@ enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell
 
 record struct BattleChoice(int PartySlot, BattleAction Action,  int Group, int TargetPartySlot, SpellInfo? Spell, int InvIdx);
 
-enum RoundResult { Continue, Victory }
+enum RoundResult { Continue, Victory, TPK }
 
 class MonsterGroup
 {
@@ -231,7 +231,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
     if (gs.Party.Alive == 0)
     {
-      // Uh-oh, TPK
+      return RoundResult.TPK;
     }
 
     foreach (Character member in gs.Party.Members.OfType<Character>())
