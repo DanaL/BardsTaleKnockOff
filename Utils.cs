@@ -199,9 +199,8 @@ static class MapLoader
     }
 
     var lines = File.ReadAllLines(path);
-    d.Indoors = lines[0] != "outdoors";
     bool inMessages = false;
-    foreach (string line in lines.Skip(1))
+    foreach (string line in lines)
     {
       if (string.IsNullOrWhiteSpace(line))
         continue;

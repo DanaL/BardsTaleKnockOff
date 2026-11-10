@@ -218,6 +218,7 @@ unsafe class ViewRenderer
 
   public void Draw(GameState gs, int originX, int originY)
   {
+    bool indoors = gs.CurrRegion == "town";
     int px = gs.X;
     int py = gs.Y;
     Dir facing = gs.Facing;
@@ -231,7 +232,7 @@ unsafe class ViewRenderer
     (int x, int y) Square(int lat, int depth) =>
       (px + depth * fx + lat * rx, py + depth * fy + lat * ry);
 
-    var ceilingTex = map.Indoors ? Sheet("ceiling.png") : null;
+    var ceilingTex = indoors ? null : Sheet("ceiling.png");
 
     // Generated pieces can hang off the edge of the view; keep them out of
     // whatever is drawn beside it.
@@ -255,7 +256,7 @@ unsafe class ViewRenderer
     // must be drawn after the walls. Otherwise the walls stick out below the
     // floor and doors look like they're floating.
     _fogFar = WallZ(viewRange + 1);
-    _fogMin = !map.Indoors && gs.DayTime ? DaylightFogMin : 0f;
+    _fogMin = indoors && gs.DayTime ? DaylightFogMin : 0f;
 
     for (int depth = viewRange; depth >= 0; depth--)
     {
@@ -335,7 +336,7 @@ unsafe class ViewRenderer
     Rgb[] bands;
     Rgb ground;
 
-    if (map.Indoors) {
+    if (gs.CurrRegion != "town") {
       bands = [new(0, 0, 0)];
       ground = new(0, 0, 0);
     }
