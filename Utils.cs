@@ -17,7 +17,7 @@ enum SaveResult { Success, Partial, Failure }
 enum Flame { None, Fire, Blue }
 record StatusIcons(Flame Light, bool Shoe, bool Eye, Dir Facing);
 
-enum Buff { AirArmour, AreaEnchant, BattleSkill, Compass, Defending, FreezeFoe, MageFlame, Hiding, Hypnotized, MageGauntlets,  PhaseBlur, 
+enum Buff { AirArmour, AreaEnchant, BattleSkill, Compass, Defending, EbenezumEscape, FreezeFoe, MageFlame, Hiding, Hypnotized, MageGauntlets,  PhaseBlur, 
             SoftStep, SorcShield, Smite, SteelLight, VorpalPlating, Invisibility }
 
 record struct TempBuff(Buff Buff, ulong ExpiresOn, bool CombatOnly);
