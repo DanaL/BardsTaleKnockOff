@@ -205,7 +205,7 @@ class GuildScreen : IScreen
       {
         if (i == _cursor)
           highlight = lines.Count;
-        lines.Add($"  {_choices[i].Name}, {_choices[i].Role}");
+        lines.Add($"  {_choices[i].Name}, {_choices[i].Role} (Level {_choices[i].Level})");
       }
       lines.Add(end < _choices.Count ? "  (more below)" : "");
     }
