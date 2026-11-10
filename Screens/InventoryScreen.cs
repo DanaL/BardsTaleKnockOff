@@ -28,6 +28,21 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
     string n;
     switch (key.key)
     {
+       case SDL_Keycode.SDLK_1:
+      case SDL_Keycode.SDLK_2:
+      case SDL_Keycode.SDLK_3:
+      case SDL_Keycode.SDLK_4:
+      case SDL_Keycode.SDLK_5:
+      case SDL_Keycode.SDLK_6:
+        int otherSlot = (int)(key.key - SDL_Keycode.SDLK_1);
+        if (otherSlot < app.GameState.Party.Count && app.GameState.Party.Members[otherSlot] is Character c) 
+        {
+          app.Screens.Pop();
+          if (app.Screens.Top is CharacterScreen cs)
+            cs.CharacterSlot = otherSlot; // This way when you close Inventory, you're on the character you switched to
+          app.Screens.Push(new InventoryScreen(app, c, otherSlot));          
+        }
+        break;
       case SDL_Keycode.SDLK_UP:
         MoveCursor(-1);
         break;

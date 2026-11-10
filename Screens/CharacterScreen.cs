@@ -15,6 +15,7 @@ namespace BardsTaleKnockOff;
 
 class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
 {
+  public int CharacterSlot { get; set; } = slot;
   const int MAIN = 0;
   const int TRANSFER_GOLD = 1;
 
@@ -39,13 +40,13 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
             app.Screens.Replace(new CharacterScreen(app, otherSlot));
           break;
         case SDL_Keycode.SDLK_I:
-          app.Screens.Push(new InventoryScreen(app, app.GameState?.Party.Members[slot]!, slot));
+          app.Screens.Push(new InventoryScreen(app, app.GameState.Party.Members[CharacterSlot]!, CharacterSlot));
           break;
         case SDL_Keycode.SDLK_P:
-          app.GameState.Party.PoolGold(slot);
+          app.GameState.Party.PoolGold(CharacterSlot);
           break;
         case SDL_Keycode.SDLK_T:
-          app.Screens.Push(new ChoosePartyMemberScreen(app, this, "Trade gold to whom", slot) { DungeonView = false });
+          app.Screens.Push(new ChoosePartyMemberScreen(app, this, "Trade gold to whom", CharacterSlot) { DungeonView = false });
           break;
         case SDL_Keycode.SDLK_ESCAPE:
           app.Screens.Pop();
@@ -95,7 +96,7 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
   void TradeGold(int amount)
   {
     Party p = app.GameState.Party;
-    if (p.Members[slot] is not Character c || p.Members[_transferToSlot] is not Character tc)
+    if (p.Members[CharacterSlot] is not Character c || p.Members[_transferToSlot] is not Character tc)
       return;
     
     amount = int.Min(amount, c.Gold);
@@ -110,7 +111,7 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
     string caption = "";
     List<string> lines = [];
 
-    if (app.GameState.Party!.Members[slot] is Character c)
+    if (app.GameState.Party!.Members[CharacterSlot] is Character c)
     {
       caption = c.Name;
       if (_state == MAIN)
@@ -129,7 +130,7 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
     ui.DrawRoster(app.GameState);
   }
 
-  List<string> CharacterInfo(Character c)
+  static List<string> CharacterInfo(Character c)
   {
     List<string> lines = [];
 
