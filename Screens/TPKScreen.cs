@@ -29,6 +29,7 @@ class TPKScreen : IScreen
 
   public void OnKey(SDL_KeyboardEvent key)
   {
+    Serialize.WriteSaveGame(_app);
     _app.GameState.Messages.Clear();
     _app.GameState.CurrRegion = "town";
     _app.Screens.Replace(new GuildScreen(_app));
