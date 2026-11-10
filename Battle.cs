@@ -266,6 +266,9 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
   {    
     var mg = Foes[groupNum];
 
+    if (mg.Count == 0)
+      return;
+      
     // Cases:
     // 1) You are the first group and > 10' feet
     // 2) There is more than a 10' gap between you and the next group
