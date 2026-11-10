@@ -87,6 +87,9 @@ class GuildScreen : IScreen
           _scrollTop = 0;
         }
         break;
+      case SDL_Keycode.SDLK_N:
+        _app.Screens.Push(new ReorderPartyScreen(_app, "", "Adventurers' Guild"));
+        break;
       case SDL_Keycode.SDLK_R:
         if (Party.Count == 0)
           _status = "There's nobody in the party to remove.";
@@ -187,7 +190,7 @@ class GuildScreen : IScreen
     {
       Mode.ChoosingToAdd => ["Add whom to the party?", "Up/Down to choose, Enter to add, Esc when done.", ""],
       Mode.ChoosingToRemove => ["Remove whom from the party?"],
-      _ => ["C) Create a character", "A) Add to party", "R) Remove from party", "D) Delete character", "E) Enter town", "", "Q) Return to main menu"]
+      _ => ["C) Create a character", "A) Add to party", "R) Remove from party", "D) Delete character", "E) Enter town", "N) Re-order party", "", "Q) Return to main menu"]
     });
 
     if (_mode == Mode.ChoosingToAdd)

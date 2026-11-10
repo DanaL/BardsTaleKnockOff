@@ -68,7 +68,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         app.Screens.Push(new ChoosePartyMemberScreen(app, this, "Who will cast a spell"));
         break;
       case SDL_Scancode.SDL_SCANCODE_N:
-        app.Screens.Push(new ReorderPartyScreen(app));
+        app.Screens.Push(new ReorderPartyScreen(app, null, ""));
         break;
     }
   }

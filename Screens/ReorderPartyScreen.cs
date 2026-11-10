@@ -13,7 +13,7 @@ using SDL;
 
 using BardsTaleKnockOff;
 
-class ReorderPartyScreen(App app) : IScreen
+class ReorderPartyScreen(App app, string? image, string caption) : IScreen
 {
   readonly List<Character> _newOrder = [];
   readonly Character?[] _currentOrder = [.. app.GameState.Party.Members];
@@ -64,7 +64,13 @@ class ReorderPartyScreen(App app) : IScreen
         lines.Add($"{j+1}) {c.Name}");
     }
 
-    ui.DrawDungeonView(app.GameState);
+    if (image is null)
+      ui.DrawDungeonView(app.GameState);
+    else if (image == "")
+      ui.DrawNoBackground(caption);
+    else
+      ui.DrawImage(image, caption);
+
     ui.DrawTextPanel(lines);
     ui.DrawRoster(app.GameState);
   }
