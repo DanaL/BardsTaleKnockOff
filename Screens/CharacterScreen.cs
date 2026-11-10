@@ -35,7 +35,7 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
         case SDL_Keycode.SDLK_5:
         case SDL_Keycode.SDLK_6:
           int otherSlot = (int)(key.key - SDL_Keycode.SDLK_1);
-          if (otherSlot <= app.Roster.Count)
+          if (otherSlot < app.GameState.Party.Count)
             app.Screens.Replace(new CharacterScreen(app, otherSlot));
           break;
         case SDL_Keycode.SDLK_I:
