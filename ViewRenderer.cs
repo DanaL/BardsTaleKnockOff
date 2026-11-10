@@ -103,7 +103,8 @@ unsafe class ViewRenderer
 
   // Painter's algorithm: draw far squares first so nearer ones cover them.
   // Within a depth band, outer squares go before inner ones.
-  static readonly int[] OuterToInner = [-2, 2, -1, 1, 0];
+  // (At depth 4 the view is wide enough to show squares 3 to each side.)
+  static readonly int[] OuterToInner = [-3, 3, -2, 2, -1, 1, 0];
 
   readonly SDL_Renderer* _renderer;
   readonly string _assetDir;
@@ -242,9 +243,10 @@ unsafe class ViewRenderer
     var stoneFloorTexture = Sheet("floor.png");
     var dirtTexture = Sheet("dirt.png");
 
-    // View range r: squares 0..r-1 are fully lit. Square r is a dim "twilight"
-    // square: its floor and side walls show, but its far wall is in the dark.
-    // Range 2 is exactly what the art provides.
+    // View range r: squares 0..r are drawn, fading into the dark towards the
+    // far edge of square r (the "twilight" square). Its far wall sits right at
+    // the edge, where the fog is black, so it gets a fixed dim light instead:
+    // a wall there shows faintly, while an open corridor fades out.
     //
     // Each square draws the walls you can see from inside it (its far wall and
     // the side wall(s) away from the centre of the view), then its floor and
@@ -252,40 +254,39 @@ unsafe class ViewRenderer
     // deliberately overlap the bottom and top few rows of those walls, so they
     // must be drawn after the walls. Otherwise the walls stick out below the
     // floor and doors look like they're floating.
+    _fogFar = WallZ(viewRange + 1);
+
     for (int depth = viewRange; depth >= 0; depth--)
     {
       bool twilight = depth == viewRange;
-      byte light = Brightness(depth, twilight);
 
       foreach (int lat in OuterToInner)
       {
         var (x, y) = Square(lat, depth);
         Tile tile = map.TileAt(x, y);
 
-        if (!twilight)
+        var farTex = EdgeTexture(tile.EdgeForDir(facing));
+        if (farTex != null)
         {
-          var tex = EdgeTexture(tile.EdgeForDir(facing));
-          if (tex != null)
-          {
-            if (FrontWalls.TryGetValue((lat, depth), out var front))
-              Blit(tex, front, originX, originY, light);
-            else if (depth == 2)
-              DrawFarFace(tex, lat, originX, originY, FarWallLight);
-          }
+          var farShade = twilight ? Shade.Fixed(EdgeWallLight) : Shade.Flat(WallZ(depth + 1));
+          if (FrontWalls.TryGetValue((lat, depth), out var front))
+            Blit(farTex, front, originX, originY, farShade);
+          else if (depth >= 2)
+            DrawFarFace(farTex, lat, depth, originX, originY, farShade);
         }
-  
+
         if (lat <= 0)
-          DrawSide(EdgeTexture(tile.EdgeForDir(facing.TurnLeft())), lat, depth, false, originX, originY, light);
+          DrawSide(EdgeTexture(tile.EdgeForDir(facing.TurnLeft())), lat, depth, false, originX, originY);
         if (lat >= 0)
-          DrawSide(EdgeTexture(tile.EdgeForDir(facing.TurnRight())), lat, depth, true, originX, originY, light);
+          DrawSide(EdgeTexture(tile.EdgeForDir(facing.TurnRight())), lat, depth, true, originX, originY);
 
         var floorTex = tile.Floor switch
         {
           Floor.Dirt => dirtTexture,
           _ => stoneFloorTexture
         };
-        DrawFloorAndCeiling(floorTex, lat, depth, light);
-        DrawFloorAndCeiling(ceilingTex, lat, depth, light);
+        DrawFloorAndCeiling(floorTex, lat, depth, false);
+        DrawFloorAndCeiling(ceilingTex, lat, depth, true);
 
         // Features stand on the floor, so they go after it. (Tree sprites
         // include their own patch of ground.)
@@ -293,10 +294,11 @@ unsafe class ViewRenderer
         if (feature != Feature.None && feature.FeatureSheet() is string name)
         {
           var tex = Sheet(name);
+          var shade = Shade.Flat(WallZ(depth) + 0.5f);
           if (depth <= 2 && FeatureSprites.TryGetValue((lat, depth), out var sprite))
-            Blit(tex, sprite, originX, originY, light);
+            Blit(tex, sprite, originX, originY, shade);
           else if (depth == 3 && FeatureSprites.TryGetValue((lat, 2), out var farSprite))
-            BlitScaled(tex, farSprite, Depth3Scale, originX, originY, light);
+            BlitScaled(tex, farSprite, Depth3Scale, originX, originY, shade);
         }
       }
     }
@@ -309,14 +311,19 @@ unsafe class ViewRenderer
       return name is not null ? Sheet(name) : null;
     }
 
-    void DrawFloorAndCeiling(SDL_Texture* tex, int lat, int depth, byte light)
+    void DrawFloorAndCeiling(SDL_Texture* tex, int lat, int depth, bool ceiling)
     {
       if (tex == null)
         return;
-      if (depth <= 2 && Floors.TryGetValue((lat, depth), out var piece))
-        Blit(tex, piece, originX, originY, light);
-      else if (depth == 3 && Floors.TryGetValue((lat, 2), out var farPiece))
-        BlitScaled(tex, farPiece, Depth3Scale, originX, originY, light);
+      if (depth <= 2)
+      {
+        if (Floors.TryGetValue((lat, depth), out var piece))
+          Blit(tex, piece, originX, originY, Shade.Floor);
+      }
+      else
+      {
+        DrawGeneratedFloor(tex, lat, depth, ceiling, originX, originY);
+      }
     }
   }
 
@@ -357,37 +364,140 @@ unsafe class ViewRenderer
     SDL_RenderFillRect(_renderer, &rect);
   }
 
-  // The art already darkens squares two ahead, so we only dim what it doesn't
-  // cover: the twilight square at range 1, and everything generated beyond.
+  // --- Distance fog --------------------------------------------------------
+  //
+  // Light falls off with distance and reaches zero at the far edge of the view
+  // range, so floors and walls fade into the dark instead of stopping at a
+  // hard edge (which reads as a black wall). Floors and ceilings get further
+  // away row by row and side walls column by column, so those are lit in
+  // strips; everything else is at one distance.
+
+  // How many squares' distance the fade takes, ending at the far edge of the
+  // view range.
+  const float FogLength = 1.5f;
+
+  // Distance at which everything is black. Set per frame from the view range.
+  float _fogFar;
+
+  // The depth-2 far wall is made from nearer, brighter art, so it's dimmed to
+  // match the art's own darkening of squares two ahead.
   const byte FarWallLight = 190;
 
-  static byte Brightness(int depth, bool twilight) => depth switch
+  // Light for the far wall of the twilight square, at the very edge of the
+  // view range, where the fog would otherwise make it black.
+  const byte EdgeWallLight = 70;
+
+  enum ShadeKind { Flat, Floor, Side, Fixed }
+
+  // How to work out how far away each part of a piece is. Flat: all at
+  // distance Value. Floor: floor/ceiling, distance from the screen row. Side:
+  // a side wall at x = Value, distance from the screen column. Fixed: no fog,
+  // just Base. Base is the light before fog.
+  readonly record struct Shade(ShadeKind Kind, float Value, byte Base = 255)
   {
-    3 => 140,
-    2 => 255,
-    _ => twilight ? (byte)170 : (byte)255
+    public static Shade Flat(float z, byte light = 255) => new(ShadeKind.Flat, z, light);
+    public static Shade Fixed(byte light) => new(ShadeKind.Fixed, 0, light);
+    public static readonly Shade Floor = new(ShadeKind.Floor, 0);
+    public static Shade Side(float wallX) => new(ShadeKind.Side, wallX);
+  }
+
+  byte Fogged(byte light, float z) =>
+    (byte)MathF.Round(light * Math.Clamp((_fogFar - z) / FogLength, 0f, 1f));
+
+  // Floors are half a square below eye level (ceilings half above), so a row
+  // d pixels from the horizon is at z = Fy / 2d.
+  static float FloorZ(float y)
+  {
+    float d = MathF.Abs(y - CenterY);
+    return d > 0 ? Fy / (2 * d) : float.MaxValue;
+  }
+
+  static float SideZ(float wallX, float x)
+  {
+    float z = Fx * wallX / (x - CenterX);
+    return z > 0 ? z : float.MaxValue;
+  }
+
+  byte LightAt(Shade shade, int x0, int y0, int i) => shade.Kind switch
+  {
+    ShadeKind.Floor => Fogged(shade.Base, FloorZ(y0 + i + 0.5f)),
+    ShadeKind.Side => Fogged(shade.Base, SideZ(shade.Value, x0 + i + 0.5f)),
+    ShadeKind.Fixed => shade.Base,
+    _ => Fogged(shade.Base, shade.Value)
   };
 
-  void DrawSide(SDL_Texture* tex, int lat, int depth, bool right, int originX, int originY, byte light)
+  // Draw src into the view rectangle x0..x1, y0..y1, fogged. Floors are drawn
+  // in rows and side walls in columns; runs with the same light go together.
+  void DrawLit(SDL_Texture* tex, SDL_FRect src, int x0, int y0, int x1, int y1, int originX, int originY, Shade shade)
+  {
+    if (x1 <= x0 || y1 <= y0)
+      return;
+
+    if (shade.Kind is ShadeKind.Flat or ShadeKind.Fixed)
+    {
+      var dst = new SDL_FRect { x = originX + x0, y = originY + y0, w = x1 - x0, h = y1 - y0 };
+      SetLight(tex, LightAt(shade, x0, y0, 0));
+      SDL_RenderTexture(_renderer, tex, &src, &dst);
+      SetLight(tex, 255);
+      return;
+    }
+
+    bool rows = shade.Kind == ShadeKind.Floor;
+    int n = rows ? y1 - y0 : x1 - x0;
+    int start = 0;
+    byte light = LightAt(shade, x0, y0, 0);
+    for (int i = 1; i <= n; i++)
+    {
+      byte next = i < n ? LightAt(shade, x0, y0, i) : (byte)0;
+      if (i < n && next == light)
+        continue;
+
+      SDL_FRect s = src;
+      var d = new SDL_FRect { x = originX + x0, y = originY + y0, w = x1 - x0, h = y1 - y0 };
+      if (rows)
+      {
+        s.y = src.y + src.h * start / n;
+        s.h = src.h * (i - start) / n;
+        d.y = originY + y0 + start;
+        d.h = i - start;
+      }
+      else
+      {
+        s.x = src.x + src.w * start / n;
+        s.w = src.w * (i - start) / n;
+        d.x = originX + x0 + start;
+        d.w = i - start;
+      }
+      SetLight(tex, light);
+      SDL_RenderTexture(_renderer, tex, &s, &d);
+
+      start = i;
+      light = next;
+    }
+    SetLight(tex, 255);
+  }
+
+  void DrawSide(SDL_Texture* tex, int lat, int depth, bool right, int originX, int originY)
   {
     if (tex == null)
       return;
     if (depth <= 2)
     {
       if (SideWalls.TryGetValue((lat, depth, right), out var piece))
-        Blit(tex, piece, originX, originY, light);
+        Blit(tex, piece, originX, originY, Shade.Side(right ? lat + 0.5f : lat - 0.5f));
     }
     else
     {
-      DrawGeneratedSide(tex, lat, depth, right, originX, originY, light);
+      DrawGeneratedSide(tex, lat, depth, right, originX, originY);
     }
   }
 
-  // The far wall of a square two ahead: the depth-2 front face, scaled down
-  // and shifted sideways for its lateral position.
-  void DrawFarFace(SDL_Texture* tex, int lat, int originX, int originY, byte light)
+  // The far wall of a square two or more ahead, which has no art of its own:
+  // the face two squares ahead, pushed back to the square's far wall line and
+  // shifted sideways for its lateral position.
+  void DrawFarFace(SDL_Texture* tex, int lat, int depth, int originX, int originY, Shade shade)
   {
-    float s = Depth3Scale;
+    float s = WallZ(2) / WallZ(depth + 1);
     float left = FarFaceScreenX + lat * FarFaceSrc.w;
     float right = left + FarFaceSrc.w;
     float top = FarFaceSrc.y, bottom = FarFaceSrc.y + FarFaceSrc.h;
@@ -403,18 +513,16 @@ unsafe class ViewRenderer
     else if (lat > 0)
       x1++;
 
-    var src = FarFaceSrc;
-    var dst = new SDL_FRect { x = originX + x0, y = originY + y0, w = x1 - x0, h = y1 - y0 };
-    SetLight(tex, light);
-    SDL_RenderTexture(_renderer, tex, &src, &dst);
-    SetLight(tex, 255);
+    // The source art is brighter than the art's own squares two ahead, so dim it to match.
+    shade = shade with { Base = (byte)(shade.Base * FarWallLight / 255) };
+    DrawLit(tex, FarFaceSrc, x0, y0, x1, y1, originX, originY, shade);
   }
 
   // A side wall with no art for it, drawn a column at a time with
   // perspective-correct texturing (the technique Wolfenstein 3D used). For
   // each screen column, undo the projection to find how far away the wall is
   // there, then draw a 1-pixel-wide slice of the texture at that height.
-  void DrawGeneratedSide(SDL_Texture* tex, int lat, int depth, bool right, int originX, int originY, byte light)
+  void DrawGeneratedSide(SDL_Texture* tex, int lat, int depth, bool right, int originX, int originY)
   {
     float wallX = right ? lat + 0.5f : lat - 0.5f;
     float zNear = WallZ(depth), zFar = WallZ(depth + 1);
@@ -424,7 +532,6 @@ unsafe class ViewRenderer
     int from = Math.Max(0, (int)MathF.Floor(MathF.Min(sxNear, sxFar)));
     int to = Math.Min(ViewW, (int)MathF.Ceiling(MathF.Max(sxNear, sxFar)));
 
-    SetLight(tex, light);
     for (int sx = from; sx < to; sx++)
     {
       float z = Fx * wallX / (sx + 0.5f - CenterX);
@@ -436,24 +543,60 @@ unsafe class ViewRenderer
 
       var src = new SDL_FRect { x = FarFaceSrc.x + texCol, y = FarFaceSrc.y, w = 1, h = FarFaceSrc.h };
       var dst = new SDL_FRect { x = originX + sx, y = originY + MathF.Round(CenterY - h / 2), w = 1, h = MathF.Round(h) };
+      SetLight(tex, Fogged(255, z));
       SDL_RenderTexture(_renderer, tex, &src, &dst);
     }
     SetLight(tex, 255);
   }
 
-  void Blit(SDL_Texture* tex, Piece piece, int originX, int originY, byte light)
+  // The floor (or ceiling) of a square with no art for it, drawn a row at a
+  // time like the generated side walls. Each screen row is a line across the
+  // floor at one distance. It's textured from the matching row of the depth-2
+  // floor art straight ahead, which spans exactly one square's width at every
+  // row, so the generated floor lines up with the walls standing on it.
+  void DrawGeneratedFloor(SDL_Texture* tex, int lat, int depth, bool ceiling, int originX, int originY)
+  {
+    float zNear = WallZ(depth), zFar = WallZ(depth + 1);
+    int from = (int)MathF.Floor(Fy / (2 * zFar)), to = (int)MathF.Ceiling(Fy / (2 * zNear));
+
+    var art = Floors[(0, 2)];
+    float sheetOffsetX = art.X0 - art.X0 % ViewW; // sheet x minus screen x for this piece
+
+    for (int d = from; d < to; d++) // rows below (or above) the horizon
+    {
+      float z = Fy / (2 * (d + 0.5f));
+      if (z < zNear || z > zFar)
+        continue;
+
+      // The same spot in the depth-2 square, and its row in the art.
+      float zArt = WallZ(2) + (z - zNear);
+      int artD = (int)(Fy / (2 * zArt));
+      float artHalfW = Fx * 0.5f / zArt;
+      float srcY = art.Row * ViewH + (ceiling ? CenterY - artD - 1 : CenterY + artD);
+      var src = new SDL_FRect { x = sheetOffsetX + CenterX - artHalfW, y = srcY, w = 2 * artHalfW, h = 1 };
+
+      int x0 = Round(CenterX + Fx * (lat - 0.5f) / z), x1 = Round(CenterX + Fx * (lat + 0.5f) / z);
+      if (x1 <= x0)
+        continue;
+      float y = ceiling ? CenterY - d - 1 : CenterY + d;
+      var dst = new SDL_FRect { x = originX + x0, y = originY + y, w = x1 - x0, h = 1 };
+      SetLight(tex, Fogged(255, z));
+      SDL_RenderTexture(_renderer, tex, &src, &dst);
+    }
+    SetLight(tex, 255);
+  }
+
+  void Blit(SDL_Texture* tex, Piece piece, int originX, int originY, Shade shade)
   {
     int w = piece.X1 - piece.X0 + 1;
+    int x = piece.X0 % ViewW;
     var src = new SDL_FRect { x = piece.X0, y = piece.Row * ViewH, w = w, h = ViewH };
-    var dst = new SDL_FRect { x = originX + piece.X0 % ViewW, y = originY, w = w, h = ViewH };
-    SetLight(tex, light);
-    SDL_RenderTexture(_renderer, tex, &src, &dst);
-    SetLight(tex, 255);
+    DrawLit(tex, src, x, 0, x + w, ViewH, originX, originY, shade);
   }
 
   // Draw a piece scaled by s about the vanishing point, i.e. as if it were
   // further away. Edges are rounded so neighbouring pieces still meet exactly.
-  void BlitScaled(SDL_Texture* tex, Piece piece, float s, int originX, int originY, byte light)
+  void BlitScaled(SDL_Texture* tex, Piece piece, float s, int originX, int originY, Shade shade)
   {
     int w = piece.X1 - piece.X0 + 1;
     float left = piece.X0 % ViewW;
@@ -461,10 +604,7 @@ unsafe class ViewRenderer
     int y0 = Round(CenterY - CenterY * s), y1 = Round(CenterY + (ViewH - CenterY) * s);
 
     var src = new SDL_FRect { x = piece.X0, y = piece.Row * ViewH, w = w, h = ViewH };
-    var dst = new SDL_FRect { x = originX + x0, y = originY + y0, w = x1 - x0, h = y1 - y0 };
-    SetLight(tex, light);
-    SDL_RenderTexture(_renderer, tex, &src, &dst);
-    SetLight(tex, 255);
+    DrawLit(tex, src, x0, y0, x1, y1, originX, originY, shade);
   }
 
   // How visible something is, 255 = fully. Depending on the level's style
