@@ -117,7 +117,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
       MonsterGroup group = Foes[_actingGroup];
       if (_actingMonster < group.Count)
       {
-        MonsterAction(group.Monsters[_actingMonster++], _actingGroup);
+        MonsterAction(group.Monsters[_actingMonster++], _actingGroup, group.Distance);
         return;
       }
 
@@ -268,7 +268,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
     if (mg.Count == 0)
       return;
-      
+
     // Cases:
     // 1) You are the first group and > 10' feet
     // 2) There is more than a 10' gap between you and the next group
@@ -302,7 +302,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     }
   }
 
-  void MonsterAction(Monster m, int group)
+  void MonsterAction(Monster m, int group, int distance)
   {
     if (m.Buffs.Any(b => b.Buff == Buff.Hypnotized))
     {
@@ -327,7 +327,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     List<int> meleeTargets = [.. targets.Where(n => n < 3)];
 
     List<(string Action, int Target)> options = [];
-    if (group < 2)
+    if (distance == 10)
     {
       options.Add(("melee", meleeTargets[rng.Next(meleeTargets.Count)]));
     }
