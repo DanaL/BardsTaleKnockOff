@@ -33,7 +33,7 @@ class Spells
     // Magician
     new SpellInfo("VOPL","Vorpal Plating", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("AIAR","Air Armour", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.Self),
-    new SpellInfo("STLI","Steel Light", 1, 2, 2, SpellDuration.Short, SpellContext.Exploring, Role.Magician, SpellTarget.None),    
+    new SpellInfo("STLI","Steel Light", 1, 3, 2, SpellDuration.Short, SpellContext.Exploring, Role.Magician, SpellTarget.None),    
     new SpellInfo("SCSI","Scry Site", 1, 2, 0, SpellDuration.NA, SpellContext.Exploring, Role.Magician, SpellTarget.None),
     new SpellInfo("HOWA","Holy Water", 2, 4, 30, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
     new SpellInfo("WIST","Wither Strike", 2, 5, 20, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),

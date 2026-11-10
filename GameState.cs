@@ -56,9 +56,10 @@ class GameState
 
       foreach (var buff in Party.Buffs)
       {
-        if (buff.Buff == Buff.MageFlame || buff.Buff == Buff.SteelLight)
-          range = int.Max(range, 2);
-        
+        if (buff.Buff == Buff.MageFlame)
+          range = int.Max(2, range);
+        else if (buff.Buff == Buff.SteelLight)
+          range = int.Max(3, range);        
       }
 
       // 3 until/unless I implement vision to range 4...
