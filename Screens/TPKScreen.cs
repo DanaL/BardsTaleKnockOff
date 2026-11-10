@@ -36,7 +36,7 @@ class TPKScreen : IScreen
 
   public void Draw(GameUI ui)
   {
-    List<string> lines = [ "Sadly, you have fallen to foul beasts and bad luck. Will you be remembered? Will stories of your deeds be sung in taverns?" ];
+    List<string> lines = [ "Sadly, you have fallen to foul beasts and ill luck. Will you be remembered? Will stories of your deeds be sung in taverns?" ];
 
     if (_app.GameState.CurrRegion != "town")
       lines.AddRange("", "Your remains will lay mouldering in the depths, or will they...");

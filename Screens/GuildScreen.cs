@@ -101,6 +101,10 @@ class GuildScreen : IScreen
         {
           _status = "You can't go adventuring alone. Add someone to your party first.";
         }
+        else if (Party.Alive == 0)
+        {
+          _status = "You need to have at least one living, breathing adventurer in your party in order to go adventuring.";
+        }
         else
         {
           _app.GameState!.X = 2;
