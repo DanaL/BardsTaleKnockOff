@@ -102,6 +102,9 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case Feature.TrainingHall:
         app.Screens.Push(new TrainingHallScreen(app));
         break;
+      case Feature.Burgemeester:
+        app.Screens.Push(new BurgemeesterScreen(app));
+        break;
       case Feature.Special1:
         if (!GS.FactDb.ContainsKey("TownOgreSlain"))
         {
