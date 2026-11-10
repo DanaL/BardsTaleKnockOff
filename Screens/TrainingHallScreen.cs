@@ -397,6 +397,9 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
             _state = MAIN;  
           }
           break;
+        case SDL_Scancode.SDL_SCANCODE_P:
+          app.GameState.Party.PoolGold(c);
+          break;
         case SDL_Scancode.SDL_SCANCODE_ESCAPE:
           _options.Clear();
           _state = MAIN;
@@ -471,10 +474,10 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
       int fee = 15 * (c.MaxMP - c.MP);
       lines.Add($"Some contemplation and breath work will indeed refocus {c.Name}'s mind and restore their MP.");
       lines.AddRange("", $"{c.Name} has {c.Gold} gp.");
-
+      
       if (fee > c.Gold)
       {
-        lines.AddRange($"Unfortunately, they lack the {fee} gp we require to book a session.");
+        lines.AddRange("", $"Unfortunately, they lack the {fee} gp we require to book a session.");
       }
       else
       {
@@ -482,6 +485,8 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
         _options.Add(YES_OPT);
         _options.Add(NO_OPT);
       }
+
+      lines.AddRange("", "P) Pool gold");
     }
 
     ui.DrawNoBackground("Training Hall");
