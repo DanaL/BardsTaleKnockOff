@@ -19,21 +19,29 @@ class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt, int 
   public string Caption { get; set; } = "";
   public bool DungeonView { get; set; } = true;
 
+  string _status = "";
+  List<string> _lines = [];
+
   public void OnKey(SDL_KeyboardEvent key)
   {
+    _status = "";
     if (key.scancode == SDL_Scancode.SDL_SCANCODE_ESCAPE)
     {
       src.AbortSelection();
       app.Screens.Pop();
+
+      return;
+    }
+
+    int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
+    if (slot != ignore && slot >= 0 && slot < app.GameState.Party.Count)
+    {
+      app.Screens.Pop();
+      src.CharacterChosen(slot);       
     }
     else
     {
-      int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
-      if (slot != ignore && slot >= 0 && slot < app.GameState.Party.Count)
-      {
-        app.Screens.Pop();
-        src.CharacterChosen(slot);       
-      }
+      _status = "There's no character in that slot.";
     }
   }
 
@@ -49,7 +57,13 @@ class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt, int 
     string s = "1";
     if (app.GameState.Party.Count > 1)
       s += $"-{app.GameState.Party.Count}";
-    ui.DrawTextPanel([$"{prompt}: {s}"]);
+
+    _lines.Clear();
+    _lines.Add($"{prompt}: {s}");
+    if (_status != "")
+      _lines.AddRange("", _status);
+      
+    ui.DrawTextPanel(_lines);
     ui.DrawRoster(app.GameState);
   }
 }
