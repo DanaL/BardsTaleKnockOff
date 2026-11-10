@@ -53,7 +53,7 @@ class LoadCampaignScreen(App app) : IScreen
         app.CampaignName = _saveFiles[_cursor].Name[..^4];
         app.NewGame();
         Serialize.LoadSaveGame(app);
-        app.Screens.Replace(new GuildScreen(app));        
+        app.Screens.Replace(new GuildScreen(app));
         break;
       case SDL_Keycode.SDLK_ESCAPE:
         app.Screens.Replace(new MainMenuScreen(app));

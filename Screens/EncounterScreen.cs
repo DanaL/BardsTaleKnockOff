@@ -9,6 +9,7 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.Linq.Expressions;
 using SDL;
 
 namespace BardsTaleKnockOff;
@@ -53,7 +54,7 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
   SpellInfo? _pendingSpell = null;
   int _chosenInvIdx = -1;
   Item? _itemToUse = null;
-
+  string _abortBattleMessage = "";
   string _image;
   string _caption;
 
@@ -176,20 +177,28 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
     }
     else if (_state == FLED && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
-      if (RetreatLoc.X != -1 && RetreatLoc.Y != -1)
-      {
-        _app.GameState.X = RetreatLoc.X;
-        _app.GameState.Y = RetreatLoc.Y;
-        _app.GameState.Facing = _app.GameState.Facing.Opposite();
-        _app.Screens.Pop(); // This is to make sure the special encounter screen is popped off the stack
-      }
+      SetUpRetreat();
 
-      Cleanup();
+      // Handle case where we were in a special encounter screen
+      while (_app.Screens.Top is not AdventureScreen)
+        _app.Screens.Pop(); 
     }
     else if (_state == FAILED_TO_FLEE && key.scancode == SDL_Scancode.SDL_SCANCODE_SPACE)
     {
       Reset();
     }
+  }
+
+  void SetUpRetreat()
+  {
+    if (RetreatLoc.X != -1 && RetreatLoc.Y != -1)
+    {
+      _app.GameState.X = RetreatLoc.X;
+      _app.GameState.Y = RetreatLoc.Y;
+      _app.GameState.Facing = _app.GameState.Facing.Opposite();
+    }
+
+    Cleanup();
   }
 
   public void Cleanup()
@@ -219,8 +228,20 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
         {
           // Some actions produce no messages (eg., the attacker died earlier
           // in the round), so keep going until one does.
-          while (_battle.Messages.Count == 0 && !_battle.RoundOver)
+          try
+          {
+            while (_battle.Messages.Count == 0 && !_battle.RoundOver)
             _battle.ResolveNextAction();
+          }          
+          catch (AbortBattleException abe)
+          {
+            // I knooowwww you aren't supposed to use Exceptions for control
+            // flow but sometimes they feel like the natural way to handle
+            // something? (Like a character casting FLEE mid-battle)
+            _abortBattleMessage = $"{abe.Message} casts FLEE and you are magically whisked away from danger!";
+            _state = FLED;
+            return;
+          }
 
           if (_battle.Messages.Count > 0)
           {
@@ -260,7 +281,10 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
         ui.DrawTextPanel([.. _app.GameState.Messages,"- press space to continue -"]);
         break;
       case FLED:
-        ui.DrawTextPanel(["You flee the battle!", "", "- press space to continue -"]);
+        if (_abortBattleMessage != "")
+          ui.DrawTextPanel([_abortBattleMessage, "", "- press space to continue -"]);
+        else
+          ui.DrawTextPanel(["You flee the battle!", "", "- press space to continue -"]);
         break;
       case FAILED_TO_FLEE:
         ui.DrawTextPanel(["You are unable to escape!", "", "- press space to continue -"]);
@@ -387,13 +411,13 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
             if (choice.Spell.Code == "SMTE")
               s = $"{c.Name} smites";
             else
-              s = $"{c.Name} casts {choice.Spell.Code} on";
+              s = $"{c.Name} casts {choice.Spell.Code}";
 
             if (choice.Spell.Target == SpellTarget.Monsters)
             {
               group = _battle.Foes[choice.Group];
               monster = group.Name.ToLower();
-              monster = $" the {monster.Pluralize()}";
+              monster = $" on the {monster.Pluralize()}";
               s += monster;
             }
             else if (choice.Spell.Target == SpellTarget.PartyMember && _app.GameState.Party.Members[choice.TargetPartySlot] is Character target)

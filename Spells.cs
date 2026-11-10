@@ -50,6 +50,9 @@ class Spells
     new SpellInfo("SMTE","Smite", 1, 3, 10, SpellDuration.NA, SpellContext.Combat, Role.Paladin, SpellTarget.Monsters),
   ];
 
+  static SpellInfo _flee= new SpellInfo("FLEE","Ebenezum's Escape", 2, 5, 0, SpellDuration.NA, 
+        SpellContext.Combat, Role.Sorcerer | Role.Trickster | Role.Conjurer | Role.Wizard | Role.Magician, SpellTarget.None);
+
   public static List<SpellInfo> SpellsFor(Character c)
   {
     List<SpellInfo> spells = [];
@@ -61,6 +64,9 @@ class Spells
     spells.AddRange(_spells.Where(s => (s.Role & Role.Trickster) == Role.Trickster && s.Level <= c.TricksterSpellLevel));
     spells.AddRange(_spells.Where(s => (s.Role & Role.Paladin) == Role.Paladin && s.Level <= c.PaladinSpellLevel));
 
+    if (c.Buffs.Any(b => b.Buff == Buff.EbenezumEscape))
+      spells.Add(_flee);
+      
     return [.. spells.OrderBy(s => s.Level).ThenBy(s => s.Name)];
   }
 }
@@ -98,6 +104,9 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
             target.Buffs.Add(new TempBuff(Buff.BattleSkill, ulong.MaxValue, true));
         }
         break;
+      case "FLEE":
+        caster.MP -= spell.Cost;
+        throw new AbortBattleException(caster.Name);
       case "FRFO":
         msgBuffer.AddRange(FreezeFoes(caster, monsterGroup, spell.Cost, rng));
         break;

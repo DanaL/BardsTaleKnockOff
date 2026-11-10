@@ -29,6 +29,8 @@ readonly record struct Rgb(byte R, byte G, byte B);
 // (haze on a bright day).
 enum DistanceFade { ToBlack, ToBackground }
 
+class AbortBattleException(string caster) : Exception(caster) {}
+
 // Facts are saved polymorphically: each subtype needs a [JsonDerivedType]
 // line with a unique tag, or saving a fact of that type throws.
 [JsonPolymorphic]
