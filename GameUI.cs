@@ -306,15 +306,15 @@ unsafe class GameUI
     Dir facing = Dir.None;
     foreach (var b in gs.Party.Buffs)
     {
-      if (b.Buff == Buff.MageFlame)
+      if (b.Buff == Buff.MageFlame || b.Buff == Buff.Torch)
         light = Flame.Fire;
-      if (b.Buff == Buff.SteelLight)
+      else if (b.Buff == Buff.SteelLight)
         light = Flame.Blue;
-      if (b.Buff == Buff.SoftStep)
+      else if (b.Buff == Buff.SoftStep)
         softStep = true;
-      if (b.Buff == Buff.Compass)
+      else if (b.Buff == Buff.Compass)
         facing = gs.Facing;
-      if (b.Buff == Buff.AreaEnchant)
+      else if (b.Buff == Buff.AreaEnchant)
         eye = true;
     }
     

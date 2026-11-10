@@ -59,7 +59,9 @@ class GameState
         if (buff.Buff == Buff.MageFlame)
           range = int.Max(2, range);
         else if (buff.Buff == Buff.SteelLight)
-          range = int.Max(2, range);        
+          range = int.Max(2, range);
+        else if (buff.Buff == Buff.Torch)
+          range = int.Max(1, range);
       }
 
       return int.Clamp(range, 0, 4);

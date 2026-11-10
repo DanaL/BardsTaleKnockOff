@@ -104,7 +104,8 @@ class ItemCatalog
 
     if (item.Id == TORCH)
     {
-      SpellResolver.Mafl(null, gs, 0);
+      gs.Party.ClearLightSources();
+      gs.Party.Buffs.Add(new TempBuff(Buff.Torch, gs.Turn + 2000, false));      
       consumed = true;
     }
 

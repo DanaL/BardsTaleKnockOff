@@ -202,11 +202,6 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
     return msgBuffer;
   }
 
-  static void ClearLightSources(Party party)
-  {
-    party.Buffs = [.. party.Buffs.Where(b => b.Buff != Buff.MageFlame && b.Buff != Buff.SteelLight)];
-  }
-
   static void Trzp(Character caster, int cost, GameState gs)
   {
     caster.MP -= cost;
@@ -258,20 +253,17 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
         c.Buffs.Add(new TempBuff(Buff.PhaseBlur, uint.MaxValue, true));
   }
 
-  // caster is nullable because lights can be created from torches, etc
-  public static void Mafl(Character? caster, GameState gs, int cost)
+  
+  static void Mafl(Character caster, GameState gs, int cost)
   {
-    caster?.MP -= cost;
-
-    // Casting a light spell replaces an existing light
-    ClearLightSources(gs.Party);
+    caster.MP -= cost;
+    gs.Party.ClearLightSources();
     gs.Party.Buffs.Add(new TempBuff(Buff.MageFlame, gs.Turn + 2000, false));
   }
 
-  public static void Stli(Character caster, int cost, GameState gs)
+  static void Stli(Character caster, int cost, GameState gs)
   {
-    ClearLightSources(gs.Party);
-
+    gs.Party.ClearLightSources();
     caster.MP -= cost;
     gs.Party.Buffs.Add(new TempBuff(Buff.SteelLight, gs.Turn + DURATION_SHORT, false));
   }

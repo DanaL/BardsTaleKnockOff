@@ -499,4 +499,15 @@ class Party
       }
     }    
   }
+
+  public void ClearLightSources()
+  {
+    Buffs = [.. Buffs.Where(b => !IsLight(b.Buff))];
+
+    static bool IsLight(Buff buff) => buff switch 
+    {
+      Buff.MageFlame or Buff.SteelLight or Buff.Torch => true,
+      _ => false
+    };
+  }  
 }
