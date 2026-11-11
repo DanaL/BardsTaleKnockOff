@@ -190,9 +190,9 @@ static class MapLoader
   public static DungeonLevel Load(string path)
   {
     DungeonLevel d = new();
-    for (int x = 0; x < DungeonLevel.Size; x++)
+    for (int x = 0; x < DungeonLevel.MAP_SIZE; x++)
     {
-      for (int y = 0; y < DungeonLevel.Size; y++)
+      for (int y = 0; y < DungeonLevel.MAP_SIZE; y++)
       {
         d.SetTile(x, y, new(Floor.Stone, Ceiling.Stone, Feature.None, Edge.PermWall, Edge.PermWall, Edge.PermWall, Edge.PermWall));
       }

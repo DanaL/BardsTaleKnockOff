@@ -74,11 +74,11 @@ record struct Tile(Floor Floor, Ceiling Ceiling, Feature Feature, Edge EdgeN, Ed
 // Bard's Tale levels are 22x22 and wrap. Technically BT maps were all toruses
 class DungeonLevel
 {
-  public const int Size = 22;
-  readonly Tile[,] _tiles = new Tile[Size, Size];
+  public const int MAP_SIZE = 22;
+  readonly Tile[,] _tiles = new Tile[MAP_SIZE, MAP_SIZE];
   public Dictionary<(int, int), string> Messages { get; } = [];
   
-  public static int Wrap(int v) => ((v % Size) + Size) % Size;
+  public static int Wrap(int v) => ((v % MAP_SIZE) + MAP_SIZE) % MAP_SIZE;
   public Tile TileAt(int x, int y) => _tiles[Wrap(x), Wrap(y)];
   public void SetTile(int x, int y, Tile tile) => _tiles[Wrap(x), Wrap(y)] = tile;
 

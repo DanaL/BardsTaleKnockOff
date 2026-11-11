@@ -39,6 +39,8 @@ unsafe class Program
       return 1;
     }
 
+    LevelGenerator.GenLevel();
+    
     // If the window won't fit on the display, the OS shrinks it, and the
     // integer scaling then leaves black borders. So pick the largest scale
     // that fits, leaving some room for the title bar.
