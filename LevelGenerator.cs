@@ -14,11 +14,24 @@ using static SDL.SDL3;
 
 namespace BardsTaleKnockOff;
 
+record struct Door(int X, int Y, Dir Dir);
+
+class Room(int h, int w)
+{  
+  public int H { get; set; } = h;
+  public int W { get; set; } = w;
+
+  public Dictionary<(int X, int Y), Tile> Floors = [];
+
+  // Realistically, there'll only be at most 2 or 3 doors  I'm sure
+  public List<Door> Exits { get; set; } = [];
+}
+
 // Implementation of disjoint-set for generating mazes
 class DisjointSet
 {
   readonly int[] _nodes;
-
+  
   public DisjointSet(int numTiles)
   {
     _nodes = new int[numTiles];
@@ -55,51 +68,104 @@ class LevelGenerator
 {
   const int MATRIX_SIZE = DungeonLevel.MAP_SIZE * DungeonLevel.MAP_SIZE;
 
-  static bool InBounds(int n) => n >= 0 && n < MATRIX_SIZE;
+  static List<Room> _roomTemplates = [
+    new Room(2, 2) { Exits = [ new(0, 1, Dir.South) ],
+       Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Wall),
+                  [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
+                  [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.StoneDoor, Edge.Open, Edge.Wall),
+                  [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open) },
+        },
+    new Room(2, 2) { Exits = [ new(0, 0, Dir.North) ],
+       Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.StoneDoor, Edge.Open, Edge.Open, Edge.Wall),
+                  [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
+                  [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
+                  [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open) },
+        },
+    new Room(2, 2) { Exits = [ new(0, 0, Dir.West) ],
+       Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.StoneDoor),
+                  [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
+                  [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
+                  [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open) },
+        },
+    new Room(2, 2) { Exits = [ new(1, 1, Dir.East) ],
+       Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Wall),
+                  [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
+                  [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
+                  [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.StoneDoor, Edge.Open) },
+        },
+    new Room(3, 3) { Exits = [ new(0, 1, Dir.West), new (2, 1, Dir.East)],
+      Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Wall),
+                 [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Open),
+                 [(2,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
 
-  static List<int> DisjointNeighbours(int n, DisjointSet ds)
+                 [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Open, Edge.StoneDoor),
+                 [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Open, Edge.Open),
+                 [(2,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.StoneDoor, Edge.Open),
+                 
+                 [(0,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
+                 [(1,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Open),
+                 [(2,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open),                                  
+                 }
+        },
+    new Room(3, 3) { Exits = [ new(0, 0, Dir.North), new (2, 2, Dir.South)],
+      Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.StoneDoor, Edge.Open, Edge.Open, Edge.Wall),
+                 [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Open),
+                 [(2,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
+
+                 [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Open, Edge.Wall),
+                 [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Open, Edge.Open),
+                 [(2,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Wall, Edge.Open),
+                 
+                 [(0,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
+                 [(1,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Open),
+                 [(2,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.StoneDoor, Edge.Wall, Edge.Open),                                  
+                 }
+        },
+  ];
+
+  static List<int> DisjointNeighbours(int n, DisjointSet ds, HashSet<int> hallways)
   {
     List<int> neighbours = [];
     
     int other = n - DungeonLevel.MAP_SIZE;
-    if (InBounds(other) && ds.Find(n) != ds.Find(other))
+    if (hallways.Contains(other) && ds.Find(n) != ds.Find(other))
       neighbours.Add(other);
     
     other = n + DungeonLevel.MAP_SIZE;
-    if (InBounds(other) && ds.Find(n) != ds.Find(other))
+    if (hallways.Contains(other) && ds.Find(n) != ds.Find(other))
       neighbours.Add(other);
 
     int rowN = n / DungeonLevel.MAP_SIZE;
     
     other = n - 1;
-    if (InBounds(other) && other / DungeonLevel.MAP_SIZE == rowN && ds.Find(n) != ds.Find(other))
+    if (hallways.Contains(other) && other / DungeonLevel.MAP_SIZE == rowN && ds.Find(n) != ds.Find(other))
       neighbours.Add(other);
 
     other = n + 1;
-    if (InBounds(other) && other / DungeonLevel.MAP_SIZE == rowN && ds.Find(n) != ds.Find(other))
+    if (hallways.Contains(other) && other / DungeonLevel.MAP_SIZE == rowN && ds.Find(n) != ds.Find(other))
       neighbours.Add(other);
 
     return neighbours; 
   }
 
-  static bool AnyDisjointNeighbours(int n, DisjointSet ds)
+  static bool AnyDisjointNeighbours(int n, DisjointSet ds, HashSet<int> hallways)
   {    
     int other = n - DungeonLevel.MAP_SIZE;
-    if (InBounds(other) && ds.Find(n) != ds.Find(other))
+    if (hallways.Contains(other) && ds.Find(n) != ds.Find(other))
       return true;
     
     other = n + DungeonLevel.MAP_SIZE;
-    if (InBounds(other) && ds.Find(n) != ds.Find(other))
+    if (hallways.Contains(other) && ds.Find(n) != ds.Find(other))
       return true;
 
     int rowN = n / DungeonLevel.MAP_SIZE;
     
     other = n - 1;
-    if (InBounds(other) && other / DungeonLevel.MAP_SIZE == rowN && ds.Find(n) != ds.Find(other))
+    if (hallways.Contains(other) && other / DungeonLevel.MAP_SIZE == rowN && ds.Find(n) != ds.Find(other))
       return true;
 
     other = n + 1;
-    if (InBounds(other) && other / DungeonLevel.MAP_SIZE == rowN && ds.Find(n) != ds.Find(other))
+    if (hallways.Contains(other) && other / DungeonLevel.MAP_SIZE == rowN && ds.Find(n) != ds.Find(other))
       return true;
 
     return false; 
@@ -133,12 +199,12 @@ class LevelGenerator
     }
   }
 
-  static void MazifyPass(DungeonLevel lvl, List<int> nodes, DisjointSet ds, Rng rng)
+  static void MazifyPass(DungeonLevel lvl, List<int> nodes, DisjointSet ds, HashSet<int> hallways, Rng rng)
   {
     nodes.Shuffle(rng);
     foreach (int n in nodes)
     {
-      var neighbours = DisjointNeighbours(n, ds);
+      var neighbours = DisjointNeighbours(n, ds, hallways);
       if (neighbours.Count > 0)
       {
         int neighbour = neighbours[rng.Next(neighbours.Count)];
@@ -148,31 +214,128 @@ class LevelGenerator
     }
   }
 
-  static void GetDisjointNodes(List<int> nodes, DisjointSet ds)
+  static void GetDisjointNodes(List<int> nodes, DisjointSet ds, HashSet<int> hallways)
   {
     nodes.Clear();
     for (int j = 0; j < MATRIX_SIZE; j++)
     {
-      if (AnyDisjointNeighbours(j, ds))
+      if (!hallways.Contains(j))
+        continue;
+      if (AnyDisjointNeighbours(j, ds, hallways))
         nodes.Add(j);
     }
   }
 
   static void Mazify(DungeonLevel lvl, Rng rng)
   {
+    // By hallways, I mean all tiles that aren't in "official" rooms
+    HashSet<int> hallways = [];
+    for (int j = 0; j < MATRIX_SIZE; j++)
+      hallways.Add(j);
+
+    // Place some rooms
+    List<Room> rooms = [];
+    HashSet<(int, int)> roomSqs = [];
+    for (int j = 0; j < 8; j++)
+    {
+      var template = _roomTemplates[rng.Next(_roomTemplates.Count)];
+      Room? r = PickRoom(template, roomSqs, hallways, rng);
+      if (r is not null)
+        rooms.Add(r);  
+    }
+    
     DisjointSet ds = new(MATRIX_SIZE);
     List<int> nodes = [];
-    GetDisjointNodes(nodes, ds);
-
+    GetDisjointNodes(nodes, ds, hallways);
+    
     do
     {
-      MazifyPass(lvl, nodes, ds, rng);
-      GetDisjointNodes(nodes, ds);
+      MazifyPass(lvl, nodes, ds, hallways, rng);
+      GetDisjointNodes(nodes, ds, hallways);
     }
     while (nodes.Count > 0);
     
-        
-    SaveMapImage(lvl, "level.png");
+    // Draw the rooms
+    foreach (Room room in rooms)
+    {
+      foreach (var k in room.Floors.Keys)
+      {
+        lvl.SetTile(k.X, k.Y, room.Floors[k]);
+      }
+    }
+  
+    // We do the doors in a separate loop so that we don't overwrite
+    // doors when rooms abut each other
+    foreach (Room room in rooms)
+    {      
+      foreach (var exit in room.Exits)
+      {
+        var (x, y, dir) = exit;
+        var(dx, dy) = dir.Delta();
+        var other = lvl.TileAt(x + dx, y + dy);
+        var tweaked = dir switch
+        {
+          Dir.North => other with { EdgeS = Edge.StoneDoor },
+          Dir.South => other with { EdgeN = Edge.StoneDoor },
+          Dir.East => other with { EdgeW = Edge.StoneDoor },
+          _ => other with { EdgeE = Edge.StoneDoor }
+        };
+        lvl.SetTile(x + dx, y + dy, tweaked);
+      }
+    }
+
+    SaveMapImage(lvl, "map 5.png");
+  }
+
+  static Room? PickRoom(Room template, HashSet<(int, int)> roomSqs, HashSet<int> hallways, Rng rng)
+  {
+    int roomX, roomY;
+    int tries = 0;
+
+    // Try to find a place for the room
+    while (true)
+    {
+      ++tries;
+
+      roomX = rng.Next(0, DungeonLevel.MAP_SIZE - template.W);
+      roomY = rng.Next(0, DungeonLevel.MAP_SIZE - template.H);
+
+      // make sure we don't overlap with any other rooms
+      bool overlap = false;
+      foreach (var k in template.Floors.Keys)
+      {
+        int actualX = roomX + k.X;
+        int actualY = roomY + k.Y;
+
+        if (roomSqs.Contains((actualX, actualY)))
+        {
+          overlap = true;
+          break;
+        }
+      }
+
+      if (!overlap)
+        break;
+
+      if (tries > 25)
+        return null;
+    }
+
+    Room room = new(template.H, template.W);    
+    foreach (var k in template.Floors.Keys)
+    {
+      int actualX = roomX + k.X;
+      int actualY = roomY + k.Y;
+      room.Floors[(actualX, actualY)] = template.Floors[k];      
+      roomSqs.Add((actualX, actualY));
+
+      hallways.Remove(actualY * DungeonLevel.MAP_SIZE + actualX);
+    }
+
+    foreach (var exit in template.Exits)
+      room.Exits.Add(exit with { X = exit.X + roomX, Y = exit.Y + roomY });
+
+    return room;
   }
 
   static DungeonLevel Init()
@@ -187,7 +350,6 @@ class LevelGenerator
     }
 
     Rng rng = new(DateTime.UtcNow.GetHashCode());
-    //Rng rng = new(7_123_456);
     
     Mazify(lvl, rng);
 
