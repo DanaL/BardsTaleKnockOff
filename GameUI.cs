@@ -157,6 +157,9 @@ unsafe class GameUI
         break;
     }
 
+    if (icons.Shield)
+      Icon(1, "shield.png");
+
     if (icons.Eye)
       Icon(2, "eye.png");
       
@@ -318,7 +321,17 @@ unsafe class GameUI
         eye = true;
     }
     
-    DrawStatusIcons(new(light, softStep, eye, facing));
+    bool shield = false;
+    foreach (var c in gs.Party.Members.OfType<Character>())
+    {
+      if (c.Buffs.Any(b => b.Buff == Buff.MysticCoatOfArmour || b.Buff == Buff.MysticShield))
+      {
+        shield = true;
+        break;
+      }
+    }
+
+    DrawStatusIcons(new(light, softStep, eye, facing, shield));
   }
 
   void DrawRosterLine(string slot, Character? c, int left, int y)
