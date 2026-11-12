@@ -29,6 +29,7 @@ class Spells
     new SpellInfo("MACO","Magic Compass", 2, 3, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
     new SpellInfo("BASK","Battleskill", 2, 4, 0, SpellDuration.Combat, SpellContext.Combat, Role.Conjurer, SpellTarget.PartyMember),
     new SpellInfo("WOHL","Word of Healing", 2, 4, 0, SpellDuration.NA, SpellContext.Both, Role.Conjurer, SpellTarget.PartyMember),
+    new SpellInfo("WAST","Warstrike", 3, 5, 20, SpellDuration.NA, SpellContext.Combat, Role.Conjurer, SpellTarget.Monsters),
 
     // Magician
     new SpellInfo("VOPL","Vorpal Plating", 1, 3, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
@@ -174,6 +175,9 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
         break;
       case "TRZP":
         Trzp(caster, spell.Cost, gs);
+        break;
+      case "WAST":
+        msgBuffer.AddRange(Wast(caster, monsterGroup, spell.Cost, rng, gs));
         break;
       case "WIST":
         msgBuffer.AddRange(Wist(caster, monsterGroup, spell.Cost, rng));
@@ -349,6 +353,36 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
     }
 
     return msgs;
+  }
+
+  public List<string> Wast(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
+  {
+    List<string> lines = [];
+    caster.MP -= cost;
+
+    for (int j = 0; j < foes[monsterGroup].Count; j++)    
+    {
+      var m = foes[monsterGroup].Monsters[j];
+      int dmg = rng.Next(5, 21);
+      var save = m.RollSavingThrow(caster.MagicPower, rng);
+      if (save == SaveResult.Success)
+      {
+        lines.Add($"{m.Name.DefArticle().Capitalize()} resists!");
+        continue;
+      }
+      else if (save == SaveResult.Partial)
+      {
+        dmg /= 2;
+      }
+
+      Queue<string> q = new();
+      q.Enqueue($"{Util.CalcName(m).DefArticle().Capitalize()} is fried for {dmg} hp!");
+      battle.DamageMonster(monsterGroup, j, dmg, gs, q);
+      while (q.Count > 0)
+        lines.Add(q.Dequeue());
+    }
+
+    return lines;
   }
 
   public List<string> Arfi(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)

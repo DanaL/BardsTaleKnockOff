@@ -311,9 +311,8 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
     if (app.GameState.Party.Buffs.Any(b => b.Buff == Buff.SoftStep))
       odds *= 2;
-
-    return false;
-    //return app.Rng.Next(odds) == 0;
+    
+    return app.Rng.Next(odds) == 0;
   }
 
   public void Draw(GameUI ui)
