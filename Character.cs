@@ -118,6 +118,8 @@ class Character
           ac -= 2;
         else if (buff.Buff == Buff.SorcShield)
           ac -= 1;
+        else if (buff.Buff == Buff.MysticShield || buff.Buff == Buff.MysticCoatOfArmour)
+          ac -= 2;
       }
 
       return ac;

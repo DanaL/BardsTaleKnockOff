@@ -40,6 +40,7 @@ class Spells
     new SpellInfo("WIST","Wither Strike", 2, 5, 20, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
     new SpellInfo("MAGA","Mage Gaunlets", 2, 5, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("AREN","Area Enchant", 2, 5, 3, SpellDuration.Short, SpellContext.Exploring, Role.Magician, SpellTarget.None),
+    new SpellInfo("MYSH","Mystic Shield", 3, 6, 0, SpellDuration.Medium, SpellContext.Both, Role.Magician, SpellTarget.FullParty),
     new SpellInfo("STFL","Star Flare", 3, 6, 40, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
 
     // Trickster
@@ -133,6 +134,9 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
           if (!target.Buffs.Any(b => b.Buff == Buff.MageGauntlets))
             target.Buffs.Add(new TempBuff(Buff.MageGauntlets, ulong.MaxValue, true));
         }
+        break;
+      case "MYSH":
+        Mysh(caster, gs, spell.Cost);
         break;
       case "PHBL":
         Phbl(caster, gs, spell.Cost);
@@ -261,6 +265,17 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
         c.Buffs.Add(new TempBuff(Buff.PhaseBlur, uint.MaxValue, true));
   }
 
+  public static void Mysh(Character caster, GameState gs, int cost)
+  {
+    caster.MP -= cost;
+
+    foreach (Character c in gs.Party.Members.OfType<Character>())
+    {
+      // Mystic Shield and Mystic Coat of Armour can't stack/exist together
+      c.Buffs = [.. c.Buffs.Where(b => b.Buff != Buff.MysticShield && b.Buff != Buff.MysticCoatOfArmour)];
+      c.Buffs.Add(new TempBuff(Buff.MysticShield, gs.Turn + DURATION_MEDIUM, false));
+    }
+  }
   
   static void Mafl(Character caster, GameState gs, int cost)
   {
