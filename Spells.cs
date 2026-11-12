@@ -40,6 +40,7 @@ class Spells
     new SpellInfo("WIST","Wither Strike", 2, 5, 20, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
     new SpellInfo("MAGA","Mage Gaunlets", 2, 5, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("AREN","Area Enchant", 2, 5, 3, SpellDuration.Short, SpellContext.Exploring, Role.Magician, SpellTarget.None),
+    new SpellInfo("STFL","Star Flare", 3, 6, 40, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
 
     // Trickster
     new SpellInfo("PHBL","Phase Blur", 1, 2, 0, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.FullParty),
@@ -169,6 +170,9 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
         caster.MP -= spell.Cost;
         if (!gs.Party.Buffs.Any(b => b.Buff == Buff.SoftStep))
           gs.Party.Buffs.Add(new TempBuff(Buff.SoftStep, gs.Turn + DURATION_MEDIUM, false));
+        break;
+      case "STFL":
+        msgBuffer.AddRange(Stfl(caster, monsterGroup, spell.Cost, rng, gs));
         break;
       case "STLI":
         Stli(caster, spell.Cost, gs);
@@ -355,19 +359,17 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
     return msgs;
   }
 
-  public List<string> Wast(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
+  List<string> DmgGroupSpell(Character caster, int monsterGroup, int dmgMin, int dmgMax, string verb, Rng rng, GameState gs)
   {
-    List<string> lines = [];
-    caster.MP -= cost;
-
+    List<string> msgs = [];
     for (int j = 0; j < foes[monsterGroup].Count; j++)    
     {
       var m = foes[monsterGroup].Monsters[j];
-      int dmg = rng.Next(5, 21);
+      int dmg = rng.Next(dmgMin, dmgMax + 1);
       var save = m.RollSavingThrow(caster.MagicPower, rng);
       if (save == SaveResult.Success)
       {
-        lines.Add($"{m.Name.DefArticle().Capitalize()} resists!");
+        msgs.Add($"{m.Name.DefArticle().Capitalize()} resists!");
         continue;
       }
       else if (save == SaveResult.Partial)
@@ -376,13 +378,25 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
       }
 
       Queue<string> q = new();
-      q.Enqueue($"{Util.CalcName(m).DefArticle().Capitalize()} is fried for {dmg} hp!");
+      q.Enqueue($"{Util.CalcName(m).DefArticle().Capitalize()} is {verb} for {dmg} hp!");
       battle.DamageMonster(monsterGroup, j, dmg, gs, q);
       while (q.Count > 0)
-        lines.Add(q.Dequeue());
+        msgs.Add(q.Dequeue());
     }
 
-    return lines;
+    return msgs;
+  }
+
+  public List<string> Stfl(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
+  {
+    caster.MP -= cost;
+    return DmgGroupSpell(caster, monsterGroup, 10, 40, "electrocuted", rng, gs);
+  }
+
+  public List<string> Wast(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
+  {
+    caster.MP -= cost;
+    return DmgGroupSpell(caster, monsterGroup, 5, 20, "fried", rng, gs);
   }
 
   public List<string> Arfi(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
