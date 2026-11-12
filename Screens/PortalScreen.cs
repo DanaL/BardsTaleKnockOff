@@ -36,7 +36,7 @@ class PortalScreen(App app, string portal) : IScreen
     switch (portal)
     {
       case "WizTowerEntrance":
-        DungeonLevel wiztower = MapLoader.Load(ResourcePath.GetDataFilePath("wiztower.txt"));
+        DungeonLevel wiztower = MapDiskUtils.Load(ResourcePath.GetDataFilePath("wiztower.txt"));
         app.GameState.CurrRegion = "wiztower";
         app.GameState.Regions["wiztower"] = [ wiztower ];
 
@@ -52,9 +52,22 @@ class PortalScreen(App app, string portal) : IScreen
         app.GameState.CurrLevel = 0;
         app.GameState.Facing = Dir.South;
         break;
+      case "DungeonEntrance":
+        app.GameState.CurrRegion = "dungeon";
+        app.GameState.X = 0;
+        app.GameState.Y = 0;
+        app.GameState.CurrLevel = 0;
+
+        Tile arrivalSq = app.GameState.Regions["dungeon"][0].TileAt(0, 0);
+        var exits = arrivalSq.Exits();
+        if (exits.Count > 0)
+        {
+          app.GameState.Facing = exits[app.Rng.Next(exits.Count)];
+        }
+        break;
     }
   }
-
+  
   void SetExit()
   {
     switch (portal)
@@ -79,6 +92,10 @@ class PortalScreen(App app, string portal) : IScreen
       case "WizTowerExit":
         desc.AddRange("Steps lead downward to the streets of Sarnath.", "", "Take the stairs? (y/n)");
         ui.DrawDungeonView(app.GameState);
+        break;
+      case "DungeonEntrance":
+        desc.AddRange("Ancient worn steps lead downward into the unspeakable darkness and danger below Sarnath.", "", "Take the stairs? (y/n)");
+        ui.DrawNoBackground("");
         break;
     }
     

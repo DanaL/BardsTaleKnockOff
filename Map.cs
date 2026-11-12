@@ -31,7 +31,8 @@ static class EdgeExt
 // Something standing in the middle of a square, drawn as a sprite that fills
 // the square (e.g. a tree). Unlike edges, these belong to the square itself.
 enum Feature : byte { None, Burgemeester, Tree, Guild, House, Shop, Special1, Special2, Special3, Special4,                    
-                      Special5, Special6, StairsUp, StairsDown, Tavern, Temple, TrainingHall, Trap_Dart0 }
+                      Special5, Special6, Special7, Special8, StairsUp, StairsDown, Tavern, Temple, TrainingHall, 
+                      Trap_Dart0 }
 
 static class FeatureExt
 {
@@ -69,6 +70,25 @@ record struct Tile(Floor Floor, Ceiling Ceiling, Feature Feature, Edge EdgeN, Ed
     Dir.East => EdgeE,
     _ => EdgeW
   };
+}
+
+static class TileExt
+{
+  public static List<Dir> Exits(this Tile t)
+  {
+    List<Dir> exits = [];
+
+    if (t.EdgeN == Edge.Open || t.EdgeN == Edge.StoneDoor)
+      exits.Add(Dir.North);
+    if (t.EdgeS == Edge.Open || t.EdgeS == Edge.StoneDoor)
+      exits.Add(Dir.South);
+    if (t.EdgeW == Edge.Open || t.EdgeW == Edge.StoneDoor)
+      exits.Add(Dir.West);
+    if (t.EdgeE == Edge.Open || t.EdgeE == Edge.StoneDoor)
+      exits.Add(Dir.East);
+      
+    return exits;
+  }
 }
 
 // Bard's Tale levels are 22x22 and wrap. Technically BT maps were all toruses

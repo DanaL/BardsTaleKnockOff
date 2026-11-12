@@ -31,10 +31,10 @@ unsafe class App(SDL_Window* window)
   
   public Rng Rng { get; set; } = new Rng(DateTime.UtcNow.GetHashCode());
 
-  public void NewGame()
+  public void Init()
   {
     string townMapPath = ResourcePath.GetDataFilePath("town.txt");
-    DungeonLevel town = MapLoader.Load(townMapPath);
+    DungeonLevel town = MapDiskUtils.Load(townMapPath);
     GameState.CurrRegion = "town";
     GameState.Regions["town"] = [ town ];
   }

@@ -185,7 +185,7 @@ static class ResourcePath
   }
 }
 
-static class MapLoader
+static class MapDiskUtils
 {
   public static DungeonLevel Load(string path)
   {
@@ -238,5 +238,29 @@ static class MapLoader
     }
 
     return d;
+  }
+
+  // Writes a level in the format Load reads. Every tile is written, since
+  // Load fills in any missing ones as permanent walls.
+  public static void Save(DungeonLevel d, string path)
+  {
+    List<string> lines = [];
+    for (int x = 0; x < DungeonLevel.MAP_SIZE; x++)
+    {
+      for (int y = 0; y < DungeonLevel.MAP_SIZE; y++)
+      {
+        Tile t = d.TileAt(x, y);
+        lines.Add($"{x},{y}:{t.Floor},{t.Ceiling},{t.Feature},{t.EdgeN},{t.EdgeS},{t.EdgeE},{t.EdgeW}");
+      }
+    }
+
+    if (d.Messages.Count > 0)
+    {
+      lines.Add("#messages");
+      foreach (var ((x, y), text) in d.Messages)
+        lines.Add($"{x},{y}:{text.Replace("\n", "\\n")}");
+    }
+
+    File.WriteAllLines(path, lines);
   }
 }

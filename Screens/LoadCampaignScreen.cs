@@ -19,8 +19,7 @@ class LoadCampaignScreen(App app) : IScreen
   int _cursor;
   int _scrollTop;
 
-  List<FileInfo> _saveFiles = [.. new DirectoryInfo(Util.SavePath).GetFiles()
-                                  .Where(f => f.Extension == ".dat")];
+  List<string> _saveFiles = Serialize.CampaignNames();
 
   void MoveCursor(int delta)
   {
@@ -50,8 +49,8 @@ class LoadCampaignScreen(App app) : IScreen
         break;
       case SDL_Keycode.SDLK_RETURN:
       case SDL_Keycode.SDLK_KP_ENTER:
-        app.CampaignName = _saveFiles[_cursor].Name[..^4];
-        app.NewGame();
+        app.CampaignName = _saveFiles[_cursor];
+        app.Init();
         Serialize.LoadSaveGame(app);
         app.Screens.Replace(new GuildScreen(app));
         break;
@@ -78,7 +77,7 @@ class LoadCampaignScreen(App app) : IScreen
       {
         if (i == _cursor)
           highlight = lines.Count;
-        lines.Add($"  {_saveFiles[i].Name[..^4]}");
+        lines.Add($"  {_saveFiles[i]}");
       }
       lines.Add(end < _saveFiles.Count ? "  (more below)" : "");
     }

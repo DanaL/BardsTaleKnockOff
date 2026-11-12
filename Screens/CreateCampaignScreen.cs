@@ -33,7 +33,7 @@ class CreateCampaignScreen(App app) : IScreen
     _status = "";
   }
 
-  bool AlreadyExists() => new DirectoryInfo(Util.SavePath).GetFiles().Any(f => f.Name == $"{_name.Trim()}.dat");
+  bool AlreadyExists() => Serialize.CampaignExists(_name.Trim());
 
   public void OnKey(SDL_KeyboardEvent key)
   {
@@ -56,7 +56,8 @@ class CreateCampaignScreen(App app) : IScreen
         else
         {
           app.CampaignName = _name.Trim();
-          app.NewGame();
+          app.Init();
+          LevelGenerator.GenMainDungeon(app.GameState);
           Serialize.WriteSaveGame(app);
           app.Screens.Replace(new GuildScreen(app));
         }

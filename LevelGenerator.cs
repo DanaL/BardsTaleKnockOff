@@ -9,7 +9,6 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-using System.Runtime.CompilerServices;
 using SDL;
 using static SDL.SDL3;
 
@@ -67,6 +66,7 @@ class DisjointSet
 
 class LevelGenerator
 {
+  const int NUM_LEVELS = 3;
   const int MATRIX_SIZE = DungeonLevel.MAP_SIZE * DungeonLevel.MAP_SIZE;
 
   static List<Room> _roomTemplates = [
@@ -326,8 +326,6 @@ class LevelGenerator
       }
     }
   
-    SaveMapImage(lvl, "map 9.png");
-
     static void MakeCloset(int x, int y, Tile tile, DungeonLevel lvl)
     {
       if (tile.EdgeE == Edge.Open) {
@@ -429,7 +427,7 @@ class LevelGenerator
     return room;
   }
 
-  static DungeonLevel Init()
+  static DungeonLevel GenLevel()
   {
     DungeonLevel lvl = new();
     for (int x = 0; x < DungeonLevel.MAP_SIZE; x++)
@@ -447,11 +445,18 @@ class LevelGenerator
     return lvl;
   }
 
-  public static void GenLevel()
+  public static void GenMainDungeon(GameState gs)
   {
-    var lvl = Init();
+    List<DungeonLevel> levels = [];
 
-    SaveMapImage(lvl, "maze 4.png");
+    for (int j = 0; j < NUM_LEVELS; j++)
+    {
+      levels.Add(GenLevel());
+    }
+
+    var arrivalTile = levels[0].TileAt(0, 0);
+    levels[0].SetTile(0, 0, arrivalTile with { Feature = Feature.Special8 });
+    gs.Regions["dungeon"] = levels;
   }
 
   // Draws the level as a top-down map and saves it as a PNG, north at the top.

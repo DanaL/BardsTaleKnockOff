@@ -17,8 +17,27 @@ record struct PartyInfo(int Slot, string Name);
 record SaveFileInfo(string CampaignName, string Path);
 record SaveGameInfo(List<Character> Roster, List<PartyInfo> Party, ulong Turn, Dictionary<string, Fact>? Facts);
 
+// A campaign is saved as a folder named after it, holding <campaign>.dat
+// (roster, party, facts...) and the generated dungeon levels as
+// dungeon01.txt, dungeon02.txt... in the same format as the hand-made maps.
 internal class Serialize
 {
+  const string DungeonRegion = "dungeon";
+
+  static string CampaignDir(string campaign) => Path.Combine(Util.SavePath, campaign);
+  static string DatPath(string campaign) => Path.Combine(CampaignDir(campaign), $"{campaign}.dat");
+  static string LevelPath(string campaign, int level) =>
+    Path.Combine(CampaignDir(campaign), $"{DungeonRegion}{level + 1:D2}.txt");
+
+  public static bool CampaignExists(string campaign) => Directory.Exists(CampaignDir(campaign));
+
+  // The saved campaigns, by name.
+  public static List<string> CampaignNames() =>
+    [.. new DirectoryInfo(Util.SavePath).GetDirectories()
+                 .Where(d => File.Exists(DatPath(d.Name)))
+                 .Select(d => d.Name)
+                 .Order()];
+
   public static void WriteSaveGame(App app)
   {
     List<PartyInfo> party = [];
@@ -31,11 +50,12 @@ internal class Serialize
     SaveGameInfo sgi = new(app.Roster, party, app.GameState.Turn, app.GameState.FactDb);
     var bytes = JsonSerializer.SerializeToUtf8Bytes(sgi, new JsonSerializerOptions { WriteIndented = false, IncludeFields = true });
 
-    DirectoryInfo saveDir = new(Util.SavePath);
+    // In the future, when this is a real game, I'm going to have check player names for invalid characters or build a
+    // little database of players vs saved games
+    string campaign = app.CampaignName;
     try
     {
-      if (!saveDir.Exists)
-        saveDir.Create();
+      Directory.CreateDirectory(CampaignDir(campaign));
     }
     catch (Exception)
     {
@@ -44,11 +64,8 @@ internal class Serialize
 
     try
     {
-      // In the future, when this is a real game, I'm going to have check player names for invalid characters or build a 
-      // little database of players vs saved games
-      string filename = $"{app.CampaignName}.dat";
-      string fullpath = Path.Combine(saveDir.FullName, filename);
-      File.WriteAllBytes(fullpath, bytes);
+      File.WriteAllBytes(DatPath(campaign), bytes);
+      WriteDungeon(app.GameState, campaign);
     }
     catch (Exception)
     {
@@ -56,10 +73,28 @@ internal class Serialize
     }
   }
 
+  static void WriteDungeon(GameState gs, string campaign)
+  {
+    if (!gs.Regions.TryGetValue(DungeonRegion, out var levels))
+      return;
+
+    for (int i = 0; i < levels.Count; i++)
+      MapDiskUtils.Save(levels[i], LevelPath(campaign, i));
+  }
+
+  // Reads dungeon01.txt, dungeon02.txt... until one is missing.
+  static void LoadDungeon(GameState gs, string campaign)
+  {
+    List<DungeonLevel> levels = [];
+    for (int i = 0; File.Exists(LevelPath(campaign, i)); i++)
+      levels.Add(MapDiskUtils.Load(LevelPath(campaign, i)));
+
+    gs.Regions[DungeonRegion] = levels;
+  }
+
   public static void LoadSaveGame(App app)
   {
-    DirectoryInfo saveDir = new(Util.SavePath);
-    string path = Path.Combine(saveDir.FullName, $"{app.CampaignName}.dat");
+    string path = DatPath(app.CampaignName);
 
     var bytes = File.ReadAllBytes(path);
     var sgi = JsonSerializer.Deserialize<SaveGameInfo>(bytes) ?? throw new Exception("Failure to deserialize save file :(");
@@ -74,5 +109,7 @@ internal class Serialize
 
     app.GameState.Turn = sgi.Turn;
     app.GameState.FactDb = sgi.Facts ?? [];
-  }  
+
+    LoadDungeon(app.GameState, app.CampaignName);
+  }
 } 
