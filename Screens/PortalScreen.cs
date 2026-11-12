@@ -65,6 +65,13 @@ class PortalScreen(App app, string portal) : IScreen
           app.GameState.Facing = exits[app.Rng.Next(exits.Count)];
         }
         break;
+      case "DungeonExit":
+        app.GameState.CurrRegion = "town";
+        app.GameState.X = 20;
+        app.GameState.Y = 8;
+        app.GameState.CurrLevel = 0;
+        app.GameState.Facing = Dir.West;
+        break;
     }
   }
   
@@ -95,6 +102,10 @@ class PortalScreen(App app, string portal) : IScreen
         break;
       case "DungeonEntrance":
         desc.AddRange("Ancient worn steps lead downward into the unspeakable darkness and danger below Sarnath.", "", "Take the stairs? (y/n)");
+        ui.DrawNoBackground("");
+        break;
+      case "DungeonExit":
+        desc.AddRange("Steps lead upward to light and fresh air above.", "", "Take the stairs? (y/n)");
         ui.DrawNoBackground("");
         break;
     }

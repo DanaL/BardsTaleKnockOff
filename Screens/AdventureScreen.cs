@@ -118,8 +118,8 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
           ogre.DefeatFact = new FlagFact("TownOgreSlain", true);
           ogre.HP = 35; // an especially tough ogre
           ogre.Rank += 1;
-          //app.Screens.Push(new BattleScreen(app, [new() { Monsters = [ogre], Distance = 10 }], false) { RetreatLoc = (19, 8), VictoryMessage = "A sinister aura emanates from the portal to the east." });
-          //app.Screens.Push(new PopupScreen(app, "An enormous ogre bars your path!"));
+          app.Screens.Push(new BattleScreen(app, [new() { Monsters = [ogre], Distance = 10 }], false) { RetreatLoc = (19, 8), VictoryMessage = "A sinister aura emanates from the portal to the east." });
+          app.Screens.Push(new PopupScreen(app, "An enormous ogre bars your path!"));
         }
         break;
       case Feature.Special3:
@@ -235,7 +235,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       x += dx;
       y += dy;
       Tile tile = GS.CurrMap.TileAt(x, y);
-      if (tile.Feature == Feature.Special5 || tile.Feature == Feature.StairsUp || tile.Feature == Feature.StairsDown)
+      if (tile.IsStairs())
       {
         GS.Say("There are stairs nearby!");
         break;
