@@ -17,7 +17,7 @@ namespace BardsTaleKnockOff;
 record struct Door(int X, int Y, Dir Dir);
 
 class Room(int h, int w)
-{  
+{
   public int H { get; set; } = h;
   public int W { get; set; } = w;
 
@@ -31,12 +31,12 @@ class Room(int h, int w)
 class DisjointSet
 {
   readonly int[] _nodes;
-  
+
   public DisjointSet(int numTiles)
   {
     _nodes = new int[numTiles];
     Array.Fill(_nodes, -1);
-  } 
+  }
 
   public void Union(int a, int b)
   {
@@ -45,7 +45,7 @@ class DisjointSet
 
     if (ra == rb)
       return;
-    
+
     if (_nodes[ra] > _nodes[rb])
       (ra, rb) = (rb, ra);
     _nodes[ra] += _nodes[rb];
@@ -61,7 +61,7 @@ class DisjointSet
       _nodes[n] = Find(_nodes[n]);
       return _nodes[n];
     }
-  }  
+  }
 }
 
 class LevelGenerator
@@ -101,10 +101,10 @@ class LevelGenerator
                  [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Open, Edge.StoneDoor),
                  [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Open, Edge.Open),
                  [(2,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.StoneDoor, Edge.Open),
-                 
+
                  [(0,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
                  [(1,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Open),
-                 [(2,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open),                                  
+                 [(2,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open),
                  }
         },
     new Room(3, 3) { Exits = [ new(0, 0, Dir.North), new (2, 2, Dir.South)],
@@ -115,28 +115,45 @@ class LevelGenerator
                  [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Open, Edge.Wall),
                  [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Open, Edge.Open),
                  [(2,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Wall, Edge.Open),
-                 
+
                  [(0,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
                  [(1,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Open),
-                 [(2,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.StoneDoor, Edge.Wall, Edge.Open),                                  
+                 [(2,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.StoneDoor, Edge.Wall, Edge.Open),
                  }
         },
+    new Room(2, 3) { Exits = [ new(0, 0, Dir.West) ],
+      Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.StoneDoor),
+                 [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Open),
+                 [(2,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
+                 [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
+                 [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Open),
+                 [(2,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open) },
+      },
+    new Room(2, 3) { Exits = [ new(2, 1, Dir.East) ],
+      Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Wall),
+                 [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Open),
+                 [(2,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
+                 [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
+                 [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Open),
+                 [(2,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.StoneDoor, Edge.Open) },
+      },
+    
   ];
 
   static List<int> DisjointNeighbours(int n, DisjointSet ds, HashSet<int> hallways)
   {
     List<int> neighbours = [];
-    
+
     int other = n - DungeonLevel.MAP_SIZE;
     if (hallways.Contains(other) && ds.Find(n) != ds.Find(other))
       neighbours.Add(other);
-    
+
     other = n + DungeonLevel.MAP_SIZE;
     if (hallways.Contains(other) && ds.Find(n) != ds.Find(other))
       neighbours.Add(other);
 
     int rowN = n / DungeonLevel.MAP_SIZE;
-    
+
     other = n - 1;
     if (hallways.Contains(other) && other / DungeonLevel.MAP_SIZE == rowN && ds.Find(n) != ds.Find(other))
       neighbours.Add(other);
@@ -145,21 +162,21 @@ class LevelGenerator
     if (hallways.Contains(other) && other / DungeonLevel.MAP_SIZE == rowN && ds.Find(n) != ds.Find(other))
       neighbours.Add(other);
 
-    return neighbours; 
+    return neighbours;
   }
 
   static bool AnyDisjointNeighbours(int n, DisjointSet ds, HashSet<int> hallways)
-  {    
+  {
     int other = n - DungeonLevel.MAP_SIZE;
     if (hallways.Contains(other) && ds.Find(n) != ds.Find(other))
       return true;
-    
+
     other = n + DungeonLevel.MAP_SIZE;
     if (hallways.Contains(other) && ds.Find(n) != ds.Find(other))
       return true;
 
     int rowN = n / DungeonLevel.MAP_SIZE;
-    
+
     other = n - 1;
     if (hallways.Contains(other) && other / DungeonLevel.MAP_SIZE == rowN && ds.Find(n) != ds.Find(other))
       return true;
@@ -168,7 +185,7 @@ class LevelGenerator
     if (hallways.Contains(other) && other / DungeonLevel.MAP_SIZE == rowN && ds.Find(n) != ds.Find(other))
       return true;
 
-    return false; 
+    return false;
   }
 
   static void CarveWall(DungeonLevel lvl, int a, int b)
@@ -236,25 +253,25 @@ class LevelGenerator
     // Place some rooms
     List<Room> rooms = [];
     HashSet<(int, int)> roomSqs = [];
-    for (int j = 0; j < 8; j++)
+    for (int j = 0; j < 10; j++)
     {
       var template = _roomTemplates[rng.Next(_roomTemplates.Count)];
       Room? r = PickRoom(template, roomSqs, hallways, rng);
       if (r is not null)
-        rooms.Add(r);  
+        rooms.Add(r);
     }
-    
+
     DisjointSet ds = new(MATRIX_SIZE);
     List<int> nodes = [];
     GetDisjointNodes(nodes, ds, hallways);
-    
+
     do
     {
       MazifyPass(lvl, nodes, ds, hallways, rng);
       GetDisjointNodes(nodes, ds, hallways);
     }
     while (nodes.Count > 0);
-    
+
     // Draw the rooms
     foreach (Room room in rooms)
     {
@@ -263,15 +280,15 @@ class LevelGenerator
         lvl.SetTile(k.X, k.Y, room.Floors[k]);
       }
     }
-  
+
     // We do the doors in a separate loop so that we don't overwrite
     // doors when rooms abut each other
     foreach (Room room in rooms)
-    {      
+    {
       foreach (var exit in room.Exits)
       {
         var (x, y, dir) = exit;
-        var(dx, dy) = dir.Delta();
+        var (dx, dy) = dir.Delta();
         var other = lvl.TileAt(x + dx, y + dy);
         var tweaked = dir switch
         {
@@ -284,7 +301,7 @@ class LevelGenerator
       }
     }
 
-    SaveMapImage(lvl, "map 5.png");
+    SaveMapImage(lvl, "map 8.png");
   }
 
   static Room? PickRoom(Room template, HashSet<(int, int)> roomSqs, HashSet<int> hallways, Rng rng)
@@ -321,12 +338,12 @@ class LevelGenerator
         return null;
     }
 
-    Room room = new(template.H, template.W);    
+    Room room = new(template.H, template.W);
     foreach (var k in template.Floors.Keys)
     {
       int actualX = roomX + k.X;
       int actualY = roomY + k.Y;
-      room.Floors[(actualX, actualY)] = template.Floors[k];      
+      room.Floors[(actualX, actualY)] = template.Floors[k];
       roomSqs.Add((actualX, actualY));
 
       hallways.Remove(actualY * DungeonLevel.MAP_SIZE + actualX);
@@ -350,7 +367,7 @@ class LevelGenerator
     }
 
     Rng rng = new(DateTime.UtcNow.GetHashCode());
-    
+
     Mazify(lvl, rng);
 
     return lvl;
