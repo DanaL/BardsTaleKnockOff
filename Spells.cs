@@ -76,8 +76,8 @@ class Spells
 
 class SpellResolver(List<MonsterGroup> foes, Battle battle)
 {
-  const int DURATION_SHORT = 1000;
-  const int DURATION_MEDIUM = 2000;
+  const int DURATION_SHORT = 500;
+  const int DURATION_MEDIUM = 1000;
 
   public List<string> Cast(SpellInfo spell, Character caster, Rng rng, int monsterGroup, Character? target, GameState gs)
   {

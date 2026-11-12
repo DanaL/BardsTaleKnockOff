@@ -432,6 +432,15 @@ class Party
     return true;
   }
 
+  public void CheckBuffs(ulong turn)
+  {
+    Buffs = [.. Buffs.Where(b => b.ExpiresOn > turn)];
+    foreach (Character c in Members.OfType<Character>())
+    {
+      c.Buffs = [.. c.Buffs.Where(b => b.ExpiresOn > turn)];
+    }
+  }
+
   public void ClearCombatBuffs()
   {
     for (int j = 0; j < Count; j++)

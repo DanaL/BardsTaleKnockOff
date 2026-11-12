@@ -50,6 +50,7 @@ class TavernScreen(App app) : IScreen
     {
       c.Gold -= 2;
       app.GameState.Turn += GameState.TURNS_PER_HOUR;
+      app.GameState.Party.CheckBuffs(app.GameState.Turn);
       var txt = File.ReadAllText(ResourcePath.GetDataFilePath("bartender.txt"));
       var bartenderLines = txt.Split('#');
       _message = bartenderLines[app.Rng.Next(bartenderLines.Length)].Trim();
