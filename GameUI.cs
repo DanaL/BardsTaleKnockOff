@@ -43,7 +43,7 @@ unsafe class GameUI
   // Status icons are 32x32 art drawn at half size, like the double-resolution
   // view art, so five of them fit down the gap beside the 3D view.
   const int IconSize = 16;
-  const int IconCount = 5;
+  const int IconCount = 6;
   const int IconSpacing = ViewRenderer.ViewH / IconCount;
 
   static readonly SDL_Rect ViewRect = new() { x = Margin, y = Margin, w = ViewRenderer.ViewW, h = ViewRenderer.ViewH };
@@ -172,8 +172,11 @@ unsafe class GameUI
     else if (icons.Facing == Dir.West)
       Icon(3, "CompassW.png");
 
+    if (icons.Carpet)
+      Icon(4, "carpet.png");
+
     if (icons.Shoe)
-      Icon(4, "shoe.png");
+      Icon(5, "shoe.png");
 
     void Icon(int slot, string filename)
     {
@@ -306,6 +309,7 @@ unsafe class GameUI
     Flame light = Flame.None;
     bool softStep = false;
     bool eye = false;
+    bool carpet = false;
     Dir facing = Dir.None;
     foreach (var b in gs.Party.Buffs)
     {
@@ -331,7 +335,8 @@ unsafe class GameUI
       }
     }
 
-    DrawStatusIcons(new(light, softStep, eye, facing, shield));
+    carpet = true;
+    DrawStatusIcons(new(light, softStep, eye, facing, shield, carpet));
   }
 
   void DrawRosterLine(string slot, Character? c, int left, int y)
