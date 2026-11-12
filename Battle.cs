@@ -607,6 +607,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
     bool hiding = false;
     bool vorpalPlating = false;
+    bool ogreStrength = false;
     bool mageGauntlets = false;
     bool battleSkill = false;
     bool smiting = false;
@@ -622,6 +623,8 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
         battleSkill = true;
       else if (buff.Buff == Buff.Smite)
         smiting = true;
+      else if (buff.Buff == Buff.OgreStrength)
+        ogreStrength = true; 
     }
 
     Monster target = Foes[monsterGroup].Monsters[0];
@@ -658,6 +661,8 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
         roll += 4;
       if (smiting)
         roll += 3;
+      if (ogreStrength)
+       roll += 7;
 
       int toHitTarget = c.THAC0 - target.AC;
       foreach (var buff in target.Buffs)
@@ -679,6 +684,8 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
           dmg += rng.Next(4, 17);
         if (battleSkill)
           dmg += 4;
+        if (ogreStrength)
+          dmg += 7;
         if (smiting)
           dmg += rng.Next(1, 9) * int.Max(1, c.Level / 2);
 

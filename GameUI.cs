@@ -323,6 +323,8 @@ unsafe class GameUI
         facing = gs.Facing;
       else if (b.Buff == Buff.AreaEnchant)
         eye = true;
+      else if (b.Buff == Buff.Levitation)
+        carpet = true;
     }
     
     bool shield = false;
@@ -335,7 +337,6 @@ unsafe class GameUI
       }
     }
 
-    carpet = true;
     DrawStatusIcons(new(light, softStep, eye, facing, shield, carpet));
   }
 

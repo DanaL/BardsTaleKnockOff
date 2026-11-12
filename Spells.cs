@@ -29,6 +29,7 @@ class Spells
     new SpellInfo("MACO","Magic Compass", 2, 3, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
     new SpellInfo("BASK","Battleskill", 2, 4, 0, SpellDuration.Combat, SpellContext.Combat, Role.Conjurer, SpellTarget.PartyMember),
     new SpellInfo("WOHL","Word of Healing", 2, 4, 0, SpellDuration.NA, SpellContext.Both, Role.Conjurer, SpellTarget.PartyMember),
+    new SpellInfo("LEVI","Levitation", 3, 5, 0, SpellDuration.Short, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
     new SpellInfo("WAST","Warstrike", 3, 5, 20, SpellDuration.NA, SpellContext.Combat, Role.Conjurer, SpellTarget.Monsters),
 
     // Magician
@@ -41,6 +42,7 @@ class Spells
     new SpellInfo("MAGA","Mage Gaunlets", 2, 5, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("AREN","Area Enchant", 2, 5, 3, SpellDuration.Short, SpellContext.Exploring, Role.Magician, SpellTarget.None),
     new SpellInfo("MYSH","Mystic Shield", 3, 6, 0, SpellDuration.Medium, SpellContext.Both, Role.Magician, SpellTarget.FullParty),
+    new SpellInfo("OGST","Ogre Strength", 3, 6, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("STFL","Star Flare", 3, 6, 40, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
 
     // Trickster
@@ -124,6 +126,9 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
         gs.Party.Buffs = [.. gs.Party.Buffs.Where(b => b.Buff != Buff.Compass)];
         gs.Party.Buffs.Add(new TempBuff(Buff.Compass, gs.Turn + DURATION_MEDIUM, false));
         break;
+      case "LEVI":
+        Levi(caster, DURATION_SHORT, gs, spell.Cost);
+        break;
       case "MAFL":
         Mafl(caster, gs, spell.Cost);
         break;
@@ -137,6 +142,14 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
         break;
       case "MYSH":
         Mysh(caster, gs, spell.Cost);
+        break;
+      case "OGST":
+        if (target is not null)
+        {
+          caster.MP -= spell.Cost;
+          if (!target.Buffs.Any(b => b.Buff == Buff.OgreStrength))
+            target.Buffs.Add(new TempBuff(Buff.OgreStrength, ulong.MaxValue, true));
+        }
         break;
       case "PHBL":
         Phbl(caster, gs, spell.Cost);
@@ -277,11 +290,18 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
     }
   }
   
+  static void Levi(Character caster, ulong duration, GameState gs, int cost)
+  {
+    caster.MP -= cost;
+    gs.Party.Buffs = [.. gs.Party.Buffs.Where(b => b.Buff != Buff.Levitation)];
+    gs.Party.Buffs.Add(new TempBuff(Buff.Levitation, gs.Turn + duration, false));
+  }
+
   static void Mafl(Character caster, GameState gs, int cost)
   {
     caster.MP -= cost;
     gs.Party.ClearLightSources();
-    gs.Party.Buffs.Add(new TempBuff(Buff.MageFlame, gs.Turn + 2000, false));
+    gs.Party.Buffs.Add(new TempBuff(Buff.MageFlame, gs.Turn + DURATION_MEDIUM, false));
   }
 
   static void Stli(Character caster, int cost, GameState gs)

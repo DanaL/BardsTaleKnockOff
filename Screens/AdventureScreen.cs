@@ -9,6 +9,7 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.Security.Cryptography.X509Certificates;
 using SDL;
 
 namespace BardsTaleKnockOff;
@@ -169,6 +170,10 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
   void DartTrap0()
   {
+    // Levitation should project from traps most of the time
+    if (app.GameState.Party.Buffs.Any(b => b.Buff == Buff.Levitation) && app.Rng.Next(4) > 0)
+      return;
+
     app.Screens.Push(new PopupScreen(app, "A trap!!"));
 
     if (GS.Party.Members[0] is Character c)
