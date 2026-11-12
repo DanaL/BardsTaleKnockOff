@@ -9,6 +9,7 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.Runtime.CompilerServices;
 using SDL;
 using static SDL.SDL3;
 
@@ -301,7 +302,80 @@ class LevelGenerator
       }
     }
 
-    SaveMapImage(lvl, "map 8.png");
+    // Make a handful of closets (1x1 rooms)
+    List<(int X, int Y, Tile Tile)> closets = [];
+    for (int x = 0; x < DungeonLevel.MAP_SIZE; x++)
+    {
+      for (int y = 0; y < DungeonLevel.MAP_SIZE; y++)
+      {
+        Tile tile = lvl.TileAt(x, y);
+        if (IsCloset(tile))
+        closets.Add((x, y, tile));
+      }
+    }
+    int n = int.Min(5, closets.Count);
+    if (n > 0)
+    {
+      int numClosets = rng.Next(n);
+      for (int j = 0; j < numClosets; j++)
+      {
+        int i = rng.Next(closets.Count);
+        var closet = closets[i];
+        MakeCloset(closet.X, closet.Y, closet.Tile, lvl);
+        closets.RemoveAt(i);
+      }
+    }
+  
+    SaveMapImage(lvl, "map 9.png");
+
+    static void MakeCloset(int x, int y, Tile tile, DungeonLevel lvl)
+    {
+      if (tile.EdgeE == Edge.Open) {
+        Tile tweaked = tile with { EdgeE = Edge.StoneDoor };
+        Tile other = lvl.TileAt(x + 1, y);
+        other = other with { EdgeW = Edge.StoneDoor };
+        lvl.SetTile(x, y, tweaked);
+        lvl.SetTile(x + 1, y, other);
+      }
+      else if (tile.EdgeW == Edge.Open) {
+        Tile tweaked = tile with { EdgeW = Edge.StoneDoor };
+        Tile other = lvl.TileAt(x - 1, y);
+        other = other with { EdgeE = Edge.StoneDoor };
+        lvl.SetTile(x, y, tweaked);
+        lvl.SetTile(x - 1, y, other);
+      }
+      else if (tile.EdgeN == Edge.Open) {
+        Tile tweaked = tile with { EdgeN = Edge.StoneDoor };
+        Tile other = lvl.TileAt(x, y - 1);
+        other = other with { EdgeS = Edge.StoneDoor };
+        lvl.SetTile(x, y, tweaked);
+        lvl.SetTile(x, y - 1, other);
+      }
+      else if (tile.EdgeS == Edge.Open) {
+        Tile tweaked = tile with { EdgeS = Edge.StoneDoor };
+        Tile other = lvl.TileAt(x, y + 1);
+        other = other with { EdgeN = Edge.StoneDoor };
+        lvl.SetTile(x, y, tweaked);
+        lvl.SetTile(x, y + 1, other);
+      }
+    }
+
+    static bool IsCloset(Tile tile)
+    {
+      int walls = 0;
+      int open = 0;
+
+      if (tile.EdgeE == Edge.Wall) ++walls;
+      if (tile.EdgeE == Edge.Open) ++open;
+      if (tile.EdgeW == Edge.Wall) ++walls;
+      if (tile.EdgeW == Edge.Open) ++open;
+      if (tile.EdgeN == Edge.Wall) ++walls;
+      if (tile.EdgeN == Edge.Open) ++open;
+      if (tile.EdgeS == Edge.Wall) ++walls;
+      if (tile.EdgeS == Edge.Open) ++open;
+
+      return walls == 3 && open == 1;
+    }
   }
 
   static Room? PickRoom(Room template, HashSet<(int, int)> roomSqs, HashSet<int> hallways, Rng rng)
