@@ -238,7 +238,59 @@ class ChangeClassScreen(App app, Character c, HashSet<Role> options) : IScreen
         app.Screens.Pop();
         app.Screens.Push(new PopupScreen(app, $"{c.Name} has become an Archer!"));
         break;
+      case SDL_Scancode.SDL_SCANCODE_C:
+        ChangeToConjurer();
+        app.Screens.Pop();
+        app.Screens.Push(new PopupScreen(app, $"{c.Name} has begun studying Conjuration!"));
+        break;
+      case SDL_Scancode.SDL_SCANCODE_M:
+        ChangeToMagician();
+        app.Screens.Pop();
+        app.Screens.Push(new PopupScreen(app, $"{c.Name} has begun studying Magician lore!"));
+        break;
+      case SDL_Scancode.SDL_SCANCODE_S:
+        ChangeToSorcerer();
+        app.Screens.Pop();
+        app.Screens.Push(new PopupScreen(app, $"{c.Name} has begun studying Sorcery!"));
+        break;
+      case SDL_Scancode.SDL_SCANCODE_W:
+        ChangeToWizard();
+        app.Screens.Pop();
+        app.Screens.Push(new PopupScreen(app, $"{c.Name} has begun studying Wizardry!"));
+        break;
     }
+  }
+
+  void ChangeToMagician()
+  {
+    c.Role = Role.Magician;
+    c.Level = 1;
+    c.MagicianSpellLevel = 1;
+    c.XP = 0;
+  }
+
+  void ChangeToConjurer()
+  {
+    c.Role = Role.Conjurer;
+    c.Level = 1;
+    c.ConjurerSpellLevel = 1;
+    c.XP = 0;
+  }
+
+  void ChangeToSorcerer()
+  {
+    c.Role = Role.Sorcerer;
+    c.Level = 1;
+    c.SorcererSpellLevel = 1;
+    c.XP = 0;
+  }
+
+  void ChangeToWizard()
+  {
+    c.Role = Role.Wizard;
+    c.Level = 1;
+    c.WizardSpellLevel = 1;
+    c.XP = 0;
   }
 
   void ChangeToArcher()

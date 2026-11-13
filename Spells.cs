@@ -47,22 +47,23 @@ class Spells
     new SpellInfo("STFL","Star Flare", 3, 6, 40, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
 
     // Sorcerer
-    new SpellInfo("PHBL","Phase Blur", 1, 2, 0, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.FullParty),
     new SpellInfo("MIJA","Mind Jab", 1, 3, 40, SpellDuration.NA, SpellContext.Combat, Role.Sorcerer, SpellTarget.Monsters),
-    new SpellInfo("HYIM","Hyponotic Image", 1, 3, 90, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.Monsters),
-
+    
     // Trickster
-    new SpellInfo("PHBL","Phase Blur", 1, 2, 0, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.FullParty),
-    new SpellInfo("HYIM","Hyponotic Image", 1, 3, 90, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.Monsters),
     new SpellInfo("SOST","Soft Step", 1, 2, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Trickster, SpellTarget.None),
 
+    // Spells shared by sorcerer and trickster
+    new SpellInfo("PHBL","Phase Blur", 1, 2, 0, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.FullParty),
+    new SpellInfo("HYIM","Hyponotic Image", 1, 3, 90, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.Monsters),
+    
     // Paladin
     new SpellInfo("WOHL","Word of Healing", 1, 4, 0, SpellDuration.NA, SpellContext.Both, Role.Paladin, SpellTarget.PartyMember),
     new SpellInfo("SMTE","Smite", 1, 3, 10, SpellDuration.NA, SpellContext.Combat, Role.Paladin, SpellTarget.Monsters),
   ];
 
-  static SpellInfo _flee= new SpellInfo("FLEE","Ebenezum's Escape", 2, 5, 0, SpellDuration.NA, 
-        SpellContext.Combat, Role.Sorcerer | Role.Trickster | Role.Conjurer | Role.Wizard | Role.Magician, SpellTarget.None);
+  // Miscellaneous
+  static SpellInfo _flee= new("FLEE","Ebenezum's Escape", 2, 5, 0, SpellDuration.NA, SpellContext.Combat, 
+      Role.Sorcerer | Role.Trickster | Role.Conjurer | Role.Wizard | Role.Magician, SpellTarget.None);
 
   public static List<SpellInfo> SpellsFor(Character c)
   {
