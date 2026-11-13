@@ -522,5 +522,5 @@ class Party
     };
   }
 
-  public void ClearDivinations() => Buffs = [.. Buffs.Where(b => b.Buff == Buff.AreaEnchant || b.Buff == Buff.LocateTraps)];
+  public void ClearDivinations() => Buffs = [.. Buffs.Where(b => b.Buff != Buff.AreaEnchant && b.Buff != Buff.LocateTraps)];
 }

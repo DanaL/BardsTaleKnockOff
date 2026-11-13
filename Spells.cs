@@ -29,7 +29,7 @@ class Spells
     new SpellInfo("MACO","Magic Compass", 2, 3, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
     new SpellInfo("BASK","Battleskill", 2, 4, 0, SpellDuration.Combat, SpellContext.Combat, Role.Conjurer, SpellTarget.PartyMember),
     new SpellInfo("WOHL","Word of Healing", 2, 4, 0, SpellDuration.NA, SpellContext.Both, Role.Conjurer, SpellTarget.PartyMember),
-    new SpellInfo("LERE","Less Revelation", 3, 5, 0, SpellDuration.Long, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
+    new SpellInfo("LERE","Lesser Revelation", 3, 5, 0, SpellDuration.Long, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
     new SpellInfo("LEVI","Levitation", 3, 5, 0, SpellDuration.Short, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
     new SpellInfo("WAST","Warstrike", 3, 5, 20, SpellDuration.NA, SpellContext.Combat, Role.Conjurer, SpellTarget.Monsters),
 
