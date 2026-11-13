@@ -515,38 +515,72 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
       case Role.Conjurer:
         if (c.ConjurerSpellLevel >= 3 && c.MagicianSpellLevel == 0)
           roles.Add(Role.Magician);
-        if (c.ConjurerSpellLevel >= 3 && c.SorcererSpellLevel == 0)
+        if (SorcererAvailable(c))
           roles.Add(Role.Sorcerer);
-        if (c.ConjurerSpellLevel >= 3 && c.WizardSpellLevel == 0)
+        if (WizardAvailable(c))
           roles.Add(Role.Wizard);
         break;
       case Role.Magician:        
         if (c.MagicianSpellLevel >= 3 && c.ConjurerSpellLevel == 0)
           roles.Add(Role.Conjurer);
-        if (c.MagicianSpellLevel >= 3 && c.SorcererSpellLevel == 0)
+        if (SorcererAvailable(c))
           roles.Add(Role.Sorcerer);
-        if (c.MagicianSpellLevel >= 3 && c.WizardSpellLevel == 0)
+        if (WizardAvailable(c))
           roles.Add(Role.Wizard);
         break;
       case Role.Sorcerer:
-        if (c.SorcererSpellLevel >= 3 && c.MagicianSpellLevel == 0)
+        if (c.MagicianSpellLevel == 0)
           roles.Add(Role.Magician);
-        if (c.SorcererSpellLevel >= 3 && c.ConjurerSpellLevel == 0)
+        if (c.ConjurerSpellLevel == 0)
           roles.Add(Role.Conjurer);
-        if (c.SorcererSpellLevel >= 3 && c.WizardSpellLevel == 0)
+        if (WizardAvailable(c))
           roles.Add(Role.Wizard);
         break;
       case Role.Wizard:
-        if (c.WizardSpellLevel >= 3 && c.MagicianSpellLevel == 0)
+        if (c.MagicianSpellLevel == 0)
           roles.Add(Role.Magician);
-        if (c.WizardSpellLevel >= 3 && c.ConjurerSpellLevel == 0)
+        if (c.ConjurerSpellLevel == 0)
           roles.Add(Role.Conjurer);
-        if (c.WizardSpellLevel >= 3 && c.SorcererSpellLevel == 0)
+        if (SorcererAvailable(c))
           roles.Add(Role.Sorcerer);
         break;
     }
 
     return roles;
+  }
+
+  // You can switch to sorcerer if you haven't been one before and you 
+  // have at least 3 spell levels in another caster class
+  static bool SorcererAvailable(Character c)
+  {
+    if (c.SorcererSpellLevel > 0)
+      return false;
+    else if (c.ConjurerSpellLevel >= 3)
+      return true;
+    else if (c.MagicianSpellLevel >= 3)
+      return true;
+    else if (c.WizardSpellLevel >= 3)
+      return true;
+
+    return false;
+  }
+
+  // You can switch to wizard if you haven't been one before and you 
+  // have at least 3 spell levels in 2 other caster classes
+  static bool WizardAvailable(Character c)
+  {
+    if (c.WizardSpellLevel > 0)
+      return false;
+
+    int n = 0;
+    if (c.ConjurerSpellLevel >= 3)
+      ++n;
+    if (c.MagicianSpellLevel >= 3)
+      ++n;
+    if (c.WizardSpellLevel >= 3)
+      ++n;
+
+    return n >= 2;
   }
 }
 
