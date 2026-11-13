@@ -244,10 +244,10 @@ class LevelGenerator
     }
   }
 
-  static void Mazify(DungeonLevel lvl, Rng rng)
+  static List<Room> Mazify(DungeonLevel lvl, Rng rng)
   {
     // By hallways, I mean all tiles that aren't in "official" rooms
-    HashSet<int> hallways = [];
+    HashSet<int> hallways = [];    
     for (int j = 0; j < MATRIX_SIZE; j++)
       hallways.Add(j);
 
@@ -310,7 +310,7 @@ class LevelGenerator
       {
         Tile tile = lvl.TileAt(x, y);
         if (IsCloset(tile))
-        closets.Add((x, y, tile));
+          closets.Add((x, y, tile));
       }
     }
     int n = int.Min(5, closets.Count);
@@ -321,41 +321,60 @@ class LevelGenerator
       {
         int i = rng.Next(closets.Count);
         var closet = closets[i];
-        MakeCloset(closet.X, closet.Y, closet.Tile, lvl);
+        rooms.Add(MakeCloset(closet.X, closet.Y, closet.Tile, lvl));
         closets.RemoveAt(i);
+        roomSqs.Add((closet.X, closet.Y));
       }
     }
   
-    static void MakeCloset(int x, int y, Tile tile, DungeonLevel lvl)
+    return rooms;
+
+    static Room MakeCloset(int x, int y, Tile tile, DungeonLevel lvl)
     {
-      if (tile.EdgeE == Edge.Open) {
+      Dir doorDir;
+
+      if (tile.EdgeE == Edge.Open) 
+      {
         Tile tweaked = tile with { EdgeE = Edge.StoneDoor };
         Tile other = lvl.TileAt(x + 1, y);
         other = other with { EdgeW = Edge.StoneDoor };
         lvl.SetTile(x, y, tweaked);
         lvl.SetTile(x + 1, y, other);
+        doorDir = Dir.East;
       }
-      else if (tile.EdgeW == Edge.Open) {
+      else if (tile.EdgeW == Edge.Open) 
+      {
         Tile tweaked = tile with { EdgeW = Edge.StoneDoor };
         Tile other = lvl.TileAt(x - 1, y);
         other = other with { EdgeE = Edge.StoneDoor };
         lvl.SetTile(x, y, tweaked);
         lvl.SetTile(x - 1, y, other);
+        doorDir = Dir.West;
       }
-      else if (tile.EdgeN == Edge.Open) {
+      else if (tile.EdgeN == Edge.Open) 
+      {
         Tile tweaked = tile with { EdgeN = Edge.StoneDoor };
         Tile other = lvl.TileAt(x, y - 1);
         other = other with { EdgeS = Edge.StoneDoor };
         lvl.SetTile(x, y, tweaked);
         lvl.SetTile(x, y - 1, other);
+        doorDir = Dir.North;
       }
-      else if (tile.EdgeS == Edge.Open) {
+      else
+      {
         Tile tweaked = tile with { EdgeS = Edge.StoneDoor };
         Tile other = lvl.TileAt(x, y + 1);
         other = other with { EdgeN = Edge.StoneDoor };
         lvl.SetTile(x, y, tweaked);
         lvl.SetTile(x, y + 1, other);
+        doorDir = Dir.South;
       }
+
+      Room room = new(1, 1);
+      room.Floors[(x, y)] = lvl.TileAt(x, y);
+      room.Exits.Add(new(x, y, doorDir));
+
+      return room;
     }
 
     static bool IsCloset(Tile tile)
@@ -427,7 +446,7 @@ class LevelGenerator
     return room;
   }
 
-  static DungeonLevel GenLevel()
+  static (List<Room>, DungeonLevel) GenLevel(Rng rng)
   {
     DungeonLevel lvl = new();
     for (int x = 0; x < DungeonLevel.MAP_SIZE; x++)
@@ -438,20 +457,47 @@ class LevelGenerator
       }
     }
 
-    Rng rng = new(DateTime.UtcNow.GetHashCode());
+    var rooms = Mazify(lvl, rng);
 
-    Mazify(lvl, rng);
-
-    return lvl;
+    return (rooms, lvl);
   }
 
-  public static void GenMainDungeon(GameState gs)
+  public static void GenMainDungeon(GameState gs, Rng rng)
   {
     List<DungeonLevel> levels = [];
 
-    for (int j = 0; j < NUM_LEVELS; j++)
+    for (int ln = 0; ln < NUM_LEVELS; ln++)
     {
-      levels.Add(GenLevel());
+      var (rooms, lvl) = GenLevel(rng);
+
+      List<(int X, int Y)> hallwaySqs = [];
+      HashSet<(int, int)> roomSqs = [];      
+      foreach (Room r in rooms)
+      {
+        foreach (var sq in r.Floors.Keys)
+          roomSqs.Add(sq);
+      }
+      for (int x = 0; x < DungeonLevel.MAP_SIZE; x++)
+      {
+        for (int y = 0; y < DungeonLevel.MAP_SIZE; y++)
+        {
+          var sq = (x, y);
+          if (!roomSqs.Contains(sq))
+            hallwaySqs.Add(sq);
+        }
+      }
+
+      // Add a few random traps in the level's hallways
+      int numOfTraps = rng.Next(1, 4);
+      for (int k = 0; k < numOfTraps; k++)
+      {
+        var sq = hallwaySqs[rng.Next(hallwaySqs.Count)];
+        hallwaySqs.Remove(sq);
+        Tile t = lvl.TileAt(sq.X, sq.Y);
+        lvl.SetTile(sq.X, sq.Y, t with { Feature = PickTrap(ln, rng) });
+      }
+
+      levels.Add(lvl);
     }
 
     var arrivalTile = levels[0].TileAt(0, 0);
@@ -459,120 +505,11 @@ class LevelGenerator
     gs.Regions["dungeon"] = levels;
   }
 
-  // Draws the level as a top-down map and saves it as a PNG, north at the top.
-  // Each tile draws its own edges just inside its own cell, so a wall shared by
-  // two tiles shows as a double line, and a one-sided edge (e.g. wall on one
-  // tile but open on its neighbour) shows as a single line on one side.
-  // With showGrid off, floors fill their whole cell, so only walls show.
-  public static unsafe void SaveMapImage(DungeonLevel lvl, string path, int cell = 24, bool showGrid = false)
+  // Eventually, deeper levels will have meaner traps like Gas Cloud, etc
+  static Feature PickTrap(int level, Rng rng)
   {
-    const int Border = 4;
-    int size = DungeonLevel.MAP_SIZE * cell + 2 * Border;
+    List<Feature> opts = [ Feature.Trap_Dart, Feature.Trap_Blades, Feature.Trap_PoisonedNeedles ];
 
-    SDL_Surface* surface = SDL_CreateSurface(size, size, SDL_PixelFormat.SDL_PIXELFORMAT_ARGB8888);
-    if (surface == null)
-      throw new Exception($"Couldn't create map surface: {SDL_GetError()}");
-    SDL_Renderer* r = SDL_CreateSoftwareRenderer(surface);
-    if (r == null)
-    {
-      SDL_DestroySurface(surface);
-      throw new Exception($"Couldn't create map renderer: {SDL_GetError()}");
-    }
-
-    void Fill(byte red, byte green, byte blue, float x, float y, float w, float h)
-    {
-      SDL_SetRenderDrawColor(r, red, green, blue, 255);
-      var rect = new SDL_FRect { x = x, y = y, w = w, h = h };
-      SDL_RenderFillRect(r, &rect);
-    }
-
-    Fill(0, 0, 0, 0, 0, size, size);
-
-    int t = Math.Max(2, cell / 8); // wall thickness
-    for (int y = 0; y < DungeonLevel.MAP_SIZE; y++)
-    {
-      for (int x = 0; x < DungeonLevel.MAP_SIZE; x++)
-      {
-        var tile = lvl.TileAt(x, y);
-        float cx = Border + x * cell, cy = Border + y * cell;
-
-        // Floor, optionally with a 1px gap so the grid shows.
-        int gap = showGrid ? 1 : 0;
-        if (tile.Floor == Floor.Dirt)
-          Fill(90, 65, 40, cx + gap, cy + gap, cell - 2 * gap, cell - 2 * gap);
-        else
-          Fill(55, 55, 65, cx + gap, cy + gap, cell - 2 * gap, cell - 2 * gap);
-
-        // Features as a coloured square in the middle of the cell.
-        if (tile.Feature != Feature.None)
-        {
-          var (fr, fg, fb) = tile.Feature switch
-          {
-            Feature.StairsUp => ((byte)80, (byte)220, (byte)80),
-            Feature.StairsDown => ((byte)220, (byte)80, (byte)80),
-            Feature.Tree => ((byte)30, (byte)140, (byte)30),
-            Feature.Trap_Dart0 => ((byte)230, (byte)120, (byte)0),
-            _ => ((byte)90, (byte)140, (byte)230)
-          };
-          float m = cell / 3f;
-          Fill(fr, fg, fb, cx + m, cy + m, cell - 2 * m, cell - 2 * m);
-        }
-
-        foreach (var dir in new[] { Dir.North, Dir.East, Dir.South, Dir.West })
-        {
-          var edge = tile.EdgeForDir(dir);
-          if (edge == Edge.Open)
-            continue;
-
-          // The strip along this side of the cell.
-          var (ex, ey, ew, eh) = dir switch
-          {
-            Dir.North => (cx, cy, cell, t),
-            Dir.South => (cx, cy + cell - t, cell, t),
-            Dir.West => (cx, cy, t, cell),
-            _ => (cx + cell - t, cy, t, cell)
-          };
-          bool horizontal = dir is Dir.North or Dir.South;
-
-          switch (edge)
-          {
-            case Edge.Wall:
-              Fill(230, 230, 230, ex, ey, ew, eh);
-              break;
-            case Edge.PermWall:
-              Fill(150, 150, 255, ex, ey, ew, eh);
-              break;
-            case Edge.StoneDoor:
-              // Wall with a gap in the middle third.
-              Fill(230, 230, 230, ex, ey, ew, eh);
-              if (horizontal)
-                Fill(200, 140, 40, ex + cell / 3f, ey, cell / 3f, eh);
-              else
-                Fill(200, 140, 40, ex, ey + cell / 3f, ew, cell / 3f);
-              break;
-            case Edge.IllusoryWall:
-              // Dashed.
-              int dash = Math.Max(2, cell / 6);
-              for (int i = 0; i < cell; i += 2 * dash)
-              {
-                float len = Math.Min(dash, cell - i);
-                if (horizontal)
-                  Fill(230, 230, 230, ex + i, ey, len, eh);
-                else
-                  Fill(230, 230, 230, ex, ey + i, ew, len);
-              }
-              break;
-          }
-        }
-      }
-    }
-
-    SDL_RenderPresent(r);
-    bool ok = SDL_SavePNG(surface, path);
-    string err = ok ? "" : SDL_GetError() ?? "";
-    SDL_DestroyRenderer(r);
-    SDL_DestroySurface(surface);
-    if (!ok)
-      throw new Exception($"Couldn't save map image to {path}: {err}");
+    return opts[rng.Next(opts.Count)];
   }
 }

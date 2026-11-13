@@ -152,8 +152,10 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case Feature.Special8:
         app.Screens.Push(new PortalScreen(app, "DungeonExit"));
         break;
-      case Feature.Trap_Dart0:
-        DartTrap0();
+      case Feature.Trap_Blades:
+      case Feature.Trap_Dart:
+      case Feature.Trap_PoisonedNeedles:
+        Trap(GS.CurrTile.Feature);
         break;
       default:
         if (IsEncounter())
@@ -167,8 +169,6 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         app.GameState.Say(s);
     }
   }
-
-  delegate List<string> TrapFn(Character? victim, GameState gs, Rng rng);
 
   void Trap(Feature trapType)
   {
@@ -184,32 +184,20 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     switch (trapType)
     {
       case Feature.Trap_Dart:
-        if (GS.Party.Members[0] is Character c)
+        if (GS.Party.Members[0] is Character dc)
         {
-          foreach (string s in Traps.Darts(c, app.GameState, app.Rng))
+          foreach (string s in Traps.Darts(dc, app.GameState, app.Rng))
             GS.Say(s);
         }
         break;
+      case Feature.Trap_PoisonedNeedles:
+         if (GS.Party.Members[0] is Character nc)
+        {
+          foreach (string s in Traps.PoisonNeedles(nc, app.GameState, app.Rng))
+            GS.Say(s);
+        }        
+        break;
     }    
-  }
-
-  void PoisonNeedleTrap()
-  {
-    // Levitation should project from traps most of the time
-    if (app.GameState.Party.Buffs.Any(b => b.Buff == Buff.Levitation) && app.Rng.Next(4) > 0)
-      return;
-
-    app.Screens.Push(new PopupScreen(app, "A trap!!"));
-
-    TrapFn trap = Traps.Darts0;
-
-    if (GS.Party.Members[0] is Character c)
-    {
-      // Once I have implemented slot S, a monster occupying it will be
-      // hit before the character in slot 1.
-      foreach (string s in trap(c, GS, app.Rng))
-        GS.Say(s);
-    }
   }
 
   void ResolveTurn()

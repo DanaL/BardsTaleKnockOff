@@ -17,7 +17,7 @@ class Traps
 {
   public static List<string> Blades(GameState gs, Rng rng)
   {
-    List<string> msgs = [ "Blades!" ];
+    List<string> msgs = [ "A tripwire sets off blades!" ];
 
     foreach (Character c in gs.Party.Members.OfType<Character>())
     {
