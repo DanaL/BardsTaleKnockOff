@@ -95,6 +95,12 @@ static class TileExt
     Feature.StairsUp or Feature.StairsDown or Feature.Special5 or Feature.Special8 => true,
     _ => false
   };
+
+  public static bool IsTrap(this Tile t) => t.Feature switch
+  {
+    Feature.Trap_Dart0 => true,
+    _ => false
+  };
 }
 
 // Bard's Tale levels are 22x22 and wrap. Technically BT maps were all toruses

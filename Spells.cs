@@ -48,7 +48,8 @@ class Spells
 
     // Sorcerer
     new SpellInfo("MIJA","Mind Jab", 1, 3, 40, SpellDuration.NA, SpellContext.Combat, Role.Sorcerer, SpellTarget.Monsters),
-    
+    new SpellInfo("LOTR","Locate Traps", 1, 2, 3, SpellDuration.Short, SpellContext.Exploring, Role.Sorcerer, SpellTarget.None),
+
     // Trickster
     new SpellInfo("SOST","Soft Step", 1, 2, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Trickster, SpellTarget.None),
 
@@ -105,8 +106,7 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
         break;
       case "AREN":        
         caster.MP -= spell.Cost;
-        // Once I've implemented more of the detector spells, AREN replaces any that are active
-        gs.Party.Buffs = [.. gs.Party.Buffs.Where(b => b.Buff != Buff.AreaEnchant)];
+        gs.Party.ClearDivinations();
         gs.Party.Buffs.Add(new TempBuff(Buff.AreaEnchant, gs.Turn + DURATION_SHORT, false));
         break;
       case "BASK":
@@ -139,6 +139,11 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
         break;
       case "LEVI":
         Levi(caster, DURATION_SHORT, gs, spell.Cost);
+        break;
+      case "LOTR":        
+        caster.MP -= spell.Cost;
+        gs.Party.ClearDivinations();
+        gs.Party.Buffs.Add(new TempBuff(Buff.LocateTraps, gs.Turn + DURATION_SHORT, false));
         break;
       case "MAFL":
         Mafl(caster, gs, spell.Cost);

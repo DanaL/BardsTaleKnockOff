@@ -520,5 +520,7 @@ class Party
       Buff.MageFlame or Buff.SteelLight or Buff.Torch or Buff.Revelation => true,
       _ => false
     };
-  }  
+  }
+
+  public void ClearDivinations() => Buffs = [.. Buffs.Where(b => b.Buff == Buff.AreaEnchant || b.Buff == Buff.LocateTraps)];
 }

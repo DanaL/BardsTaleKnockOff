@@ -319,20 +319,32 @@ unsafe class GameUI
     Dir facing = Dir.None;
     foreach (var b in gs.Party.Buffs)
     {
-      if (b.Buff == Buff.MageFlame || b.Buff == Buff.Torch)
-        light = Flame.Fire;
-      else if (b.Buff == Buff.SteelLight)
-        light = Flame.Blue;
-      else if (b.Buff == Buff.Revelation)
-        light = Flame.Purple;
-      else if (b.Buff == Buff.SoftStep)
-        softStep = true;
-      else if (b.Buff == Buff.Compass)
-        facing = gs.Facing;
-      else if (b.Buff == Buff.AreaEnchant)
-        eye = true;
-      else if (b.Buff == Buff.Levitation)
-        carpet = true;
+      switch (b.Buff)
+      {
+        case Buff.MageFlame:
+        case Buff.Torch:
+          light = Flame.Fire;
+          break;
+        case Buff.SteelLight:
+          light = Flame.Blue;
+          break;
+        case Buff.Revelation:
+          light = Flame.Purple;
+          break;
+        case Buff.SoftStep:
+          softStep = true;
+          break;
+        case Buff.Compass:
+          facing = gs.Facing;
+          break;
+        case Buff.Levitation:
+          carpet = true;
+          break;
+        case Buff.AreaEnchant:
+        case Buff.LocateTraps:
+          eye = true;
+          break;
+      }
     }
     
     bool shield = false;

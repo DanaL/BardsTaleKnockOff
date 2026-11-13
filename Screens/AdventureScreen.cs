@@ -225,8 +225,15 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
   {
     foreach (var buff in GS.Party.Buffs)
     {
-      if (buff.Buff == Buff.AreaEnchant)
-        CheckAreaEnchant();
+      switch (buff.Buff)
+      {
+        case Buff.AreaEnchant:
+          CheckAreaEnchant();
+          break;
+        case Buff.LocateTraps:
+          LocateTraps();
+          break;
+      }
     }
   }
 
@@ -244,6 +251,25 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       if (tile.IsStairs())
       {
         GS.Say("There are stairs nearby!");
+        break;
+      }
+    }
+  }
+
+  void LocateTraps()
+  {
+    var (dx, dy) = GS.Facing.Delta();
+    int x = GS.X;
+    int y = GS.Y;
+
+    for (int j = 0; j < 3; j++)
+    {
+      x += dx;
+      y += dy;
+      Tile tile = GS.CurrMap.TileAt(x, y);
+      if (tile.IsTrap())
+      {
+        GS.Say("There is a trap nearby!");
         break;
       }
     }
