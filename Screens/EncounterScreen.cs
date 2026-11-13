@@ -626,6 +626,17 @@ class EncounterScreen : IScreen
     ["wiztower"] = [ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), (MonsterCatalog.FERAL_DOG, 8),
                 (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4), (MonsterCatalog.NOMAD, 4),
                   (MonsterCatalog.BARBARIAN, 8) ] ],
+    ["dungeon"] = [ 
+          /* Level 1 */ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), (MonsterCatalog.FERAL_DOG, 8),
+                          (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4), (MonsterCatalog.NOMAD, 4),
+                          (MonsterCatalog.BARBARIAN, 8) ],
+          /* Level 2 */ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), (MonsterCatalog.FERAL_DOG, 8),
+                          (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4), (MonsterCatalog.NOMAD, 4),
+                          (MonsterCatalog.BARBARIAN, 8) ],
+          /* Level 3 */ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), (MonsterCatalog.FERAL_DOG, 8),
+                          (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4), (MonsterCatalog.NOMAD, 4),
+                          (MonsterCatalog.BARBARIAN, 8) ],
+    ],
   };
 
   public EncounterScreen(App app)
