@@ -27,12 +27,19 @@ class BurgemeesterScreen : IScreen
       _app.GameState.FactDb.Add("MetBurgemeester", new FlagFact("MetBurgemeester", true));
       _blurb = [ "Ah! New adventurers! I am the Burgemeester of Sarnath and welcome all adventurers and their gold! Particularly in these benighted days. You see, not too long ago, a bunch of cultists arrived in town." , "" 
                     ,"Sure they seemed fine at first, but then they slipped into Underhalls and started stirring up trouble.", "", "Since then, monsters have been spilling out into town and it's hardly safe to walk the streets anymore.",
-                    "", "Come to think of it, this is exactly the sort of thing stalwart heroes might look into.", "", "You should stop by from time-to-time and keep my appraised of your progress.", "", "E) Exit to town" ];
+                    "", "Come to think of it, this is exactly the sort of thing stalwart heroes might look into.", "", "You should stop by from time-to-time and keep my appraised of your progress." ];
     }
     else
     {
-      _blurb = [ "Long ago the great Archmages sealed away Arcioch deep in the Underhalls. In better times, that's a fine tourist draw that brings adventurers to own. But when it rains, it pours and now we have more monsters than we'd like.", "", "E) Exit to town" ];
+      _blurb = [ "Long ago the great Archmages sealed away Arcioch deep in the Underhalls. In better times, that's a fine tourist draw that brings adventurers to own. But when it rains, it pours and now we have more monsters than we'd like." ];
     }
+
+    if (!_app.GameState.FactDb.ContainsKey("TownOgreSlain"))
+    {
+      _blurb.Add("Watch out for the ogre guarding the entrance to the Underhalls. It's a real asshole.");
+    }
+
+    _blurb.AddRange("", "E) Exit to town");
   }
 
   public void OnKey(SDL_KeyboardEvent key)

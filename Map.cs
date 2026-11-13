@@ -32,7 +32,7 @@ static class EdgeExt
 // the square (e.g. a tree). Unlike edges, these belong to the square itself.
 enum Feature : byte { None, Burgemeester, Tree, Guild, House, Shop, Special1, Special2, Special3, Special4,                    
                       Special5, Special6, Special7, Special8, StairsUp, StairsDown, Tavern, Temple, TrainingHall, 
-                      Trap_Dart0 }
+                      Trap_Dart, Trap_PoisonedNeedles }
 
 static class FeatureExt
 {
@@ -98,7 +98,8 @@ static class TileExt
 
   public static bool IsTrap(this Tile t) => t.Feature switch
   {
-    Feature.Trap_Dart0 => true,
+    Feature.Trap_Dart => true,
+    Feature.Trap_PoisonedNeedles => true,
     _ => false
   };
 }

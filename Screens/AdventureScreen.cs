@@ -168,7 +168,32 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     }
   }
 
-  void DartTrap0()
+  delegate List<string> TrapFn(Character? victim, GameState gs, Rng rng);
+
+  void Trap(Feature trapType)
+  {
+    // Levitation should project from traps most of the time
+    if (app.GameState.Party.Buffs.Any(b => b.Buff == Buff.Levitation) && app.Rng.Next(4) > 0)
+      return;
+
+    GameState gs = app.GameState;
+    app.Screens.Push(new PopupScreen(app, "A trap!!"));
+
+    // Once I have implemented slot S, a monster occupying it will be
+    // hit before the character in slot 1.
+    switch (trapType)
+    {
+      case Feature.Trap_Dart:
+        if (GS.Party.Members[0] is Character c)
+        {
+          foreach (string s in Traps.Darts(c, app.GameState, app.Rng))
+            GS.Say(s);
+        }
+        break;
+    }    
+  }
+
+  void PoisonNeedleTrap()
   {
     // Levitation should project from traps most of the time
     if (app.GameState.Party.Buffs.Any(b => b.Buff == Buff.Levitation) && app.Rng.Next(4) > 0)
@@ -176,11 +201,13 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
     app.Screens.Push(new PopupScreen(app, "A trap!!"));
 
+    TrapFn trap = Traps.Darts0;
+
     if (GS.Party.Members[0] is Character c)
     {
       // Once I have implemented slot S, a monster occupying it will be
       // hit before the character in slot 1.
-      foreach (string s in Traps.Darts0(c, GS, app.Rng))
+      foreach (string s in trap(c, GS, app.Rng))
         GS.Say(s);
     }
   }

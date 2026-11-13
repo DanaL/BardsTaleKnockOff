@@ -46,9 +46,8 @@ class TreasureChestScreen : IScreen
     _items = items;
     _xp = xp;
 
-    List<Trap> options = [ Trap.Darts0, Trap.Darts0, Trap.Darts0, Trap.PoisonNeedle0, Trap.Blades0 ];    
+    List<Trap> options = [ Trap.Darts, Trap.Darts, Trap.Darts, Trap.PoisonNeedle, Trap.Blades ];    
     _trap = options[_app.Rng.Next(options.Count)];
-    _trap = Trap.PoisonNeedle0;
   }
 
   public void OnKey(SDL_KeyboardEvent key)
@@ -208,14 +207,14 @@ class TreasureChestScreen : IScreen
 
     switch (_trap)
     {
-      case Trap.Darts0:
-        _msgBuffer.AddRange(Traps.Darts0(null, _app.GameState, _app.Rng));        
+      case Trap.Darts:
+        _msgBuffer.AddRange(Traps.Darts(null, _app.GameState, _app.Rng));        
         break;
-      case Trap.PoisonNeedle0:
-        _msgBuffer.AddRange(Traps.PoisonNeedles0(null, _app.GameState, _app.Rng));
+      case Trap.PoisonNeedle:
+        _msgBuffer.AddRange(Traps.PoisonNeedles(null, _app.GameState, _app.Rng));
         break;
-      case Trap.Blades0:
-        _msgBuffer.AddRange(Traps.Blades0(_app.GameState, _app.Rng));
+      case Trap.Blades:
+        _msgBuffer.AddRange(Traps.Blades(_app.GameState, _app.Rng));
         break;
     }
     

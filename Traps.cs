@@ -11,11 +11,11 @@
 
 namespace BardsTaleKnockOff;
 
-enum Trap { Darts0, PoisonNeedle0, Blades0, }
+enum Trap { Darts, PoisonNeedle, Blades, }
 
 class Traps
 {
-  public static List<string> Blades0(GameState gs, Rng rng)
+  public static List<string> Blades(GameState gs, Rng rng)
   {
     List<string> msgs = [ "Blades!" ];
 
@@ -24,8 +24,13 @@ class Traps
       if (c.Incapacitated)
         continue;
 
-      int dmg = rng.Next(1, 5) + rng.Next(1, 5);
-      SaveResult save = c.RollSavingThrow(1, rng);
+      int dungeonDifficulty = gs.CurrLevel / 2;
+      int rolls = 2 + 2 * dungeonDifficulty;
+      int dmg = 0;
+      for (int j = 0; j < rolls; j++)
+        dmg += rng.Next(1, 9);
+      
+      SaveResult save = c.RollSavingThrow(1 + dungeonDifficulty, rng);
       if (save == SaveResult.Success) 
       {
         msgs.Add($"{c.Name} avoids the trap!");
@@ -45,7 +50,7 @@ class Traps
     return msgs;
   }
 
-  public static List<string> Darts0(Character? victim, GameState gs, Rng rng)
+  public static List<string> Darts(Character? victim, GameState gs, Rng rng)
   {
     List<string> msgs = [];    
     Character c;
@@ -70,8 +75,13 @@ class Traps
 
     msgs.Add($"A trap! Darts fly at {c.Name}!");
 
-    int dmg = rng.Next(1, 5) + rng.Next(1, 5) + rng.Next(1, 5) + rng.Next(1, 5);
-    SaveResult save = c.RollSavingThrow(1, rng);
+    int dungeonDifficulty = gs.CurrLevel / 2;
+    int rolls = 4 + 2 * dungeonDifficulty;
+    int dmg = 0;
+    for (int j = 0; j < rolls; j++)
+      dmg += rng.Next(1, 5);
+
+    SaveResult save = c.RollSavingThrow(1 + dungeonDifficulty, rng);
     if (save == SaveResult.Success) 
     {
       msgs.Add("But they avoid being hit!");
@@ -90,7 +100,7 @@ class Traps
     return msgs;
   }
 
-  public static List<string> PoisonNeedles0(Character? victim, GameState gs, Rng rng)
+  public static List<string> PoisonNeedles(Character? victim, GameState gs, Rng rng)
   {
     List<string> msgs = [];    
     Character c;
@@ -115,8 +125,13 @@ class Traps
 
     msgs.Add($"A trap! Poison needles shoot at {c.Name}!");
 
-    int dmg = rng.Next(1, 5) + rng.Next(1, 5) + rng.Next(1, 5) + rng.Next(1, 5);
-    SaveResult save = c.RollSavingThrow(1, rng);
+    int dungeonDifficulty = gs.CurrLevel / 2;
+    int rolls = 4 + 2 * dungeonDifficulty;
+    int dmg = 0;
+    for (int j = 0; j < rolls; j++)
+      dmg += rng.Next(1, 5);
+    
+    SaveResult save = c.RollSavingThrow(1 + dungeonDifficulty, rng);
     if (save == SaveResult.Success) 
     {
       msgs.Add("But they avoid being hit!");
