@@ -46,6 +46,11 @@ class Spells
     new SpellInfo("OGST","Ogre Strength", 3, 6, 0, SpellDuration.Combat, SpellContext.Combat, Role.Magician, SpellTarget.PartyMember),
     new SpellInfo("STFL","Star Flare", 3, 6, 40, SpellDuration.NA, SpellContext.Combat, Role.Magician, SpellTarget.Monsters),
 
+    // Sorcerer
+    new SpellInfo("PHBL","Phase Blur", 1, 2, 0, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.FullParty),
+    new SpellInfo("MIJA","Mind Jab", 1, 3, 40, SpellDuration.NA, SpellContext.Combat, Role.Sorcerer, SpellTarget.Monsters),
+    new SpellInfo("HYIM","Hyponotic Image", 1, 3, 90, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.Monsters),
+
     // Trickster
     new SpellInfo("PHBL","Phase Blur", 1, 2, 0, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.FullParty),
     new SpellInfo("HYIM","Hyponotic Image", 1, 3, 90, SpellDuration.Combat, SpellContext.Combat, Role.Sorcerer | Role.Trickster, SpellTarget.Monsters),
@@ -144,6 +149,9 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
           if (!target.Buffs.Any(b => b.Buff == Buff.MageGauntlets))
             target.Buffs.Add(new TempBuff(Buff.MageGauntlets, ulong.MaxValue, true));
         }
+        break;
+      case "MIJA":
+        msgBuffer.AddRange(Mija(caster, monsterGroup, spell.Cost, rng, gs));
         break;
       case "MYSH":
         Mysh(caster, gs, spell.Cost);
@@ -446,14 +454,14 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
     return DmgGroupSpell(caster, monsterGroup, 5, 20, "fried", rng, gs);
   }
 
-  public List<string> Arfi(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
+  List<string> DmgSingleTargetSpellScales(Character caster, int monsterGroup, int dmgMin, int dmgMax, string verb, Rng rng, GameState gs)
   {
-    List<string> lines = [];
-    caster.MP -= cost;
+    List<string> msgs = [];
+
     if (foes[monsterGroup].Count > 0)
     {
       int targetNum = rng.Next(foes[monsterGroup].Count);
-      int dmg = rng.Next(1, 5) * caster.Level;
+      int dmg = rng.Next(dmgMin, dmgMax + 1) * caster.Level;
       Monster m = foes[monsterGroup].Monsters[targetNum];
       var save = m.RollSavingThrow(caster.MagicPower, rng);
       if (save == SaveResult.Success)
@@ -466,12 +474,24 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
       }
       
       Queue<string> q = new();
-      q.Enqueue($"{Util.CalcName(m).DefArticle().Capitalize()} is fried for {dmg} hp!");
+      q.Enqueue($"{Util.CalcName(m).DefArticle().Capitalize()} is {verb} for {dmg} hp!");
       battle.DamageMonster(monsterGroup, targetNum, dmg, gs, q);
       while (q.Count > 0)
-        lines.Add(q.Dequeue());
+        msgs.Add(q.Dequeue());
     }
 
-    return lines;
+    return msgs;
+  }
+
+  public List<string> Arfi(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
+  {
+    caster.MP -= cost;
+    return DmgSingleTargetSpellScales(caster, monsterGroup, 1, 4, "fried", rng, gs);    
+  }
+
+  public List<string> Mija(Character caster, int monsterGroup, int cost, Rng rng, GameState gs)
+  {
+    caster.MP -= cost;
+    return DmgSingleTargetSpellScales(caster, monsterGroup, 2, 8, "blasted", rng, gs);    
   }
 }
