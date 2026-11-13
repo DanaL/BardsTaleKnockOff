@@ -567,33 +567,33 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
       case Role.Conjurer:
         if (c.ConjurerSpellLevel >= 3 && c.MagicianSpellLevel == 0)
           roles.Add(Role.Magician);
-        if (SorcererAvailable(c))
+        if (c.ConjurerSpellLevel >= 3 && SorcererAvailable(c))
           roles.Add(Role.Sorcerer);
-        if (WizardAvailable(c))
+        if (c.ConjurerSpellLevel >= 3 && WizardAvailable(c))
           roles.Add(Role.Wizard);
         break;
       case Role.Magician:        
         if (c.MagicianSpellLevel >= 3 && c.ConjurerSpellLevel == 0)
           roles.Add(Role.Conjurer);
-        if (SorcererAvailable(c))
+        if (c.MagicianSpellLevel >= 3 && SorcererAvailable(c))
           roles.Add(Role.Sorcerer);
-        if (WizardAvailable(c))
+        if (c.MagicianSpellLevel >= 3 && WizardAvailable(c))
           roles.Add(Role.Wizard);
         break;
       case Role.Sorcerer:
-        if (c.MagicianSpellLevel == 0)
+        if (c.SorcererSpellLevel >= 3 && c.MagicianSpellLevel == 0)
           roles.Add(Role.Magician);
-        if (c.ConjurerSpellLevel == 0)
+        if (c.SorcererSpellLevel >= 3 && c.ConjurerSpellLevel == 0)
           roles.Add(Role.Conjurer);
-        if (WizardAvailable(c))
+        if (c.SorcererSpellLevel >= 3 && WizardAvailable(c))
           roles.Add(Role.Wizard);
         break;
       case Role.Wizard:
-        if (c.MagicianSpellLevel == 0)
+        if (c.WizardSpellLevel >= 3 && c.MagicianSpellLevel == 0)
           roles.Add(Role.Magician);
-        if (c.ConjurerSpellLevel == 0)
+        if (c.WizardSpellLevel >= 3 && c.ConjurerSpellLevel == 0)
           roles.Add(Role.Conjurer);
-        if (SorcererAvailable(c))
+        if (c.WizardSpellLevel >= 3 && SorcererAvailable(c))
           roles.Add(Role.Sorcerer);
         break;
     }
