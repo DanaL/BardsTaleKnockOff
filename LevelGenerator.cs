@@ -497,12 +497,77 @@ class LevelGenerator
         lvl.SetTile(sq.X, sq.Y, t with { Feature = PickTrap(ln, rng) });
       }
 
+      // Knock out a few walls
+      int numToErase = rng.Next(7, 10);
+      for (int k = 3; k <= numToErase; k++)
+        EraseWall(lvl, hallwaySqs, roomSqs, rng);
+
       levels.Add(lvl);
     }
 
     var arrivalTile = levels[0].TileAt(0, 0);
     levels[0].SetTile(0, 0, arrivalTile with { Feature = Feature.Special8 });
     gs.Regions["dungeon"] = levels;
+  }
+
+  static void EraseWall(DungeonLevel lvl, List<(int X, int Y)> hallwaySqs, HashSet<(int, int)> roomSqs, Rng rng)
+  {
+    List<(int, int, Dir)> opts = [];
+
+    // Try a bunch of times
+    for (int j = 0; j < 100; j++)
+    {
+      opts.Clear();
+      var sq = hallwaySqs[rng.Next(hallwaySqs.Count)];
+      Tile tile = lvl.TileAt(sq.X, sq.Y);
+      if (tile.EdgeN == Edge.Wall && !roomSqs.Contains((sq.X, sq.Y - 1)))
+        opts.Add((sq.X, sq.Y - 1, Dir.North));
+      if (tile.EdgeS == Edge.Wall && !roomSqs.Contains((sq.X, sq.Y + 1)))
+        opts.Add((sq.X, sq.Y + 1, Dir.South));
+      if (tile.EdgeE == Edge.Wall && !roomSqs.Contains((sq.X + 1, sq.Y)))
+        opts.Add((sq.X + 1, sq.Y, Dir.East));
+      if (tile.EdgeW == Edge.Wall && !roomSqs.Contains((sq.X - 1, sq.Y)))
+        opts.Add((sq.X - 1, sq.Y, Dir.West));
+      
+      if (opts.Count == 0)
+        continue;
+            
+      (int nx, int ny, Dir dir) = opts[rng.Next(opts.Count)];
+      Erase(lvl, tile, sq.X, sq.Y, nx, ny, dir);
+      
+      break;
+    }
+
+    static void Erase(DungeonLevel lvl, Tile tile, int tx, int ty, int nx, int ny, Dir dir)
+    {
+      Tile other;
+      switch (dir)
+      {
+        case Dir.North:
+          tile.EdgeN = Edge.Open;
+          other = lvl.TileAt(nx, ny);
+          other.EdgeS = Edge.Open;
+          break;
+        case Dir.South:
+          tile.EdgeS = Edge.Open;
+          other = lvl.TileAt(nx, ny);
+          other.EdgeN = Edge.Open;
+          break;
+        case Dir.East:
+          tile.EdgeE = Edge.Open;
+          other = lvl.TileAt(nx, ny);
+          other.EdgeW = Edge.Open;
+          break;
+        default:
+          tile.EdgeW = Edge.Open;
+          other = lvl.TileAt(nx, ny);
+          other.EdgeE = Edge.Open;
+          break;
+      }
+
+      lvl.SetTile(tx, ty, tile);
+      lvl.SetTile(nx, ny, other);
+    }
   }
 
   // Eventually, deeper levels will have meaner traps like Gas Cloud, etc
