@@ -14,7 +14,7 @@ using BardsTaleKnockOff;
 
 enum SaveResult { Success, Partial, Failure }
 
-enum Flame { None, Fire, Blue }
+enum Flame { None, Fire, Blue, Purple }
 record StatusIcons(Flame Light, bool Shoe, bool Eye, Dir Facing, bool Shield, bool Carpet);
 
 enum Buff { AirArmour, AreaEnchant, BattleSkill, Compass, Defending, EbenezumEscape, FreezeFoe, MageFlame, Levitation, 

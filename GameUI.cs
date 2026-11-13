@@ -157,6 +157,9 @@ unsafe class GameUI
       case Flame.Blue:
         Icon(0, "blueflame.png");
         break;
+      case Flame.Purple:
+        Icon(0, "purpleflame.png");
+        break;
     }
 
     if (icons.Shield)
@@ -321,7 +324,7 @@ unsafe class GameUI
       else if (b.Buff == Buff.SteelLight)
         light = Flame.Blue;
       else if (b.Buff == Buff.Revelation)
-        light = Flame.Blue;
+        light = Flame.Purple;
       else if (b.Buff == Buff.SoftStep)
         softStep = true;
       else if (b.Buff == Buff.Compass)
