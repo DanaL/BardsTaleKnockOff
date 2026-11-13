@@ -109,10 +109,12 @@ unsafe class GameUI
   {
     Frame(ViewRect);
 
+    bool revealSecretDoors = gs.Party.Buffs.Any(b => b.Buff == Buff.Revelation);
+
     if (gs.ViewRange == 0) // this will happen when the party is blind
       DrawNoBackground("It's dark!");
     else
-      _view.Draw(gs, ViewRect.x, ViewRect.y);
+      _view.Draw(gs, revealSecretDoors, ViewRect.x, ViewRect.y);
 
     if (gs.Alert >= DateTime.UtcNow)
       BorderAlert();
@@ -202,9 +204,10 @@ unsafe class GameUI
   // dungeon view if a GameState is given (eg., monsters standing in the maze).
   public void DrawImage(string fileName, string caption, GameState? backdrop = null)
   {
+    bool revealSecretDoors = backdrop is not null && backdrop.Party.Buffs.Any(b => b.Buff == Buff.Revelation);
     Frame(ViewRect);
     if (backdrop is not null)
-      _view.Draw(backdrop, ViewRect.x, ViewRect.y);
+      _view.Draw(backdrop, revealSecretDoors, ViewRect.x, ViewRect.y);
     else
       FillRect(PictureBackground, ViewRect);
     _view.DrawImage(fileName, ViewRect.x, ViewRect.y);
@@ -316,6 +319,8 @@ unsafe class GameUI
       if (b.Buff == Buff.MageFlame || b.Buff == Buff.Torch)
         light = Flame.Fire;
       else if (b.Buff == Buff.SteelLight)
+        light = Flame.Blue;
+      else if (b.Buff == Buff.Revelation)
         light = Flame.Blue;
       else if (b.Buff == Buff.SoftStep)
         softStep = true;

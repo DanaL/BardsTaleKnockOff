@@ -29,6 +29,7 @@ class Spells
     new SpellInfo("MACO","Magic Compass", 2, 3, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
     new SpellInfo("BASK","Battleskill", 2, 4, 0, SpellDuration.Combat, SpellContext.Combat, Role.Conjurer, SpellTarget.PartyMember),
     new SpellInfo("WOHL","Word of Healing", 2, 4, 0, SpellDuration.NA, SpellContext.Both, Role.Conjurer, SpellTarget.PartyMember),
+    new SpellInfo("LERE","Less Revelation", 3, 5, 0, SpellDuration.Long, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
     new SpellInfo("LEVI","Levitation", 3, 5, 0, SpellDuration.Short, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
     new SpellInfo("WAST","Warstrike", 3, 5, 20, SpellDuration.NA, SpellContext.Combat, Role.Conjurer, SpellTarget.Monsters),
 
@@ -80,6 +81,7 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
 {
   const int DURATION_SHORT = 500;
   const int DURATION_MEDIUM = 1000;
+  const int DURATION_LONG = 1500;
 
   public List<string> Cast(SpellInfo spell, Character caster, Rng rng, int monsterGroup, Character? target, GameState gs)
   {
@@ -125,6 +127,9 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
         caster.MP -= spell.Cost;
         gs.Party.Buffs = [.. gs.Party.Buffs.Where(b => b.Buff != Buff.Compass)];
         gs.Party.Buffs.Add(new TempBuff(Buff.Compass, gs.Turn + DURATION_MEDIUM, false));
+        break;
+      case "LERE":
+        Lere(caster, gs, spell.Cost);
         break;
       case "LEVI":
         Levi(caster, DURATION_SHORT, gs, spell.Cost);
@@ -290,6 +295,13 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
     }
   }
   
+  static void Lere(Character caster, GameState gs, int cost)
+  {
+    caster.MP -= cost;
+    gs.Party.ClearLightSources();
+    gs.Party.Buffs.Add(new TempBuff(Buff.Revelation, gs.Turn + DURATION_LONG, false));
+  }
+
   static void Levi(Character caster, ulong duration, GameState gs, int cost)
   {
     caster.MP -= cost;

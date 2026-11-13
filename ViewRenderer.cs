@@ -26,6 +26,8 @@ unsafe class ViewRenderer
   // top (row 0) or bottom (row 1) half of the sheet.
   readonly record struct Piece(int X0, int X1, int Row);
 
+  bool _revealSecretDoors = false;
+
   // Far wall (the one facing the party) of the square at (lateral, depth).
   static readonly Dictionary<(int lat, int depth), Piece> FrontWalls = new()
   {
@@ -216,7 +218,7 @@ unsafe class ViewRenderer
     SDL_RenderTexture(_renderer, tex, null, &dst);
   }
 
-  public void Draw(GameState gs, int originX, int originY)
+  public void Draw(GameState gs, bool revealSecretDoors, int originX, int originY)
   {
     bool indoors = gs.CurrRegion == "town";
     int px = gs.X;
@@ -225,7 +227,8 @@ unsafe class ViewRenderer
     int viewRange = gs.ViewRange;
     DungeonLevel map = gs.CurrMap;
     _fade = DistanceFade.ToBlack;
-    
+    _revealSecretDoors = revealSecretDoors;
+
     var (fx, fy) = facing.Delta();
     var (rx, ry) = facing.TurnRight().Delta();
 
@@ -309,6 +312,9 @@ unsafe class ViewRenderer
 
     SDL_Texture* EdgeTexture(Edge edge)
     {
+      if (_revealSecretDoors && edge == Edge.IllusoryWall)
+        return null;
+        
       string? name = edge.EdgeSheet();
       return name is not null ? Sheet(name) : null;
     }

@@ -517,7 +517,7 @@ class Party
 
     static bool IsLight(Buff buff) => buff switch 
     {
-      Buff.MageFlame or Buff.SteelLight or Buff.Torch => true,
+      Buff.MageFlame or Buff.SteelLight or Buff.Torch or Buff.Revelation => true,
       _ => false
     };
   }  
