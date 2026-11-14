@@ -627,15 +627,15 @@ class EncounterScreen : IScreen
                 (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4), (MonsterCatalog.NOMAD, 4),
                   (MonsterCatalog.BARBARIAN, 8) ] ],
     ["dungeon"] = [ 
-          /* Level 1 */ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), (MonsterCatalog.FERAL_DOG, 8),
-                          (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4), (MonsterCatalog.NOMAD, 4),
-                          (MonsterCatalog.BARBARIAN, 8) ],
-          /* Level 2 */ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), (MonsterCatalog.FERAL_DOG, 8),
-                          (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4), (MonsterCatalog.NOMAD, 4),
-                          (MonsterCatalog.BARBARIAN, 8) ],
-          /* Level 3 */ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), (MonsterCatalog.FERAL_DOG, 8),
-                          (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4), (MonsterCatalog.NOMAD, 4),
-                          (MonsterCatalog.BARBARIAN, 8) ],
+    /* Level 1 */ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), (MonsterCatalog.FERAL_DOG, 8),
+                    (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4), (MonsterCatalog.NOMAD, 4),
+                    (MonsterCatalog.BARBARIAN, 8) ],
+    /* Level 2 */ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), (MonsterCatalog.FERAL_DOG, 8),
+                    (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4), (MonsterCatalog.NOMAD, 4),
+                    (MonsterCatalog.BARBARIAN, 8), (MonsterCatalog.WOLF, 8) ],
+    /* Level 3 */ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), (MonsterCatalog.FERAL_DOG, 8),
+                    (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4), (MonsterCatalog.NOMAD, 4),
+                    (MonsterCatalog.BARBARIAN, 8), (MonsterCatalog.WOLF, 8), (MonsterCatalog.BLACK_WIDOW, 8) ],
     ],
   };
 
@@ -689,8 +689,9 @@ class EncounterScreen : IScreen
     //_groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng), MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng), MonsterCatalog.Get(MonsterCatalog.GOBLIN, app.Rng)], Distance = 10});
     //_groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.SPIDER, app.Rng) ], Distance = 10});
     //_groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng), MonsterCatalog.Get(MonsterCatalog.MAGICIAN_0, app.Rng)], Distance = 90});
-    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng), MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng), MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng)], Distance = 40});
-    
+    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng), MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng), MonsterCatalog.Get(MonsterCatalog.SKELETON, app.Rng)], Distance = 40});    
+    //_groups = [ new() { Monsters = [ MonsterCatalog.Get(MonsterCatalog.BLACK_WIDOW, app.Rng) ], Distance = 10} ];
+
     List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g.Name : g.Name.Pluralize())} ({g.Distance}')")];
     string desc = summaries.Count switch
     {

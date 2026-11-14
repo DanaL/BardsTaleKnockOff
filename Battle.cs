@@ -263,7 +263,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
   public (int XP, int Gold, int MonstersDefeated) AwardSpoils() => (_xpWon, _goldWon, _monstersDefeated);
 
   void AdvanceGroup(int groupNum)
-  {    
+  {
     var mg = Foes[groupNum];
 
     if (mg.Count == 0)
@@ -512,6 +512,16 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
       string s = target.ReceiveDmg(dmg);
       if (s != "")
         Messages.Enqueue(s);
+
+      if (m.HasFlag(MonsterFlag.Poison))
+      {
+        var save = target.RollSavingThrow(m.Rank, rng);
+        if (save != SaveResult.Success)
+        {
+          Messages.Enqueue($"{target.Name} is poisoned!");
+          target.Condition = "POISONED";
+        }
+      }
     }
     else
     {
