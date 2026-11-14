@@ -483,6 +483,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
   {    
     string n = Util.CalcName(m).DefArticle().Capitalize();
     int roll = rng.Next(1, 21);
+    bool nat20 = roll == 20;
     int toHitTarget = m.THAC0 - target.AC;
 
     foreach (var buff in target.Buffs)
@@ -503,7 +504,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     if (m.Condition == "OLD")
       roll -= 10;
 
-    if (roll >= toHitTarget)
+    if (roll >= toHitTarget || nat20)
     {
       int dmg = rng.Next(m.DmgLow, m.DmgHigh + 1);
       if (m.Condition == "OLD")
