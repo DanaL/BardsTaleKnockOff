@@ -84,7 +84,7 @@ class MonsterCatalog
     BARBARIAN => new Monster("Barbarian", 6, rng.Next(10, 18), 16, 4, 16, 180, rng.Next(50, 141), MonsterScript.Melee, "attacks", "barbarian.png", MonsterFlag.None, 1),
     SPIDER => new Monster("Spider", 6, rng.Next(5, 12), 17, 3, 12, 120, rng.Next(20, 51), MonsterScript.Melee, "bites", "spider.png", MonsterFlag.None, 1),
     OGRE => new Monster("Ogre", 6, rng.Next(8, 24), 14, 6, 24, 1024, rng.Next(100, 151), MonsterScript.Melee, "swings", "orc.png", MonsterFlag.None, 3),
-    WOLF => new Monster("Feral dog", 6, rng.Next(10, 18), 15, 4, 16, 256, rng.Next(20, 41), MonsterScript.Melee, "bites", "canine.png", MonsterFlag.None, 2),
+    WOLF => new Monster("Wolf", 6, rng.Next(10, 18), 15, 4, 16, 256, rng.Next(20, 41), MonsterScript.Melee, "bites", "canine.png", MonsterFlag.None, 2),
     BLACK_WIDOW => new Monster("Black Widow", 5, rng.Next(2, 18), 15, 5, 20, 1024, rng.Next(75, 151), MonsterScript.Melee, "bites", "spider.png", MonsterFlag.Poison, 2),
     _ => throw new Exception($"Unknown monster id {id}")  
   };

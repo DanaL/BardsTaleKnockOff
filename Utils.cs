@@ -128,8 +128,8 @@ static class StringUtils
 
       return s;
     }
-    else if (s == "elf")
-      return "elves";
+    else if (s.EndsWith("lf"))
+      return s[..^1] + "ves";
     else if (s.EndsWith('s') || s.EndsWith('x') || s.EndsWith("ch"))
       return s + "es";
     else
