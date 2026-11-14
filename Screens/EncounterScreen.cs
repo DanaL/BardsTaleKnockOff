@@ -9,7 +9,6 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-using System.Linq.Expressions;
 using SDL;
 
 namespace BardsTaleKnockOff;
@@ -332,6 +331,13 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
   void Victory()
   {
     var (xp, gold, monstersDefeated) = _battle.AwardSpoils();
+
+    // Scale up gold rewards in more dangerous areas
+    if (_app.GameState.CurrRegion != "town")
+    {
+      double scale = 1.0 + 0.1 + _app.GameState.CurrLevel / 20.0;
+      gold = (int)(gold * scale);
+    }
 
     if (_app.GameState.CurrRegion == "town" || _app.Rng.Next(8) == 0)
     {        
