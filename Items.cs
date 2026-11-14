@@ -83,7 +83,7 @@ class ItemCatalog
     STAFF => new() { Id = STAFF, Name = "Staff", Type = ItemType.Weapon, Value = 30, DamageDie = 6, NumDamageDice = 1, UseableBy = ALL },
     ROBES => new() { Id = ROBES, Name = "Robes", Type = ItemType.Armour, Value = 40, ACMod = 1, UseableBy = ALL },
     LEATHER_ARMOUR => new() { Id = LEATHER_ARMOUR, Name = "Leather Armour", Type = ItemType.Armour, Value = 70, ACMod = 2, UseableBy = NONCASTER },
-    CHAIN_MAIL => new() { Id = CHAIN_MAIL, Name = "Chain Mail", Type = ItemType.Armour, Value = 150, ACMod = 3, UseableBy = FIGHTER },
+    CHAIN_MAIL => new() { Id = CHAIN_MAIL, Name = "Chain Mail", Type = ItemType.Armour, Value = 150, ACMod = 3, UseableBy = FIGHTER | Role.Hunter },
     SPLINT_MAIL => new() { Id = SPLINT_MAIL, Name = "Splint Mail", Type = ItemType.Armour, Value = 300, ACMod = 4, UseableBy = FIGHTER },
     PLATE_ARMOUR => new() { Id = PLATE_ARMOUR, Name = "Plate Armour", Type = ItemType.Armour, Value = 700, ACMod = 5, UseableBy = FIGHTER },
     GAUNTLETS => new() { Id = GAUNTLETS, Name = "Gauntlets", Type = ItemType.Gloves, Value = 40, ACMod = 1, UseableBy = FIGHTER },
