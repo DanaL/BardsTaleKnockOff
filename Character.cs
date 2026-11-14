@@ -316,7 +316,6 @@ class Character
     {
       case Role.Warrior:
         newHP = rng.Next(4, 17);
-        CritChance += rng.Next(1, 32);
         if (nextLevel % 2 == 0)
           AbilityPoints += 1;
         if (nextLevel == 7 || nextLevel == 11)
@@ -333,7 +332,6 @@ class Character
         if (nextLevel % 2 == 0)
           AbilityPoints += 1;
         break;
-      
       case Role.Hunter:
          newHP = rng.Next(1, 9);
          CritChance += rng.Next(1, 32);
