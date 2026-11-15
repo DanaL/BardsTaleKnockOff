@@ -21,7 +21,7 @@ class HouseScreen(App app) : IScreen
     {
       case SDL_Keycode.SDLK_ESCAPE:
       case SDL_Keycode.SDLK_E:
-        app.GameState!.Facing = app.GameState.Facing.Opposite();
+        app.GameState.Facing = app.GameState.Facing.Opposite();
         var (dx, dy) = app.GameState.Facing.Delta();
         app.GameState.X += dx;
         app.GameState.Y += dy;

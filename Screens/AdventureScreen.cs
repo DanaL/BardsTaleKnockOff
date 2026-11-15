@@ -101,7 +101,17 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         app.Screens.Push(new TempleScreen(app));
         break;
       case Feature.TrainingHall:
-        app.Screens.Push(new TrainingHallScreen(app));
+        if (app.GameState.DayTime)
+        {
+          app.Screens.Push(new TrainingHallScreen(app));
+        }
+        else
+        {
+          var (dx, dy) = app.GameState.Facing.Delta();
+          app.GameState.X -= dx;
+          app.GameState.Y -= dy;
+          app.Screens.Push(new PopupScreen(app, "The Training Hall is closed until morning."));
+        }
         break;
       case Feature.Burgemeester:
         app.Screens.Push(new BurgemeesterScreen(app));
