@@ -32,11 +32,12 @@ unsafe class App(SDL_Window* window)
   public Rng Rng { get; set; } = new Rng(DateTime.UtcNow.GetHashCode());
 
   public void Init()
-  {
+  {    
     string townMapPath = ResourcePath.GetDataFilePath("town.txt");
     DungeonLevel town = MapDiskUtils.Load(townMapPath);
     GameState.CurrRegion = "town";
     GameState.Regions["town"] = [ town ];
+    Roster.Clear();
   }
 
   // Switch typed-character events (IScreen.OnText) on or off. Leave it off

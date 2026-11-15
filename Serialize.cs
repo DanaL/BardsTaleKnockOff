@@ -104,7 +104,7 @@ internal class Serialize
     foreach (var pi in sgi.Party.OrderBy(p => p.Slot))
     {
       Character c = app.Roster.First(ch => ch.Name == pi.Name);
-      app.GameState!.Party.Add(c);
+      app.GameState.Party.Add(c);
     }
 
     app.GameState.Turn = sgi.Turn;

@@ -51,6 +51,7 @@ class LoadCampaignScreen(App app) : IScreen
       case SDL_Keycode.SDLK_KP_ENTER:
         app.CampaignName = _saveFiles[_cursor];
         app.Init();
+        app.GameState = new GameState();
         Serialize.LoadSaveGame(app);
         app.Screens.Replace(new GuildScreen(app));
         break;

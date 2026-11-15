@@ -31,7 +31,7 @@ class BurgemeesterScreen : IScreen
     }
     else
     {
-      _blurb = [ "Long ago the great Archmages sealed away Arcioch deep in the Underhalls. In better times, that's a fine tourist draw that brings adventurers to own. But when it rains, it pours and now we have more monsters than we'd like." ];
+      _blurb = [ "Long ago the great Archmages sealed away Arcioch deep in the Underhalls. In better times, that's a fine tourist draw that brings adventurers to town. But when it rains, it pours and now we have more monsters than we'd like." ];
     }
 
     if (!_app.GameState.FactDb.ContainsKey("TownOgreSlain"))
