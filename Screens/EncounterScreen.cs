@@ -29,6 +29,7 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
   const SDL_Scancode HIDE_KEY = SDL_Scancode.SDL_SCANCODE_H;
   const SDL_Scancode CAST_SPELL_KEY = SDL_Scancode.SDL_SCANCODE_C;
   const SDL_Scancode USE_ITEM_KEY = SDL_Scancode.SDL_SCANCODE_U;
+  const SDL_Scancode S_KEY = SDL_Scancode.SDL_SCANCODE_S;
 
   const int PICK_ACTION = 0;
   const int CONFIRM = 1;
@@ -128,7 +129,10 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
             _app.Screens.Push(new InventorySelectionScreen(iopts, this) { Caption = _caption, Image = _image });
           }
           _availableActions = [];
-          break;          
+          break;
+        case S_KEY:
+          SpellChosen(Spells.Smite);
+          break;
       }
 
       if (next)
@@ -478,6 +482,12 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
       {
         _availableActions.Add(ATTACK_KEY);
         lines.Add("A) Attack foes");
+      }
+
+      if (c.PaladinSpellLevel > 0 && c.MP >= 3)
+      {
+        _availableActions.Add(S_KEY);
+        lines.Add("S) Smite");
       }
 
       if (c.MaxMP > 0)

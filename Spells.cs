@@ -19,6 +19,8 @@ record SpellInfo(string Code, string Name, int Level, int Cost, int Range, Spell
 
 class Spells
 {
+  public static SpellInfo Smite = new("SMTE","Smite", 1, 3, 10, SpellDuration.NA, SpellContext.Combat, Role.Paladin, SpellTarget.Monsters);
+
   static List<SpellInfo> _spells = [
     // Conjurer
     new SpellInfo("MAFL","Mage Flame", 1, 2, 0, SpellDuration.Medium, SpellContext.Exploring, Role.Conjurer, SpellTarget.None),
@@ -59,7 +61,7 @@ class Spells
     
     // Paladin
     new SpellInfo("WOHL","Word of Healing", 1, 4, 0, SpellDuration.NA, SpellContext.Both, Role.Paladin, SpellTarget.PartyMember),
-    new SpellInfo("SMTE","Smite", 1, 3, 10, SpellDuration.NA, SpellContext.Combat, Role.Paladin, SpellTarget.Monsters),
+    Smite,
   ];
 
   // Miscellaneous
