@@ -9,9 +9,6 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-using SDL;
-using static SDL.SDL3;
-
 namespace BardsTaleKnockOff;
 
 record struct Door(int X, int Y, Dir Dir);
@@ -446,6 +443,44 @@ class LevelGenerator
     return room;
   }
 
+  // Not pathfinding, just finding the shortest paths from 
+  // a particular location
+  static void StepCounts(int x, int y, DungeonLevel lvl)
+  {
+    int w = DungeonLevel.MAP_SIZE;
+    int[] distances = new int[MATRIX_SIZE];
+    Array.Fill(distances, int.MaxValue);
+    distances[y * w + x] = 0;
+    Queue<(int X, int Y)> q = new();
+    q.Enqueue((x, y));
+
+    while (q.Count > 0)
+    {
+      (int cx, int cy) = q.Dequeue();      
+      int d = distances[cy * w + cx];
+      
+      // if the neighbour distance is already less than or equal to distance
+      // of square we just reached, we can stop because that other path is 
+      // shorter. Otherwise, set neighbour distance in the matrix to new 
+      // shortest value and add neighbour to queue
+      foreach (Dir dir in new[] { Dir.North, Dir.South, Dir.East, Dir.West})
+      {
+        if (!lvl.Passable(cx, cy, dir)) 
+          continue;
+        var (deltax, deltay) = dir.Delta();
+        int nx = DungeonLevel.Wrap(cx + deltax);
+        int ny = DungeonLevel.Wrap(cy + deltay);
+        int n = w * ny + nx;
+        int nd = distances[n];
+        if (d + 1 < nd || nd == int.MaxValue)
+        {
+          distances[n] = d + 1;
+          q.Enqueue((nx, ny));
+        }
+      }
+    }
+  }
+
   static (List<Room>, DungeonLevel) GenLevel(Rng rng)
   {
     DungeonLevel lvl = new();
@@ -508,6 +543,8 @@ class LevelGenerator
     var arrivalTile = levels[0].TileAt(0, 0);
     levels[0].SetTile(0, 0, arrivalTile with { Feature = Feature.Special8 });
     gs.Regions["dungeon"] = levels;
+
+    StepCounts(0, 0, levels[0]);
   }
 
   static void EraseWall(DungeonLevel lvl, List<(int X, int Y)> hallwaySqs, HashSet<(int, int)> roomSqs, Rng rng)

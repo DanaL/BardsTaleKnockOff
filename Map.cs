@@ -118,7 +118,7 @@ class DungeonLevel
   // Can the party step from (x, y) through the given side?
   public bool Passable(int x, int y, Dir side)
   {
-    var tile = _tiles[x, y];
+    var tile = TileAt(x, y);
     Edge edge = side switch
     {
       Dir.North => tile.EdgeN,
@@ -131,6 +131,6 @@ class DungeonLevel
       return false;
     
     var (dx, dy) = side.Delta();
-    return !_tiles[x + dx, y + dy].Feature.Blocks();
+    return !TileAt(x + dx, y + dy).Feature.Blocks();
   }
 }
