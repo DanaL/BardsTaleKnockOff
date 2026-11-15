@@ -36,7 +36,12 @@ class TreasureChestScreen : IScreen
 
   static readonly Dictionary<string, List<List<int>>> _tables = new()
   {
-    [ "wiztower" ] = [[ ItemCatalog.TORCH, ItemCatalog.TORCH, ItemCatalog.DAGGER , ItemCatalog.SHORTBOW, ItemCatalog.BROADSWORD, ItemCatalog.WARAXE, ItemCatalog.HALBERD, ItemCatalog.ARROW ]]
+    [ "wiztower" ] = [[ ItemCatalog.TORCH, ItemCatalog.TORCH, ItemCatalog.DAGGER , ItemCatalog.SHORTBOW, ItemCatalog.BROADSWORD, ItemCatalog.WARAXE, ItemCatalog.HALBERD, ItemCatalog.ARROW ]],
+    [ "dungeon" ] = [
+        /* level 1 */ [ ItemCatalog.TORCH, ItemCatalog.TORCH, ItemCatalog.DAGGER , ItemCatalog.SHORTBOW, ItemCatalog.BROADSWORD, ItemCatalog.WARAXE, ItemCatalog.HALBERD, ItemCatalog.ARROW ],
+        /* level 2 */ [ ItemCatalog.TORCH, ItemCatalog.TORCH, ItemCatalog.DAGGER , ItemCatalog.SHORTBOW, ItemCatalog.BROADSWORD, ItemCatalog.WARAXE, ItemCatalog.HALBERD, ItemCatalog.ARROW ],
+        /* level 3 */ [ ItemCatalog.TORCH, ItemCatalog.TORCH, ItemCatalog.DAGGER , ItemCatalog.SHORTBOW, ItemCatalog.BROADSWORD, ItemCatalog.WARAXE, ItemCatalog.HALBERD, ItemCatalog.ARROW ]
+    ]
   };
 
   public TreasureChestScreen(App app, int gold, int items, int xp)
