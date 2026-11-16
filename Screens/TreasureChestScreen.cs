@@ -28,7 +28,9 @@ class TreasureChestScreen : IScreen
   const int END = 3;
 
   int _state = MENU;
-  int _gold, _items, _xp;
+  readonly int _gold;
+  int _items;
+  int _xp;
 
   // This is really only used right now for the 'tutorial' dungeon but maybe
   // I'll find a use for it in the main dungeon

@@ -81,6 +81,7 @@ class PortalScreen(App app, string portal) : IScreen
         app.GameState.Facing = Dir.South;
         break;
       case "DungeonEntrance":
+        Serialize.LoadDungeon(app.GameState, app.CampaignName);
         app.GameState.CurrRegion = "dungeon";
         app.GameState.X = 0;
         app.GameState.Y = 0;

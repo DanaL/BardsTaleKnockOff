@@ -58,6 +58,7 @@ class CreateCampaignScreen(App app) : IScreen
           app.CampaignName = _name.Trim();
           app.Init();
           LevelGenerator.GenMainDungeon(app.GameState, app.Rng);
+          Serialize.WriteDungeon(app.GameState, app.CampaignName);
           Serialize.WriteSaveGame(app);
           app.Screens.Replace(new GuildScreen(app));
         }

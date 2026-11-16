@@ -19,7 +19,7 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
 {
   // if the player flees some special encounters, like a guarded door, we
   // might want to move them to a different location
-  public (int X, int Y) RetreatLoc = (-1, -1); 
+  public (int X, int Y, Dir Dir) RetreatLoc = (-1, -1, Dir.None); 
 
   // A message to be written after the player wins the fight
   public string VictoryMessage { get; set; } = "";
@@ -203,7 +203,7 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
     {
       _app.GameState.X = RetreatLoc.X;
       _app.GameState.Y = RetreatLoc.Y;
-      _app.GameState.Facing = _app.GameState.Facing.Opposite();
+      _app.GameState.Facing = RetreatLoc.Dir;
     }
 
     Cleanup();
@@ -371,6 +371,14 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
       Cleanup();
       TreasureChestScreen scr = new(_app, gold, ItemsFound(monstersDefeated), xp);
       _app.Screens.Push(scr);
+    }
+
+    // if this was a fixed encounter, we want to clear it out for this current
+    // visit to the dungeon.
+    Tile tile = _app.GameState.CurrTile;
+    if (tile.Feature == Feature.Encounter)
+    {
+      _app.GameState.CurrMap.SetTile(_app.GameState.X, _app.GameState.Y, tile with { Feature = Feature.None });
     }
   }
 
@@ -619,6 +627,8 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
 
 class EncounterScreen : IScreen
 {
+  public (int X, int Y, Dir Dir) RetreatLoc = (-1, -1, Dir.None); 
+
   readonly App _app;
 
   const int PRELUDE = 0;
@@ -658,59 +668,16 @@ class EncounterScreen : IScreen
     ],
   };
 
-  public EncounterScreen(App app)
+  public EncounterScreen(App app, List<MonsterGroup>? monsters = null)
   {
     _app = app;
     _app.GameState.Messages.Clear();
 
-    var gs = app.GameState;
-    List<(Monsters, int)> monsterOptions = [.. _monsterTable[gs.CurrRegion][gs.CurrLevel]];
-    if (gs.CurrRegion == "town" && !gs.DayTime)
-      monsterOptions.AddRange((Monsters.Magician0, 4), (Monsters.Spider, 4));
-    else if (_app.GameState.CurrTile.Feature == Feature.House)
-      monsterOptions.Add((Monsters.Spider, 4));
-
-    List<Monster> monsterGroup = [];
-    (Monsters monsterId, int count) = monsterOptions[app.Rng.Next(monsterOptions.Count)];
-    _groups.Add(GenGroup(monsterId, count, 10, app.Rng));
-    if (gs.CurrRegion == "town" && app.Rng.Next(4) == 0) 
-    {
-      (Monsters monsterId2, int count2) = monsterOptions[app.Rng.Next(monsterOptions.Count)];
-      _groups.Add(GenGroup(monsterId2, count2, 10, app.Rng));
-    }
-    else if (gs.CurrRegion != "town")
-    {
-      int extraGroups = _app.Rng.Next(10) switch
-      {
-        < 2 => 0,
-        >= 2 and <= 6 => 1,
-        7 or 8 => 2,
-        _ => 3
-      };
-
-      int distance = 10;
-      for (int j = 0; j < extraGroups; j++)
-      {
-        (Monsters mId, int cnt) = monsterOptions[app.Rng.Next(monsterOptions.Count)];
-        var group = GenGroup(mId, cnt, distance, app.Rng);
-        if (group.Monsters[0].HasFlag(MonsterFlag.Ranged))
-        {
-          int extraD = _app.Rng.Next(3) == 0 ? 20 : 10;
-          distance += extraD;
-          group.Distance += extraD;
-        }
-        _groups.Add(group);
-        distance += 10;
-      }      
-    }
+    if (monsters is null)
+      PickMonsters();
+    else
+      _groups = monsters;
     
-    //_groups = [];
-    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(Monsters.Goblin, app.Rng), MonsterCatalog.Get(Monsters.Goblin, app.Rng), MonsterCatalog.Get(Monsters.Goblin, app.Rng)], Distance = 10});
-    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(Monsters.Spider, app.Rng) ], Distance = 10});
-    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(Monsters.Magician0, app.Rng), MonsterCatalog.Get(Monsters.Magician0, app.Rng)], Distance = 90});
-    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(Monsters.Skeleton, app.Rng), MonsterCatalog.Get(Monsters.Skeleton, app.Rng), MonsterCatalog.Get(Monsters.Skeleton, app.Rng)], Distance = 40});    
-    //_groups = [ new() { Monsters = [ MonsterCatalog.Get(Monsters.BlackWidow, app.Rng) ], Distance = 10} ];
-
     List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g.Name : g.Name.Pluralize())} ({g.Distance}')")];
     string desc = summaries.Count switch
     {
@@ -727,6 +694,57 @@ class EncounterScreen : IScreen
       2 => $"You curse as monsters charge you. You face {desc}!",
       _ => $"The denizens of this foul place assault you! You face {desc}!"
     };
+  }
+
+  void PickMonsters()
+  {
+    var gs = _app.GameState;
+    List<(Monsters, int)> monsterOptions = [.. _monsterTable[gs.CurrRegion][gs.CurrLevel]];
+    if (gs.CurrRegion == "town" && !gs.DayTime)
+      monsterOptions.AddRange((Monsters.Magician0, 4), (Monsters.Spider, 4));
+    else if (_app.GameState.CurrTile.Feature == Feature.House)
+      monsterOptions.Add((Monsters.Spider, 4));
+
+    List<Monster> monsterGroup = [];
+    (Monsters monsterId, int count) = monsterOptions[_app.Rng.Next(monsterOptions.Count)];
+    _groups.Add(GenGroup(monsterId, count, 10, _app.Rng));
+    if (gs.CurrRegion == "town" && _app.Rng.Next(4) == 0) 
+    {
+      (Monsters monsterId2, int count2) = monsterOptions[_app.Rng.Next(monsterOptions.Count)];
+      _groups.Add(GenGroup(monsterId2, count2, 10, _app.Rng));
+    }
+    else if (gs.CurrRegion != "town")
+    {
+      int extraGroups = _app.Rng.Next(10) switch
+      {
+        < 2 => 0,
+        >= 2 and <= 6 => 1,
+        7 or 8 => 2,
+        _ => 3
+      };
+
+      int distance = 10;
+      for (int j = 0; j < extraGroups; j++)
+      {
+        (Monsters mId, int cnt) = monsterOptions[_app.Rng.Next(monsterOptions.Count)];
+        var group = GenGroup(mId, cnt, distance, _app.Rng);
+        if (group.Monsters[0].HasFlag(MonsterFlag.Ranged))
+        {
+          int extraD = _app.Rng.Next(3) == 0 ? 20 : 10;
+          distance += extraD;
+          group.Distance += extraD;
+        }
+        _groups.Add(group);
+        distance += 10;
+      }      
+    }
+
+    //_groups = [];
+    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(Monsters.Goblin, app.Rng), MonsterCatalog.Get(Monsters.Goblin, app.Rng), MonsterCatalog.Get(Monsters.Goblin, app.Rng)], Distance = 10});
+    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(Monsters.Spider, app.Rng) ], Distance = 10});
+    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(Monsters.Magician0, app.Rng), MonsterCatalog.Get(Monsters.Magician0, app.Rng)], Distance = 90});
+    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(Monsters.Skeleton, app.Rng), MonsterCatalog.Get(Monsters.Skeleton, app.Rng), MonsterCatalog.Get(Monsters.Skeleton, app.Rng)], Distance = 40});    
+    //_groups = [ new() { Monsters = [ MonsterCatalog.Get(Monsters.BlackWidow, app.Rng) ], Distance = 10} ];
   }
 
   static MonsterGroup GenGroup(Monsters monsterId, int num, int distance, Rng rng)
@@ -747,15 +765,21 @@ class EncounterScreen : IScreen
     }
     else if (_state == FLED)
     {
+      if (RetreatLoc.X != -1 && RetreatLoc.Y != -1)
+      {
+        _app.GameState.X = RetreatLoc.X;
+        _app.GameState.Y = RetreatLoc.Y;
+        _app.GameState.Facing = RetreatLoc.Dir;
+      }
       _app.Screens.Pop();
     }
     else if ((_state == PRELUDE && key.scancode == SDL_Scancode.SDL_SCANCODE_F) || _state == FAILED_TO_FLEE)
     {
-      _app.Screens.Replace(new BattleScreen(_app, _groups, false));
+      _app.Screens.Replace(new BattleScreen(_app, _groups, false) { RetreatLoc = RetreatLoc });
     }
     else if (_state == PRELUDE && _advance && key.scancode == SDL_Scancode.SDL_SCANCODE_A)
     {
-      _app.Screens.Replace(new BattleScreen(_app, _groups, true));
+      _app.Screens.Replace(new BattleScreen(_app, _groups, true) { RetreatLoc = RetreatLoc });
     }
   }
 

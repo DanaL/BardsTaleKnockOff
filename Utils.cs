@@ -201,14 +201,22 @@ static class MapDiskUtils
 
     var lines = File.ReadAllLines(path);
     bool inMessages = false;
+    bool inEncounters = false;
     foreach (string line in lines)
     {
       if (string.IsNullOrWhiteSpace(line))
         continue;
 
-      if (line.Trim().Equals("#messages", StringComparison.OrdinalIgnoreCase))
+      if (line.Trim().Equals("#messages"))
       {
         inMessages = true;
+        inEncounters = false;
+        continue;
+      }
+      else if (line.Trim().Equals("#encounters"))
+      {
+        inEncounters = true;
+        inMessages = false;
         continue;
       }
 
@@ -220,6 +228,21 @@ static class MapDiskUtils
       if (inMessages)
       {
         d.Messages[(x, y)] = pieces[1].Trim().Replace("\\n", "\n");
+        continue;
+      }
+      else if (inEncounters)
+      {
+        List<Encounter> encounters = [];
+        foreach (var s in pieces[1].Trim().Split(';'))
+        {
+          var enc = s.Split(',');
+          Monsters m = Enum.Parse<Monsters>(enc[0], true);
+          int count = int.Parse(enc[1]);
+          int distance = int.Parse(enc[2]);
+          encounters.Add(new(m, count, distance));
+        }
+        d.Encounters[(x, y)] = encounters;
+
         continue;
       }
 
@@ -260,6 +283,16 @@ static class MapDiskUtils
       lines.Add("#messages");
       foreach (var ((x, y), text) in d.Messages)
         lines.Add($"{x},{y}:{text.Replace("\n", "\\n")}");
+    }
+
+    if (d.Encounters.Count > 0)
+    {
+      lines.Add("#encounters");
+      foreach (var ((x, y), encounters) in d.Encounters)
+      {
+        string groups = string.Join(';', encounters.Select(e => $"{e.Monster},{e.Count},{e.Distance}"));
+        lines.Add($"{x},{y}:{groups}");
+      }
     }
 
     File.WriteAllLines(path, lines);

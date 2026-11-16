@@ -129,7 +129,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
           ogre.DefeatFact = new FlagFact("TownOgreSlain", true);
           ogre.HP = 35; // an especially tough ogre
           ogre.Rank += 1;
-          app.Screens.Push(new BattleScreen(app, [new() { Monsters = [ogre], Distance = 10 }], false) { RetreatLoc = (19, 8), VictoryMessage = "A sinister aura emanates from the portal to the east." });
+          app.Screens.Push(new BattleScreen(app, [new() { Monsters = [ogre], Distance = 10 }], false) { RetreatLoc = (19, 8, app.GameState.Facing.Opposite()), VictoryMessage = "A sinister aura emanates from the portal to the east." });
           app.Screens.Push(new PopupScreen(app, "An enormous ogre bars your path!"));
         }
         break;
@@ -176,6 +176,20 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case Feature.Trap_Dart:
       case Feature.Trap_PoisonedNeedles:
         Trap(GS.CurrTile.Feature);
+        break;
+      case Feature.Encounter:
+        if (app.GameState.CurrMap.Encounters.TryGetValue((app.GameState.X, app.GameState.Y), out var enc))
+        {
+          List<MonsterGroup> foes = [];
+          foreach (var e in enc)
+          {
+            foes.Add(e.ToMonsterGroup(app.Rng));
+          }
+
+          var rl = app.GameState.CurrMap.RetreatLocation(app.GameState.X, app.GameState.Y, app.Rng);
+          EncounterScreen es = new(app, foes) { RetreatLoc = rl };
+          app.Screens.Push(es);
+        }        
         break;
       default:
         if (IsEncounter())

@@ -65,7 +65,6 @@ internal class Serialize
     try
     {
       File.WriteAllBytes(DatPath(campaign), bytes);
-      WriteDungeon(app.GameState, campaign);
     }
     catch (Exception)
     {
@@ -73,7 +72,7 @@ internal class Serialize
     }
   }
 
-  static void WriteDungeon(GameState gs, string campaign)
+  public static void WriteDungeon(GameState gs, string campaign)
   {
     if (!gs.Regions.TryGetValue(DungeonRegion, out var levels))
       return;
@@ -83,7 +82,7 @@ internal class Serialize
   }
 
   // Reads dungeon01.txt, dungeon02.txt... until one is missing.
-  static void LoadDungeon(GameState gs, string campaign)
+  public static void LoadDungeon(GameState gs, string campaign)
   {
     List<DungeonLevel> levels = [];
     for (int i = 0; File.Exists(LevelPath(campaign, i)); i++)
@@ -108,8 +107,6 @@ internal class Serialize
     }
 
     app.GameState.Turn = sgi.Turn;
-    app.GameState.FactDb = sgi.Facts ?? [];
-
-    LoadDungeon(app.GameState, app.CampaignName);
+    app.GameState.FactDb = sgi.Facts ?? [];    
   }
 } 

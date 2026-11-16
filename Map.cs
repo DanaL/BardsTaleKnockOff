@@ -62,7 +62,20 @@ static class DirExt
   };
 }
 
-record Encounter(string Monster, int count);
+record Encounter(Monsters Monster, int Count, int Distance);
+
+static class EncounterExt
+{
+  public static MonsterGroup ToMonsterGroup(this Encounter e, Rng rng)
+  {
+    MonsterGroup mg = new() { Distance = e.Distance };
+
+    for (int j = 0; j < e.Count; j++)
+      mg.Monsters.Add(MonsterCatalog.Get(e.Monster, rng));
+
+    return mg;
+  }
+}
 
 record struct Tile(Floor Floor, Ceiling Ceiling, Feature Feature, Edge EdgeN, Edge EdgeS, Edge EdgeE, Edge EdgeW)
 {
@@ -112,7 +125,8 @@ class DungeonLevel
   public const int MAP_SIZE = 22;
   readonly Tile[,] _tiles = new Tile[MAP_SIZE, MAP_SIZE];
   public Dictionary<(int, int), string> Messages { get; } = [];
-  
+  public Dictionary<(int, int), List<Encounter>> Encounters { get; } = [];
+
   public static int Wrap(int v) => ((v % MAP_SIZE) + MAP_SIZE) % MAP_SIZE;
   public Tile TileAt(int x, int y) => _tiles[Wrap(x), Wrap(y)];
   public void SetTile(int x, int y, Tile tile) => _tiles[Wrap(x), Wrap(y)] = tile;
@@ -134,5 +148,30 @@ class DungeonLevel
     
     var (dx, dy) = side.Delta();
     return !TileAt(x + dx, y + dy).Feature.Blocks();
+  }
+
+  // Pick a random square to move to from x,y. If for some reason there are no
+  // open exits, return x,y and a random dir
+  public (int X, int Y, Dir dir) RetreatLocation(int x, int y, Rng rng)
+  {
+    List<Dir> dirs = [ Dir.North, Dir.South, Dir.East, Dir.West ];
+    List<Dir> opts = [];
+    
+    foreach (Dir d in dirs)
+    {
+      if (Passable(x, y, d))
+        opts.Add(d);     
+    }
+
+    if (opts.Count > 0)
+    {
+      Dir dir = opts[rng.Next(opts.Count)];
+      (int deltax, int deltay) = dir.Delta();
+      return (x + deltax, y + deltay, dir.Opposite());
+    }
+    else
+    {
+      return (x, y, dirs[rng.Next(dirs.Count)]);
+    }
   }
 }
