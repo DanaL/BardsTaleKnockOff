@@ -63,7 +63,7 @@ class DisjointSet
 
 class LevelGenerator
 {
-  const int NUM_LEVELS = 3;
+  const int NUM_LEVELS = 4;
   const int MATRIX_SIZE = DungeonLevel.MAP_SIZE * DungeonLevel.MAP_SIZE;
 
   static List<Room> _roomTemplates = [
@@ -445,7 +445,7 @@ class LevelGenerator
 
   // Not pathfinding, just finding the shortest paths from 
   // a particular location
-  static void StepCounts(int x, int y, DungeonLevel lvl)
+  static (int Sq, int D)[] StepCounts(int x, int y, DungeonLevel lvl)
   {
     int w = DungeonLevel.MAP_SIZE;
     int[] distances = new int[MATRIX_SIZE];
@@ -478,6 +478,48 @@ class LevelGenerator
           q.Enqueue((nx, ny));
         }
       }
+    }
+
+    (int, int)[] result = new(int, int)[MATRIX_SIZE];
+    for (int j = 0; j < MATRIX_SIZE; j++)
+      result[j] = (j, distances[j]);
+
+    return result;
+  }
+
+  // BT's levels were neatly stacked, by which I mean if the 
+  // stairs down were at 4, 10 then the arrival stairs/stairs up
+  // on the next level would be at 4, 10 as well
+  static void SetStairs(List<DungeonLevel> levels, Rng rng)
+  {
+    var arrivalTile = levels[0].TileAt(0, 0);
+    levels[0].SetTile(0, 0, arrivalTile with { Feature = Feature.Special8 });
+    int startx = 0, starty = 0; // Per bard's tale tradition the arrival
+                                // stairs on level 1 of a dungeon are always
+                                // at 0, 0
+
+    for (int lvl = 0; lvl < NUM_LEVELS - 1; lvl++)
+    {
+      var map = levels[lvl];
+      var nextMap = levels[lvl + 1];
+
+      // For the stairs down, pick a tile that's further away from the 
+      // stairs up
+      var distances = StepCounts(startx, starty, map);
+      List<int> distantSqs = [.. distances.OrderByDescending(i => i.D)
+                                          .Take(MATRIX_SIZE / 3)
+                                          .Select(i => i.Sq)];
+      int stairsSq = distantSqs[rng.Next(distantSqs.Count)];
+      int stairsX = stairsSq % DungeonLevel.MAP_SIZE;
+      int stairsY = stairsSq / DungeonLevel.MAP_SIZE;
+      Tile tile = map.TileAt(stairsX, stairsY);
+      map.SetTile(stairsX, stairsY, tile with { Feature = Feature.StairsDown });
+
+      tile = nextMap.TileAt(stairsX, stairsY);
+      nextMap.SetTile(stairsX, stairsY, tile with { Feature = Feature.StairsUp });
+
+      startx = stairsX;
+      starty = stairsY;
     }
   }
 
@@ -539,12 +581,10 @@ class LevelGenerator
 
       levels.Add(lvl);
     }
+    
+    SetStairs(levels, rng);
 
-    var arrivalTile = levels[0].TileAt(0, 0);
-    levels[0].SetTile(0, 0, arrivalTile with { Feature = Feature.Special8 });
     gs.Regions["dungeon"] = levels;
-
-    StepCounts(0, 0, levels[0]);
   }
 
   static void EraseWall(DungeonLevel lvl, List<(int X, int Y)> hallwaySqs, HashSet<(int, int)> roomSqs, Rng rng)
