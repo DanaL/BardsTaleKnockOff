@@ -125,7 +125,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case Feature.Special2:
         if (!GS.FactDb.ContainsKey("TownOgreSlain"))
         {
-          Monster ogre = MonsterCatalog.Get(MonsterCatalog.OGRE, app.Rng);
+          Monster ogre = MonsterCatalog.Get(Monsters.Ogre, app.Rng);
           ogre.DefeatFact = new FlagFact("TownOgreSlain", true);
           ogre.HP = 35; // an especially tough ogre
           ogre.Rank += 1;

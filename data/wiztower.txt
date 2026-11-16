@@ -192,3 +192,6 @@
 
 #messages
 2,8:Footsteps in the dust track south and then disappear...
+
+#encounters
+0,2:feral_dog,2;feral_dog,1

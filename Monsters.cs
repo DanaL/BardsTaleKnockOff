@@ -57,35 +57,27 @@ class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, i
   public bool HasFlag(MonsterFlag flag) => (Flags & flag) != MonsterFlag.None;
 }
 
+enum Monsters
+{
+  Goblin, Orc, Skeleton, Conjurer0, Magician0, FeralDog, Spider, Ogre, Nomad, Barbarian, Wolf, BlackWidow  
+}
+
 class MonsterCatalog
 {
-  public const int GOBLIN = 0;
-  public const int ORC = 1;
-  public const int SKELETON = 2;
-  public const int CONJURER_0 = 3;
-  public const int MAGICIAN_0 = 4;
-  public const int FERAL_DOG = 5;
-  public const int SPIDER = 6;
-  public const int OGRE = 7;
-  public const int NOMAD = 8;
-  public const int BARBARIAN = 9;
-  public const int WOLF = 10;
-  public const int BLACK_WIDOW = 11;
-
-  public static Monster Get(int id, Rng rng) => id switch
-  {    
-    GOBLIN => new Monster("Goblin", 10, rng.Next(3, 8), 19, 1, 4, 60, rng.Next(20, 51), MonsterScript.Melee, "attacks", "goblin.png", MonsterFlag.None, 1),
-    ORC => new Monster("Orc", 8, rng.Next(3, 12), 18, 2, 8, 90, rng.Next(20, 81), MonsterScript.Melee, "attacks", "orc.png", MonsterFlag.None, 1),
-    SKELETON => new Monster("Skeleton", 6, rng.Next(7, 16), 18, 3, 12, 110, rng.Next(20, 81), MonsterScript.Melee, "claws at", "skeleton.png", MonsterFlag.Undead, 1),
-    FERAL_DOG => new Monster("Feral dog", 7, rng.Next(3, 12), 18, 2, 8, 90, rng.Next(20, 41), MonsterScript.Melee, "bites", "canine.png", MonsterFlag.None, 1),
-    CONJURER_0 => new Monster("Conjurer", 9, rng.Next(1, 10), 18, 1, 4, 100, rng.Next(25, 61), MonsterScript.Conjuror0, "attacks", "magicuser_yellow.png", MonsterFlag.Ranged, 1),
-    MAGICIAN_0 => new Monster("Magician", 9, rng.Next(1, 10), 18, 1, 4, 100, rng.Next(25, 61), MonsterScript.Magician0, "attacks", "magicuser_green.png", MonsterFlag.Ranged, 1),
-    NOMAD => new Monster("Nomad", 6, rng.Next(8, 16), 17, 3, 12, 120, rng.Next(40, 121), MonsterScript.Melee, "attacks", "barbarian.png", MonsterFlag.None, 1),
-    BARBARIAN => new Monster("Barbarian", 6, rng.Next(10, 18), 16, 4, 16, 180, rng.Next(50, 141), MonsterScript.Melee, "attacks", "barbarian.png", MonsterFlag.None, 1),
-    SPIDER => new Monster("Spider", 6, rng.Next(5, 12), 17, 3, 12, 120, rng.Next(20, 51), MonsterScript.Melee, "bites", "spider.png", MonsterFlag.None, 1),
-    OGRE => new Monster("Ogre", 6, rng.Next(8, 24), 14, 6, 24, 1024, rng.Next(100, 151), MonsterScript.Melee, "swings", "orc.png", MonsterFlag.None, 3),
-    WOLF => new Monster("Wolf", 6, rng.Next(10, 18), 15, 4, 16, 256, rng.Next(20, 41), MonsterScript.Melee, "bites", "canine.png", MonsterFlag.None, 2),
-    BLACK_WIDOW => new Monster("Black Widow", 5, rng.Next(2, 18), 15, 5, 20, 1024, rng.Next(75, 151), MonsterScript.Melee, "bites", "spider.png", MonsterFlag.Poison, 2),
+  public static Monster Get(Monsters id, Rng rng) => id switch
+  {
+    Monsters.Goblin => new Monster("Goblin", 10, rng.Next(3, 8), 19, 1, 4, 60, rng.Next(20, 51), MonsterScript.Melee, "attacks", "goblin.png", MonsterFlag.None, 1),
+    Monsters.Orc => new Monster("Orc", 8, rng.Next(3, 12), 18, 2, 8, 90, rng.Next(20, 81), MonsterScript.Melee, "attacks", "orc.png", MonsterFlag.None, 1),
+    Monsters.Skeleton => new Monster("Skeleton", 6, rng.Next(7, 16), 18, 3, 12, 110, rng.Next(20, 81), MonsterScript.Melee, "claws at", "skeleton.png", MonsterFlag.Undead, 1),
+    Monsters.FeralDog => new Monster("Feral dog", 7, rng.Next(3, 12), 18, 2, 8, 90, rng.Next(20, 41), MonsterScript.Melee, "bites", "canine.png", MonsterFlag.None, 1),
+    Monsters.Conjurer0 => new Monster("Conjurer", 9, rng.Next(1, 10), 18, 1, 4, 100, rng.Next(25, 61), MonsterScript.Conjuror0, "attacks", "magicuser_yellow.png", MonsterFlag.Ranged, 1),
+    Monsters.Magician0 => new Monster("Magician", 9, rng.Next(1, 10), 18, 1, 4, 100, rng.Next(25, 61), MonsterScript.Magician0, "attacks", "magicuser_green.png", MonsterFlag.Ranged, 1),
+    Monsters.Nomad => new Monster("Nomad", 6, rng.Next(8, 16), 17, 3, 12, 120, rng.Next(40, 121), MonsterScript.Melee, "attacks", "barbarian.png", MonsterFlag.None, 1),
+    Monsters.Barbarian => new Monster("Barbarian", 6, rng.Next(10, 18), 16, 4, 16, 180, rng.Next(50, 141), MonsterScript.Melee, "attacks", "barbarian.png", MonsterFlag.None, 1),
+    Monsters.Spider => new Monster("Spider", 6, rng.Next(5, 12), 17, 3, 12, 120, rng.Next(20, 51), MonsterScript.Melee, "bites", "spider.png", MonsterFlag.None, 1),
+    Monsters.Ogre => new Monster("Ogre", 6, rng.Next(8, 24), 14, 6, 24, 1024, rng.Next(100, 151), MonsterScript.Melee, "swings", "orc.png", MonsterFlag.None, 3),
+    Monsters.Wolf => new Monster("Wolf", 6, rng.Next(10, 18), 15, 4, 16, 256, rng.Next(20, 41), MonsterScript.Melee, "bites", "canine.png", MonsterFlag.None, 2),
+    Monsters.BlackWidow => new Monster("Black Widow", 5, rng.Next(2, 18), 15, 5, 20, 1024, rng.Next(75, 151), MonsterScript.Melee, "bites", "spider.png", MonsterFlag.Poison, 2),
     _ => throw new Exception($"Unknown monster id {id}")  
   };
 }

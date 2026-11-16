@@ -30,7 +30,7 @@ static class EdgeExt
 
 // Something standing in the middle of a square, drawn as a sprite that fills
 // the square (e.g. a tree). Unlike edges, these belong to the square itself.
-enum Feature : byte { None, Burgemeester, Tree, Guild, House, Shop, Special1, Special2, Special3, Special4,                    
+enum Feature : byte { None, Burgemeester, Encounter, Tree, Guild, House, Shop, Special1, Special2, Special3, Special4,                    
                       Special5, Special6, Special7, Special8, StairsUp, StairsDown, Tavern, Temple, TrainingHall, 
                       Trap_Blades, Trap_Dart, Trap_PoisonedNeedles }
 
@@ -61,6 +61,8 @@ static class DirExt
     _ => (-1, 0)
   };
 }
+
+record Encounter(string Monster, int count);
 
 record struct Tile(Floor Floor, Ceiling Ceiling, Feature Feature, Edge EdgeN, Edge EdgeS, Edge EdgeE, Edge EdgeW)
 {
