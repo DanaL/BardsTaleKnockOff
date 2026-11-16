@@ -13,6 +13,34 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
+class StairsScreen(App app, bool descending) : IScreen
+{  
+  public void OnKey(SDL_KeyboardEvent key)
+  {
+    switch (key.scancode)
+    {
+      case SDL_Scancode.SDL_SCANCODE_N:
+      case SDL_Scancode.SDL_SCANCODE_ESCAPE:
+        app.Screens.Pop();
+        break;
+      case SDL_Scancode.SDL_SCANCODE_Y:
+        app.GameState.CurrLevel += descending ? 1 : -1;
+        app.Screens.Pop();
+        break;
+    }
+  }
+
+  public void Draw(GameUI ui)
+  {
+    string txt = descending ? "Stairs downward lead deeper into the dungeon. Take them? (y/n)"
+                            : "Stairs upward allow you to ascend. Take them? (y/n)";
+
+    ui.DrawNoBackground("");
+    ui.DrawTextPanel([ txt ]);
+    ui.DrawRoster(app.GameState);
+  }
+}
+
 class PortalScreen(App app, string portal) : IScreen
 {
   public void OnKey(SDL_KeyboardEvent key)

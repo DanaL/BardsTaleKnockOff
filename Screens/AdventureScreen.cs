@@ -162,6 +162,16 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case Feature.Special8:
         app.Screens.Push(new PortalScreen(app, "DungeonExit"));
         break;
+      case Feature.StairsDown:
+        app.Screens.Push(new StairsScreen(app, true));
+        if (IsEncounter())
+          app.Screens.Push(new EncounterScreen(app));
+        break;
+      case Feature.StairsUp:
+        app.Screens.Push(new StairsScreen(app, false));
+        if (IsEncounter())
+          app.Screens.Push(new EncounterScreen(app));
+        break;
       case Feature.Trap_Blades:
       case Feature.Trap_Dart:
       case Feature.Trap_PoisonedNeedles:

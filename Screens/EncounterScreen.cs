@@ -652,6 +652,9 @@ class EncounterScreen : IScreen
     /* Level 3 */ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), (MonsterCatalog.FERAL_DOG, 8),
                     (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4), (MonsterCatalog.NOMAD, 4),
                     (MonsterCatalog.BARBARIAN, 8), (MonsterCatalog.WOLF, 8), (MonsterCatalog.BLACK_WIDOW, 8) ],
+    /* Level 4 */ [ (MonsterCatalog.GOBLIN, 8), (MonsterCatalog.ORC, 8), (MonsterCatalog.SKELETON, 4), (MonsterCatalog.FERAL_DOG, 8),
+                    (MonsterCatalog.CONJURER_0, 4), (MonsterCatalog.MAGICIAN_0, 4), (MonsterCatalog.SPIDER, 4), (MonsterCatalog.NOMAD, 4),
+                    (MonsterCatalog.BARBARIAN, 8), (MonsterCatalog.WOLF, 8), (MonsterCatalog.BLACK_WIDOW, 8) ],
     ],
   };
 
