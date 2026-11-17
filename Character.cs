@@ -430,6 +430,23 @@ class Party
     return true;
   }
 
+  public bool HasLight()
+  {
+    foreach (var b in Buffs)
+    {
+      switch (b.Buff)
+      {
+        case Buff.Torch:
+        case Buff.MageFlame:
+        case Buff.SteelLight:
+        case Buff.Revelation:
+          return true;
+      }
+    }
+
+    return false;
+  }
+
   public void CheckBuffs(ulong turn)
   {
     Buffs = [.. Buffs.Where(b => b.ExpiresOn > turn)];

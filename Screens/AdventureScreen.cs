@@ -9,7 +9,6 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
-using System.Security.Cryptography.X509Certificates;
 using SDL;
 
 namespace BardsTaleKnockOff;
@@ -21,8 +20,8 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 {
   GameState GS => app.GameState;
 
-  const int EXPLORE = 0;
-  const int CAST_SPELL = 1;
+  const ulong GLIMPSE_DURATION = 300;
+  ulong _glimpseMs = 0;
 
   Character? _caster = null;
   SpellInfo? _spellToCast = null;
@@ -30,12 +29,17 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
   public void OnKey(SDL_KeyboardEvent key)
   {
+    if (_glimpseMs > 0)
+      SnuffLight();
+
     switch (key.scancode)
     {
       case SDL_Scancode.SDL_SCANCODE_UP:
       case SDL_Scancode.SDL_SCANCODE_W:
         GS.Messages.Clear();
         GS.TryMove(GS.Facing);
+        if (GS.Party.HasLight() && GS.CurrTile.HasFlag(TileFlags.Darkness))
+          SnuffLight();
         CheckLocation();
         ResolveTurn();
         Divination();
@@ -201,7 +205,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     {
       foreach (string s in msg.Split('\n'))
         app.GameState.Say(s);
-    }
+    }    
   }
 
   void Trap(Feature trapType)
@@ -232,6 +236,15 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         }        
         break;
     }    
+  }
+
+  void SnuffLight()
+  {
+    if (GS.Party.HasLight() && GS.CurrTile.HasFlag(TileFlags.Darkness))
+    {
+      GS.Say("Darkness!");
+      GS.Party.ClearLightSources();
+    }
   }
 
   void ResolveTurn()
@@ -405,6 +418,17 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
   public void Update(ulong elapsedMs)
   {
+    if (_glimpseMs > 0)
+    {
+      _glimpseMs = elapsedMs >= _glimpseMs ? 0 : _glimpseMs - elapsedMs;
+      if (_glimpseMs == 0)
+        SnuffLight();
+    }
+    else if (GS.Party.HasLight() && GS.CurrTile.HasFlag(TileFlags.Darkness))
+    {
+      _glimpseMs = GLIMPSE_DURATION;
+    }
+
     _idleTime += elapsedMs;
     if (_idleTime >= 10_000)
     {
