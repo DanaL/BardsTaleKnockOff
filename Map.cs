@@ -77,7 +77,15 @@ static class EncounterExt
   }
 }
 
-record struct Tile(Floor Floor, Ceiling Ceiling, Feature Feature, Edge EdgeN, Edge EdgeS, Edge EdgeE, Edge EdgeW)
+[Flags]
+enum TileFlags : ushort
+{
+  None     = 0b00000000,
+  Darkness = 0b00000001,
+}
+
+record struct Tile(Floor Floor, Ceiling Ceiling, Feature Feature, Edge EdgeN, Edge EdgeS, Edge EdgeE, Edge EdgeW,
+                   TileFlags Flags = TileFlags.None)
 {
   public readonly Edge EdgeForDir(Dir dir) => dir switch {
     Dir.North => EdgeN,
@@ -117,6 +125,8 @@ static class TileExt
     Feature.Trap_PoisonedNeedles => true,
     _ => false
   };
+
+  public static bool HasFlag(this Tile t, TileFlags flag) => t.Flags.HasFlag(flag);
 }
 
 // Bard's Tale levels are 22x22 and wrap. Technically BT maps were all toruses

@@ -269,7 +269,8 @@ static class MapDiskUtils
         continue;
       }
 
-      // Format: x,y:Floor,Ceiling,Feature,EdgeN,EdgeS,EdgeE,EdgeW
+      // Format: x,y:Floor,Ceiling,Feature,EdgeN,EdgeS,EdgeE,EdgeW[,Flags]
+      // Optional flags are separated by '|' (e.g. Darkness|AntiMagic)
       string[] f = pieces[1].Split(',');
 
       Tile tile = new(
@@ -279,7 +280,8 @@ static class MapDiskUtils
         Enum.Parse<Edge>(f[3], true),
         Enum.Parse<Edge>(f[4], true),
         Enum.Parse<Edge>(f[5], true),
-        Enum.Parse<Edge>(f[6], true)
+        Enum.Parse<Edge>(f[6], true),
+        f.Length > 7 ? Enum.Parse<TileFlags>(f[7].Replace('|', ','), true) : TileFlags.None
       );
       d.SetTile(x, y, tile);
     }
@@ -297,7 +299,10 @@ static class MapDiskUtils
       for (int y = 0; y < DungeonLevel.MAP_SIZE; y++)
       {
         Tile t = d.TileAt(x, y);
-        lines.Add($"{x},{y}:{t.Floor},{t.Ceiling},{t.Feature},{t.EdgeN},{t.EdgeS},{t.EdgeE},{t.EdgeW}");
+        string line = $"{x},{y}:{t.Floor},{t.Ceiling},{t.Feature},{t.EdgeN},{t.EdgeS},{t.EdgeE},{t.EdgeW}";
+        if (t.Flags != TileFlags.None)
+          line += "," + t.Flags.ToString().Replace(", ", "|");
+        lines.Add(line);
       }
     }
 
