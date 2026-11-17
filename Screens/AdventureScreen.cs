@@ -43,21 +43,25 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         CheckLocation();
         ResolveTurn();
         Divination();
+        CheckForSpinner();
         break;
       case SDL_Scancode.SDL_SCANCODE_DOWN:
       case SDL_Scancode.SDL_SCANCODE_S:
         GS.Facing = GS.Facing.Opposite();
         Divination();
+        CheckForSpinner();
         break;
       case SDL_Scancode.SDL_SCANCODE_LEFT:
       case SDL_Scancode.SDL_SCANCODE_A:
         GS.Facing = GS.Facing.TurnLeft();
         Divination();
+        CheckForSpinner();
         break;
       case SDL_Scancode.SDL_SCANCODE_RIGHT:
       case SDL_Scancode.SDL_SCANCODE_D:
         GS.Facing = GS.Facing.TurnRight();
         Divination();
+        CheckForSpinner();
         break;
       case SDL_Scancode.SDL_SCANCODE_1:
       case SDL_Scancode.SDL_SCANCODE_2:
@@ -182,7 +186,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         Trap(GS.CurrTile.Feature);
         break;
       case Feature.Encounter:
-        if (app.GameState.CurrMap.Encounters.TryGetValue((app.GameState.X, app.GameState.Y), out var enc))
+        if (GS.CurrMap.Encounters.TryGetValue((GS.X, GS.Y), out var enc))
         {
           List<MonsterGroup> foes = [];
           foreach (var e in enc)
@@ -190,10 +194,10 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
             foes.Add(e.ToMonsterGroup(app.Rng));
           }
 
-          var rl = app.GameState.CurrMap.RetreatLocation(app.GameState.X, app.GameState.Y, app.Rng);
+          var rl = GS.CurrMap.RetreatLocation(GS.X, GS.Y, app.Rng);
           EncounterScreen es = new(app, foes) { RetreatLoc = rl };
           app.Screens.Push(es);
-        }        
+        }
         break;
       default:
         if (IsEncounter())
@@ -201,20 +205,19 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         break;
     }
 
-    if (app.GameState.CurrMap.Messages.TryGetValue((app.GameState.X, app.GameState.Y), out var msg))
+    if (GS.CurrMap.Messages.TryGetValue((GS.X, GS.Y), out var msg))
     {
       foreach (string s in msg.Split('\n'))
-        app.GameState.Say(s);
+        GS.Say(s);
     }    
   }
 
   void Trap(Feature trapType)
   {
     // Levitation should project from traps most of the time
-    if (app.GameState.Party.Buffs.Any(b => b.Buff == Buff.Levitation) && app.Rng.Next(4) > 0)
+    if (GS.Party.Buffs.Any(b => b.Buff == Buff.Levitation) && app.Rng.Next(4) > 0)
       return;
 
-    GameState gs = app.GameState;
     app.Screens.Push(new PopupScreen(app, "A trap!!"));
 
     // Once I have implemented slot S, a monster occupying it will be
@@ -229,7 +232,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         }
         break;
       case Feature.Trap_PoisonedNeedles:
-         if (GS.Party.Members[0] is Character nc)
+        if (GS.Party.Members[0] is Character nc)
         {
           foreach (string s in Traps.PoisonNeedles(nc, app.GameState, app.Rng))
             GS.Say(s);
@@ -247,11 +250,21 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     }
   }
 
+  void CheckForSpinner()
+  {
+    if (GS.CurrTile.Feature == Feature.Spinner)
+    {
+      List<Dir> other = [.. Util.Cardinals.Where(d => d != GS.Facing)];
+      Dir spin = other[app.Rng.Next(other.Count)];      
+      GS.Facing = spin;
+    }
+  }
+
   void ResolveTurn()
   {
-    app.GameState.Party.StatusEffects(app.GameState);
+    GS.Party.StatusEffects(GS);
 
-    if (app.GameState.Party.Alive == 0)
+    if (GS.Party.Alive == 0)
     {
       app.Screens.Replace(new TPKScreen(app));
       return;
@@ -263,9 +276,9 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     // to me?
     if (_idleTime > 10_000)
     {
-      if (app.GameState.CurrLevel == 0 && app.GameState.DayTime && app.GameState.CurrLevel == 0)
+      if (GS.CurrLevel == 0 && GS.DayTime && GS.CurrLevel == 0)
       {
-        foreach (var character in app.GameState.Party.Members.OfType<Character>())
+        foreach (var character in GS.Party.Members.OfType<Character>())
         {
           if (character.MaxMP > 0 && character.MP < character.MaxMP)
             ++character.MP;
@@ -280,7 +293,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     ++GS.Turn;
 
     GS.Party.CheckBuffs(GS.Turn);
-    GS.Party.MoveIncapacitatedToBack();
+    GS.Party.MoveIncapacitatedToBack();    
   }
 
   void Divination()

@@ -385,12 +385,6 @@ class TrainingHallServicesScreen(App app, Character c) : IScreen
           if (slot <= app.GameState.Party.Count && app.GameState.Party.Members[slot] is Character nc)
           {
             c = nc;
-
-            for (int j = 1; j <= 13; j++)
-            {
-              int foo = (int) Math.Round(j / 2.0, MidpointRounding.AwayFromZero);
-              Console.WriteLine($"{j} {foo}");
-            }
           }          
           break;
         case SDL_Scancode.SDL_SCANCODE_M:
