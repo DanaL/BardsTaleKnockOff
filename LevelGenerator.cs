@@ -66,7 +66,7 @@ class LevelGenerator
   const int NUM_LEVELS = 4;
   const int MATRIX_SIZE = DungeonLevel.MAP_SIZE * DungeonLevel.MAP_SIZE;
 
-  static List<Room> _roomTemplates = [
+  static readonly List<Room> _roomTemplates = [
     new Room(2, 2) { Exits = [ new(0, 1, Dir.South) ],
        Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Wall),
                   [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
@@ -135,7 +135,6 @@ class LevelGenerator
                  [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Open),
                  [(2,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.StoneDoor, Edge.Open) },
       },
-    
   ];
 
   static List<int> DisjointNeighbours(int n, DisjointSet ds, HashSet<int> hallways)
@@ -579,6 +578,9 @@ class LevelGenerator
       for (int k = 3; k <= numToErase; k++)
         EraseWall(lvl, hallwaySqs, roomSqs, rng);
 
+      // Sometimes add fixed encounters
+      SetFixedEncounters(lvl, ln, rooms, rng);
+
       levels.Add(lvl);
     }
     
@@ -587,6 +589,58 @@ class LevelGenerator
     gs.Regions["dungeon"] = levels;
   }
 
+  static void SetFixedEncounters(DungeonLevel lvl, int levelNum, List<Room> rooms, Rng rng)
+  {
+    int numFixed = rng.Next(10) switch
+    {
+      > 8 => 3,
+      >= 5 and <= 7 => 2,
+      >= 2 and <= 5 => 1,
+      _ => 0
+    };
+    numFixed = int.Min(numFixed, rooms.Count);
+    List<int> roomIds = [.. Enumerable.Range(0, rooms.Count)];
+    roomIds.Shuffle(rng);
+
+    for (int j = 0; j < numFixed; j++)
+    {
+      Room room = rooms[roomIds[j]];
+      List<Door> exits = [.. room.Exits.Where(sq => lvl.TileAt(sq.X, sq.Y).Feature == Feature.None)];
+      if (exits.Count == 0)
+        continue;
+      Door exit = exits[rng.Next(exits.Count)];
+      lvl.Encounters[(exit.X, exit.Y)] = PickEnc(levelNum, rng);
+      Tile t = lvl.TileAt(exit.X, exit.Y);
+      lvl.SetTile(exit.X, exit.Y, t with { Feature = Feature.Encounter });
+    }
+
+    static List<Encounter> PickEnc(int levelNum, Rng rng)
+    {
+      List<Encounter> enc = [];
+      var table = Util.MonsterTable["dungeon"][levelNum];
+      Monsters m = table[rng.Next(table.Count)].Item1;
+
+      int numGroups = rng.Next(10) switch
+      {
+        > 8 => 4,
+        >= 7 and <= 8 => 3,
+        >= 4 and <= 6 => 2,
+        _ => 1
+      };
+
+      int groupSize = rng.Next(5, 10);
+      int distance = 10;
+      for (int j = 0; j < numGroups; j++)
+      {
+        enc.Add(new(m, groupSize, distance));
+        if (j > 0)
+          distance += 10;
+      }
+
+      return enc;
+    }
+  }
+  
   static void EraseWall(DungeonLevel lvl, List<(int X, int Y)> hallwaySqs, HashSet<(int, int)> roomSqs, Rng rng)
   {
     List<(int, int, Dir)> opts = [];

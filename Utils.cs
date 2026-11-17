@@ -44,6 +44,29 @@ static class Util
   const string GameFolder = "DanasBardsTale";
   public static double ToDouble(string s) => double.Parse(s, System.Globalization.CultureInfo.InvariantCulture);
 
+  public static readonly Dictionary<string, List<List<(Monsters, int)>>> MonsterTable = new()
+  {
+    ["town"] =[ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), 
+                (Monsters.FeralDog, 8), (Monsters.Conjurer0, 4), (Monsters.Nomad, 4)  ] ],
+    ["wiztower"] = [ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
+                (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
+                  (Monsters.Barbarian, 8) ] ],
+    ["dungeon"] = [ 
+    /* Level 1 */ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
+                    (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
+                    (Monsters.Barbarian, 8) ],
+    /* Level 2 */ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
+                    (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
+                    (Monsters.Barbarian, 8), (Monsters.Wolf, 8) ],
+    /* Level 3 */ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
+                    (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
+                    (Monsters.Barbarian, 8), (Monsters.Wolf, 8), (Monsters.BlackWidow, 8) ],
+    /* Level 4 */ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
+                    (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
+                    (Monsters.Barbarian, 8), (Monsters.Wolf, 8), (Monsters.BlackWidow, 8) ],
+    ],
+  };
+  
   public static string CalcName(Monster m)
   {
     string n = m.Name;

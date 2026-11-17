@@ -643,31 +643,6 @@ class EncounterScreen : IScreen
   readonly List<MonsterGroup> _groups = [];
   readonly string _blurb;
 
-  // Monster tables
-
-  static readonly Dictionary<string, List<List<(Monsters, int)>>> _monsterTable = new()
-  {
-    ["town"] =[ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), 
-                (Monsters.FeralDog, 8), (Monsters.Conjurer0, 4), (Monsters.Nomad, 4)  ] ],
-    ["wiztower"] = [ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
-                (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
-                  (Monsters.Barbarian, 8) ] ],
-    ["dungeon"] = [ 
-    /* Level 1 */ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
-                    (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
-                    (Monsters.Barbarian, 8) ],
-    /* Level 2 */ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
-                    (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
-                    (Monsters.Barbarian, 8), (Monsters.Wolf, 8) ],
-    /* Level 3 */ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
-                    (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
-                    (Monsters.Barbarian, 8), (Monsters.Wolf, 8), (Monsters.BlackWidow, 8) ],
-    /* Level 4 */ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
-                    (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
-                    (Monsters.Barbarian, 8), (Monsters.Wolf, 8), (Monsters.BlackWidow, 8) ],
-    ],
-  };
-
   public EncounterScreen(App app, List<MonsterGroup>? monsters = null)
   {
     _app = app;
@@ -699,7 +674,7 @@ class EncounterScreen : IScreen
   void PickMonsters()
   {
     var gs = _app.GameState;
-    List<(Monsters, int)> monsterOptions = [.. _monsterTable[gs.CurrRegion][gs.CurrLevel]];
+    List<(Monsters, int)> monsterOptions = [.. Util.MonsterTable[gs.CurrRegion][gs.CurrLevel]];
     if (gs.CurrRegion == "town" && !gs.DayTime)
       monsterOptions.AddRange((Monsters.Magician0, 4), (Monsters.Spider, 4));
     else if (_app.GameState.CurrTile.Feature == Feature.House)
