@@ -31,8 +31,8 @@ static class EdgeExt
 // Something standing in the middle of a square, drawn as a sprite that fills
 // the square (e.g. a tree). Unlike edges, these belong to the square itself.
 enum Feature : byte { None, Burgemeester, Encounter, Tree, Guild, House, Shop, Special1, Special2, Special3, Special4,                    
-                      Special5, Special6, Special7, Special8, Spinner, StairsUp, StairsDown, Tavern, Temple, TrainingHall, 
-                      Trap_Blades, Trap_Dart, Trap_PoisonedNeedles }
+                      Special5, Special6, Special7, Special8, Spinner, StairsUp, StairsDown, Tavern, Teleporter, Temple, 
+                      TrainingHall, Trap_Blades, Trap_Dart, Trap_PoisonedNeedles }
 
 static class FeatureExt
 {
@@ -122,7 +122,8 @@ class DungeonLevel
   readonly Tile[,] _tiles = new Tile[MAP_SIZE, MAP_SIZE];
   public Dictionary<(int, int), string> Messages { get; } = [];
   public Dictionary<(int, int), List<Encounter>> Encounters { get; } = [];
-
+  public Dictionary<(int, int), (int, int)> Teleporters { get; } = [];
+  
   public static int Wrap(int v) => ((v % MAP_SIZE) + MAP_SIZE) % MAP_SIZE;
   public Tile TileAt(int x, int y) => _tiles[Wrap(x), Wrap(y)];
   public void SetTile(int x, int y, Tile tile) => _tiles[Wrap(x), Wrap(y)] = tile;

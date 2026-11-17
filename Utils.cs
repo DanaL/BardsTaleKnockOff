@@ -234,6 +234,7 @@ static class MapDiskUtils
     var lines = File.ReadAllLines(path);
     bool inMessages = false;
     bool inEncounters = false;
+    bool inTeleporters = false;
     foreach (string line in lines)
     {
       if (string.IsNullOrWhiteSpace(line))
@@ -243,12 +244,21 @@ static class MapDiskUtils
       {
         inMessages = true;
         inEncounters = false;
+        inTeleporters = false;
         continue;
       }
       else if (line.Trim().Equals("#encounters"))
       {
         inEncounters = true;
         inMessages = false;
+        inTeleporters = false;
+        continue;
+      }
+      else if (line.Trim().Equals("#teleporters"))
+      {
+        inEncounters = false;
+        inMessages = false;
+        inTeleporters = true;
         continue;
       }
 
@@ -275,6 +285,12 @@ static class MapDiskUtils
         }
         d.Encounters[(x, y)] = encounters;
 
+        continue;
+      }
+      else if (inTeleporters)
+      {
+        var digits = pieces[1].Trim().Split(',');
+        d.Teleporters[(x, y)] = (int.Parse(digits[0]), int.Parse(digits[1]));
         continue;
       }
 
@@ -329,6 +345,15 @@ static class MapDiskUtils
       {
         string groups = string.Join(';', encounters.Select(e => $"{e.Monster},{e.Count},{e.Distance}"));
         lines.Add($"{x},{y}:{groups}");
+      }
+    }
+
+    if (d.Teleporters.Count > 0)
+    {
+      lines.Add("#teleporters");
+      foreach (var ((x, y),  (destx, desty)) in d.Teleporters)
+      {
+        lines.Add($"{x},{y}:{destx},{desty}");
       }
     }
 

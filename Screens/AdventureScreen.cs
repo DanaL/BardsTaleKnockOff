@@ -180,6 +180,14 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         if (IsEncounter())
           app.Screens.Push(new EncounterScreen(app));
         break;
+      case Feature.Teleporter:
+        if (GS.CurrMap.Teleporters.TryGetValue((GS.X, GS.Y), out (int, int) dest))
+        {
+          (GS.X, GS.Y) = dest;
+        }
+        if (IsEncounter())
+          app.Screens.Push(new EncounterScreen(app));
+        break;
       case Feature.Trap_Blades:
       case Feature.Trap_Dart:
       case Feature.Trap_PoisonedNeedles:
