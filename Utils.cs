@@ -44,6 +44,8 @@ static class Util
   const string GameFolder = "DanasBardsTale";
   public static double ToDouble(string s) => double.Parse(s, System.Globalization.CultureInfo.InvariantCulture);
 
+  public static readonly List<Dir> Cardinals = [ Dir.North, Dir.South, Dir.East, Dir.West];
+  
   public static readonly Dictionary<string, List<List<(Monsters, int)>>> MonsterTable = new()
   {
     ["town"] =[ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), 
@@ -67,6 +69,13 @@ static class Util
     ],
   };
   
+  public static int Distance(int x1, int y1, int x2, int y2)
+  {
+    int dx = Math.Abs(x1 - x2);
+    int dy = Math.Abs(y1 - y2);
+    return (int)Math.Sqrt(dx * dx + dy * dy);
+  }
+
   public static string CalcName(Monster m)
   {
     string n = m.Name;

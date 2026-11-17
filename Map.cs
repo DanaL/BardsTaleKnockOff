@@ -84,49 +84,35 @@ enum TileFlags : ushort
   Darkness = 0b00000001,
 }
 
-record struct Tile(Floor Floor, Ceiling Ceiling, Feature Feature, Edge EdgeN, Edge EdgeS, Edge EdgeE, Edge EdgeW,
-                   TileFlags Flags = TileFlags.None)
+record struct Tile(Floor Floor, Ceiling Ceiling, Feature Feature, Edge EdgeN, Edge EdgeS, Edge EdgeE, Edge EdgeW, TileFlags Flags = TileFlags.None)
 {
+
   public readonly Edge EdgeForDir(Dir dir) => dir switch {
     Dir.North => EdgeN,
     Dir.South => EdgeS,
     Dir.East => EdgeE,
     _ => EdgeW
   };
-}
 
-static class TileExt
-{
-  public static List<Dir> Exits(this Tile t)
+  public readonly List<Dir> Exits()
   {
     List<Dir> exits = [];
 
-    if (t.EdgeN == Edge.Open || t.EdgeN == Edge.StoneDoor)
+    if (EdgeN == Edge.Open || EdgeN == Edge.StoneDoor)
       exits.Add(Dir.North);
-    if (t.EdgeS == Edge.Open || t.EdgeS == Edge.StoneDoor)
+    if (EdgeS == Edge.Open || EdgeS == Edge.StoneDoor)
       exits.Add(Dir.South);
-    if (t.EdgeW == Edge.Open || t.EdgeW == Edge.StoneDoor)
+    if (EdgeW == Edge.Open || EdgeW == Edge.StoneDoor)
       exits.Add(Dir.West);
-    if (t.EdgeE == Edge.Open || t.EdgeE == Edge.StoneDoor)
+    if (EdgeE == Edge.Open || EdgeE == Edge.StoneDoor)
       exits.Add(Dir.East);
       
     return exits;
   }
 
-  public static bool IsStairs(this Tile t) => t.Feature switch
-  {
-    Feature.StairsUp or Feature.StairsDown or Feature.Special5 or Feature.Special8 => true,
-    _ => false
-  };
-
-  public static bool IsTrap(this Tile t) => t.Feature switch
-  {
-    Feature.Trap_Dart => true,
-    Feature.Trap_PoisonedNeedles => true,
-    _ => false
-  };
-
-  public static bool HasFlag(this Tile t, TileFlags flag) => t.Flags.HasFlag(flag);
+  public readonly bool IsStairs() => Feature is Feature.StairsUp or Feature.StairsDown or Feature.Special5 or Feature.Special8;
+  public readonly bool IsTrap() => Feature is Feature.Trap_Dart or Feature.Trap_PoisonedNeedles or Feature.Trap_Blades;
+  public readonly bool HasFlag(TileFlags flag) => Flags.HasFlag(flag);
 }
 
 // Bard's Tale levels are 22x22 and wrap. Technically BT maps were all toruses
@@ -145,14 +131,8 @@ class DungeonLevel
   public bool Passable(int x, int y, Dir side)
   {
     var tile = TileAt(x, y);
-    Edge edge = side switch
-    {
-      Dir.North => tile.EdgeN,
-      Dir.South => tile.EdgeS,
-      Dir.East => tile.EdgeE,
-      _ => tile.EdgeW
-    };
-
+    Edge edge = tile.EdgeForDir(side);
+    
     if (edge == Edge.Wall || edge == Edge.PermWall)
       return false;
     

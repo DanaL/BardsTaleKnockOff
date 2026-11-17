@@ -581,12 +581,50 @@ class LevelGenerator
       // Sometimes add fixed encounters
       SetFixedEncounters(lvl, ln, rooms, rng);
 
+      // Add a few areas of darkness
+      int numDarkAreas = rng.Next(0, 4);
+      for (int j = 0; j < numDarkAreas; j++)
+      {
+        int rx = rng.Next(DungeonLevel.MAP_SIZE);
+        int ry = rng.Next(DungeonLevel.MAP_SIZE);
+        MakeDarkArea(lvl, rx, ry, rng.Next(3));        
+      }
+
       levels.Add(lvl);
     }
     
     SetStairs(levels, rng);
 
     gs.Regions["dungeon"] = levels;
+  }
+
+  static void MakeDarkArea(DungeonLevel lvl, int x, int y, int range)
+  {
+    Queue<(int X, int Y)> q = new();
+    q.Enqueue((x, y));
+    HashSet<(int, int)> visited = [];
+    
+    while (q.Count > 0)
+    {
+      var sq = q.Dequeue();
+      visited.Add(sq);
+
+      Tile tile = lvl.TileAt(sq.X, sq.Y);
+      if (!tile.HasFlag(TileFlags.Darkness))
+        lvl.SetTile(sq.X, sq.Y, tile with { Flags = tile.Flags | TileFlags.Darkness });
+
+      foreach (var dir in Util.Cardinals)
+      {
+        if (tile.EdgeForDir(dir) != Edge.Open)
+          continue;
+        (int deltax, int deltay) = dir.Delta();
+        int nx = sq.X + deltax;
+        int ny = sq.Y + deltay;
+        if (visited.Contains((nx, ny)) || Util.Distance(x, y, nx, ny) > range)
+          continue;
+        q.Enqueue((nx, ny));
+      }
+    }
   }
 
   static void SetFixedEncounters(DungeonLevel lvl, int levelNum, List<Room> rooms, Rng rng)
