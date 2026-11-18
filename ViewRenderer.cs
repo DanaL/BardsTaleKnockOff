@@ -425,12 +425,12 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
                   (_purple, 0.06), 
                   (_pink, 0.12),
                   (_orange, 0.03)];
-      ground = new(78, 45, 27);
+      ground = new(68, 36, 52);
     }
     else if (gs.DayTime)
     {
       bands = [(new(64, 104, 184), 0.2), (new(86, 128, 204), 0.2), (new(112, 154, 220), 0.2), (new(146, 184, 232), 0.2), (new(178, 206, 238), 0.2)];
-      ground = new(122, 84, 56);
+      ground = new(68, 36, 52);
     }
     else 
     {
