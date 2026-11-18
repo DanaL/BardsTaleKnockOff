@@ -246,6 +246,7 @@ unsafe class ViewRenderer
 
     var stoneFloorTexture = Sheet("floor.png");
     var dirtTexture = Sheet("dirt.png");
+    var waterTexture = Sheet("water.png");
 
     // View range r: squares 0..r are drawn, fading into the dark towards the
     // far edge of square r (the "twilight" square). Its far wall sits right at
@@ -288,6 +289,7 @@ unsafe class ViewRenderer
         var floorTex = tile.Floor switch
         {
           Floor.Dirt => dirtTexture,
+          Floor.Water => waterTexture,
           _ => stoneFloorTexture
         };
         DrawFloorAndCeiling(floorTex, lat, depth, false);

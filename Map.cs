@@ -12,7 +12,7 @@
 namespace BardsTaleKnockOff;
 
 enum Ceiling : byte { None, Stone }
-enum Floor : byte { Stone, Dirt }
+enum Floor : byte { Stone, Dirt, Water }
 
 enum Edge : byte { Open, PermWall, Wall, StoneDoor, IllusoryWall, HouseWall, HouseDoor, HouseWallGr, HouseDoorGr }
 
@@ -36,15 +36,16 @@ static class EdgeExt
 // the square (e.g. a tree). Unlike edges, these belong to the square itself.
 enum Feature : byte { None, Burgemeester, Encounter, Tree, Guild, House, Shop, Special1, Special2, Special3, Special4,                    
                       Special5, Special6, Special7, Special8, Spinner, StairsUp, StairsDown, Tavern, Teleporter, Temple, 
-                      TrainingHall, Trap_Blades, Trap_Dart, Trap_PoisonedNeedles }
+                      TrainingHall, Trap_Blades, Trap_Dart, Trap_PoisonedNeedles, Water }
 
 static class FeatureExt
 {
-  public static bool Blocks(this Feature f) => f == Feature.Tree;
+  public static bool Blocks(this Feature f) => f is Feature.Tree;
 
   public static string? FeatureSheet(this Feature f) => f switch
   {
     Feature.Tree => "tree.png",
+    Feature.Water => "water.png",
     _ => null
   };
 }

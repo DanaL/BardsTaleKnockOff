@@ -90,11 +90,19 @@ class GameState
 
   public void TryMove(Dir dir)
   {
+    var delta = dir.Delta();
+    Tile next = CurrMap.TileAt(X + delta.dx, Y + delta.dy);
     if (!CurrMap.Passable(X, Y, dir))
     {
       Say("Ouch! You can't go that way.");
       return;
     }
+    else if (next.Feature == Feature.Water)
+    {
+      Say("You don't want to get your boots wet.");
+      return;
+    }
+    
     var (dx, dy) = dir.Delta();
     X = DungeonLevel.Wrap(X + dx);
     Y = DungeonLevel.Wrap(Y + dy);
