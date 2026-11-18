@@ -17,7 +17,7 @@ namespace BardsTaleKnockOff;
 // Squares in view are addressed relative to the party:
 //   depth   0 = the party's square, 1 = one ahead, 2 = two ahead
 //   lateral negative = left, 0 = straight ahead, positive = right
-unsafe class ViewRenderer
+unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
 {
   public const int ViewW = 160;
   public const int ViewH = 120;
@@ -108,20 +108,12 @@ unsafe class ViewRenderer
   // (At depth 4 the view is wide enough to show squares 3 to each side.)
   static readonly int[] OuterToInner = [-3, 3, -2, 2, -1, 1, 0];
 
-  readonly SDL_Renderer* _renderer;
-  readonly string _assetDir;
+  readonly SDL_Renderer* _renderer = renderer;
+  readonly string _assetDir = assetDir;
 
   // Tile sheets by file name, loaded the first time a style asks for them.
   // (Pointers can't be generic type arguments, hence nint.)
   readonly Dictionary<string, nint> _sheets = [];
-
-  DistanceFade _fade = DistanceFade.ToBlack;
-
-  public ViewRenderer(SDL_Renderer* renderer, string assetDir)
-  {
-    _renderer = renderer;
-    _assetDir = assetDir;
-  }
 
   SDL_Texture* Sheet(string? name)
   {
@@ -226,14 +218,10 @@ unsafe class ViewRenderer
     Dir facing = gs.Facing;
     int viewRange = gs.ViewRange;
     DungeonLevel map = gs.CurrMap;
-    _fade = DistanceFade.ToBlack;
     _revealSecretDoors = revealSecretDoors;
 
     var (fx, fy) = facing.Delta();
     var (rx, ry) = facing.TurnRight().Delta();
-
-    (int x, int y) Square(int lat, int depth) =>
-      (px + depth * fx + lat * rx, py + depth * fy + lat * ry);
 
     var ceilingTex = indoors ? null : Sheet("ceiling.png");
 
@@ -242,7 +230,7 @@ unsafe class ViewRenderer
     var clip = new SDL_Rect { x = originX, y = originY, w = ViewW, h = ViewH };
     SDL_SetRenderClipRect(_renderer, &clip);
 
-    DrawBackground(map, gs, originX, originY);
+    DrawBackground(gs, originX, originY);
 
     var stoneFloorTexture = Sheet("floor.png");
     var dirtTexture = Sheet("dirt.png");
@@ -312,6 +300,8 @@ unsafe class ViewRenderer
 
     SDL_SetRenderClipRect(_renderer, null);
 
+    (int x, int y) Square(int lat, int depth) => (px + depth * fx + lat * rx, py + depth * fy + lat * ry);
+
     SDL_Texture* EdgeTexture(Edge edge)
     {
       if (_revealSecretDoors && edge == Edge.IllusoryWall)
@@ -339,7 +329,7 @@ unsafe class ViewRenderer
 
   // Sky bands from the top of the view down to the horizon, ground below it.
   // Whatever isn't covered by squares in view shows this.
-  void DrawBackground(DungeonLevel map, GameState gs, int originX, int originY)
+  void DrawBackground(GameState gs, int originX, int originY)
   {
     Rgb[] bands;
     Rgb ground;
@@ -569,6 +559,7 @@ unsafe class ViewRenderer
       SetLight(tex, Fogged(255, z));
       SDL_RenderTexture(_renderer, tex, &src, &dst);
     }
+
     SetLight(tex, 255);
   }
 
@@ -606,6 +597,7 @@ unsafe class ViewRenderer
       SetLight(tex, Fogged(255, z));
       SDL_RenderTexture(_renderer, tex, &src, &dst);
     }
+
     SetLight(tex, 255);
   }
 
@@ -634,16 +626,8 @@ unsafe class ViewRenderer
   // that either darkens it or makes it see-through so the sky/ground shows.
   void SetLight(SDL_Texture* tex, byte light)
   {
-    if (_fade == DistanceFade.ToBlack)
-    {
-      SDL_SetTextureColorMod(tex, light, light, light);
-      SDL_SetTextureAlphaMod(tex, 255);
-    }
-    else
-    {
-      SDL_SetTextureColorMod(tex, 255, 255, 255);
-      SDL_SetTextureAlphaMod(tex, light);
-    }
+    SDL_SetTextureColorMod(tex, light, light, light);
+    SDL_SetTextureAlphaMod(tex, 255);
   }
 
   static int Round(float v) => (int)MathF.Floor(v + 0.5f);

@@ -25,11 +25,6 @@ record struct TempBuff(Buff Buff, ulong ExpiresOn, bool CombatOnly);
 
 readonly record struct Rgb(byte R, byte G, byte B);
 
-// Indoors, far things get darker (a light source in the dark: dungeons, night).
-// Outdoors, things become see-through and melt into the sky/ground behind them
-// (haze on a bright day).
-enum DistanceFade { ToBlack, ToBackground }
-
 class AbortBattleException(string caster) : Exception(caster) {}
 
 // Facts are saved polymorphically: each subtype needs a [JsonDerivedType]

@@ -104,7 +104,6 @@ unsafe class GameUI
   // before drawing, so screens don't need to.
   public void Clear() => FillRect(Background, new SDL_Rect { x = 0, y = 0, w = ScreenW, h = ScreenH });
 
-  // The first-person view of the map.
   public void DrawDungeonView(GameState gs)
   {
     Frame(ViewRect);
