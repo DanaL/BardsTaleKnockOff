@@ -747,3 +747,122 @@ class LevelGenerator
     return opts[rng.Next(opts.Count)];
   }
 }
+
+record struct Box(int X, int Y, int H, int W);
+class RoomBlob(int height, int width, Rng rng)
+{
+  const int MAX_ROOM = 3;
+
+  List<Box> _boxes = [];
+
+  public void Generate()
+  {
+    _boxes = Partition(0, height, 0, width, rng);
+    foreach (var box in _boxes)
+    {
+      Room r = new(box.H, box.W);
+      // add the corners
+      r.Floors[(box.X, box.Y)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Wall);
+      r.Floors[(box.X, box.Y + box.H - 1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall);
+      r.Floors[(box.X + box.W - 1, box.Y)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open);
+      r.Floors[(box.X + box.W - 1, box.Y + box.H - 1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open);
+
+      for (int y = box.Y; y < box.Y + box.H; y++)
+      {
+        for (int x = box.X; x < box.X + box.W; x++)
+        {
+          Edge n = y == box.Y ? Edge.Wall : Edge.Open;
+          Edge s = y == box.Y + box.H - 1 ? Edge.Wall : Edge.Open;
+          Edge e = x == box.X + box.W - 1 ? Edge.Wall : Edge.Open;
+          Edge w = x == box.X ? Edge.Wall : Edge.Open;
+          r.Floors[(x, y)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, n, s, e, w);
+        }
+      }
+    }      
+  }
+
+  // Prints the boxes as ASCII outlines, 4 characters across and 2 down per
+  // square, with each box labelled with a letter.
+  public void Dump()
+  {
+    for (int i = 0; i < _boxes.Count; i++)
+    {
+       Console.WriteLine($"{(char)('A' + i % 26)}  {_boxes[i]}");
+    }
+    int rows = 2 * height + 1, cols = 4 * width + 1;
+    char[,] grid = new char[rows, cols];
+    for (int r = 0; r < rows; r++)
+      for (int c = 0; c < cols; c++)
+        grid[r, c] = ' ';
+
+    for (int i = 0; i < _boxes.Count; i++)
+    {
+      var b = _boxes[i];
+      int r0 = 2 * b.Y, r1 = 2 * (b.Y + b.H);
+      int c0 = 4 * b.X, c1 = 4 * (b.X + b.W);
+
+      for (int c = c0; c <= c1; c++)
+      {
+        Line(r0, c, '-');
+        Line(r1, c, '-');
+      }
+      for (int r = r0; r <= r1; r++)
+      {
+        Line(r, c0, '|');
+        Line(r, c1, '|');
+      }
+      foreach (var (r, c) in new[] { (r0, c0), (r0, c1), (r1, c0), (r1, c1) })
+        grid[r, c] = '+';
+
+      grid[(r0 + r1) / 2, (c0 + c1) / 2] = (char)('A' + i % 26);
+    }
+
+    for (int r = 0; r < rows; r++)
+    {
+      var line = new System.Text.StringBuilder();
+      for (int c = 0; c < cols; c++)
+        line.Append(grid[r, c]);
+      Console.WriteLine(line.ToString().TrimEnd());
+    }
+
+    // Don't let a wall overwrite a corner drawn by a neighbouring box.
+    void Line(int r, int c, char ch)
+    {
+      if (grid[r, c] != '+')
+        grid[r, c] = ch;
+    }
+  }
+
+  List<Box> Partition(int top, int bottom, int left, int right, Rng rng)
+  {
+    int height = bottom - top;
+    int width = right - left;
+
+    if (height <= 1 || width <= 1)
+      return [];
+
+    bool canSplitX = width > MAX_ROOM;
+    bool canSplitY = height > MAX_ROOM;
+     if (!canSplitX && !canSplitY)
+      return [ new(X: left, Y: top, H: height, W: width) ];
+
+    List<Box> boxes = [];
+    bool splitX = canSplitX && (!canSplitY || rng.Next(2) == 0);    
+    if (splitX)
+    {
+      int x = Split(left, right, rng);
+      boxes.AddRange(Partition(top, bottom, left, x, rng));
+      boxes.AddRange(Partition(top, bottom, x, right, rng));
+    }
+    else
+    {
+      int y = Split(top, bottom, rng);
+      boxes.AddRange(Partition(top, y, left, right, rng));
+      boxes.AddRange(Partition(y, bottom, left, right, rng));
+    }
+
+    return boxes;
+  }
+
+  static int Split(int a, int b, Rng rng) => int.Clamp((a + b) / 2 + rng.Next(7) - 3, a + 1, b - 1);
+}

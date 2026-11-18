@@ -27,6 +27,10 @@ unsafe class Program
 
   static int Main()
   {
+    RoomBlob blobber = new(10, 10, new Rng(DateTime.UtcNow.GetHashCode()));
+    blobber.Generate();
+    blobber.Dump();
+
     if (!SDL_Init(SDL_InitFlags.SDL_INIT_VIDEO))
     {
       Console.Error.WriteLine($"SDL_Init failed: {SDL_GetError()}");
