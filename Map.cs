@@ -30,6 +30,8 @@ static class EdgeExt
     Edge.HouseDoorGr => "house_door_gr.png",
     _ => null
   };
+
+  public static bool Opaque(this Edge e) => e is not Edge.Open;
 }
 
 // Something standing in the middle of a square, drawn as a sprite that fills
@@ -132,7 +134,7 @@ class DungeonLevel
   public static int Wrap(int v) => ((v % MAP_SIZE) + MAP_SIZE) % MAP_SIZE;
   public Tile TileAt(int x, int y) => _tiles[Wrap(x), Wrap(y)];
   public void SetTile(int x, int y, Tile tile) => _tiles[Wrap(x), Wrap(y)] = tile;
-
+  
   // Can the party step from (x, y) through the given side?
   public bool Passable(int x, int y, Dir side)
   {

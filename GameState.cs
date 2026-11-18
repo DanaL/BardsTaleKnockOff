@@ -70,7 +70,7 @@ class GameState
     }
   }
 
-  public (int, int) CurrTime()
+  public (int Hour, int Minutes) CurrTime()
   {
     int normalized = (int)((Turn + START_OFFSET) % TURNS_PER_DAY);
     int hour = normalized / TURNS_PER_HOUR;
@@ -79,7 +79,16 @@ class GameState
     return (hour, minute);
   }
 
-  public bool DayTime => CurrTime().Item1 >= 6 && CurrTime().Item1 < 19;
+  public bool DayTime => CurrTime().Hour >= 6 && CurrTime().Hour < 19;
+  public bool Sunrise => CurrTime().Hour >= 6 && CurrTime().Hour <= 7;
+  public bool Sunset
+  {
+    get
+    {
+      (int hour, int minutes) = CurrTime();
+      return hour == 19 || (hour == 20 && minutes >= 0 && minutes <= 30);
+    }
+  }
 
   public void Say(string message)
   {

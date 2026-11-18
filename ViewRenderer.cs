@@ -230,8 +230,6 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
     var clip = new SDL_Rect { x = originX, y = originY, w = ViewW, h = ViewH };
     SDL_SetRenderClipRect(_renderer, &clip);
 
-    DrawBackground(gs, originX, originY);
-
     var stoneFloorTexture = Sheet("floor.png");
     var dirtTexture = Sheet("dirt.png");
     var waterTexture = Sheet("water.png");
@@ -250,6 +248,10 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
     _fogFar = WallZ(viewRange + 1);
     _fogMin = indoors && gs.DayTime ? DaylightFogMin : 0f;
 
+    DrawBackground(gs, originX, originY);
+    if (gs.CurrRegion == "town" && (gs.Sunset || gs.Sunrise))
+      DrawSilhouettes(gs, originX, originY);
+    
     for (int depth = viewRange; depth >= 0; depth--)
     {
       bool twilight = depth == viewRange;
@@ -327,33 +329,125 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
     }
   }
 
+  // Draw distant shapes that are out view range but will still block 
+  // the background. Only relevant for the town.
+  //
+  // Everything is one flat colour, so the order doesn't matter: overlapping
+  // shapes just merge, and the in-range squares are drawn over all of it.
+  void DrawSilhouettes(GameState gs, int originX, int originY)
+  {
+    (int fx, int fy) = gs.Facing.Delta();
+    (int rx, int ry) = gs.Facing.TurnRight().Delta();
+    Dir left = gs.Facing.TurnLeft();
+    Dir right = gs.Facing.TurnRight();
+
+    for (int d = gs.ViewRange + 1; d <= gs.ViewRange + 4; d++)
+    {
+      float z = WallZ(d + 1);
+      float halfWidth = CenterX * z / Fx;
+      int maxLat = (int)MathF.Ceiling(halfWidth - 0.5f);
+
+      for (int lat = -maxLat; lat <= maxLat; lat++)
+      {
+        int x = gs.X + d * fx + lat * rx;
+        int y = gs.Y + d * fy + lat * ry;
+        Tile t = gs.CurrMap.TileAt(x, y);
+
+        if (t.EdgeForDir(gs.Facing).Opaque())
+          SilhouetteFront(lat, z, originX, originY);
+
+        // As in Draw, each square does the side wall away from the centre of
+        // the view. (The other side is the neighbouring square's wall.)
+        if (lat <= 0 && t.EdgeForDir(left).Opaque())
+          SilhouetteSide(lat - 0.5f, d, originX, originY);
+        if (lat >= 0 && t.EdgeForDir(right).Opaque())
+          SilhouetteSide(lat + 0.5f, d, originX, originY);
+      }
+    }
+  }
+
+  // Silhouettes are buildings against the sunset, so nearly black.
+  static readonly Rgb SilhouetteColour = new(0x2a, 0x22, 0x3a);
+
+  // A wall facing the party, across square lat, at distance z.
+  void SilhouetteFront(int lat, float z, int originX, int originY)
+  {
+    int x0 = (int)MathF.Round(CenterX + Fx * (lat - 0.5f) / z);
+    int x1 = (int)MathF.Round(CenterX + Fx * (lat + 0.5f) / z);
+    float h = Fy / z;
+    int top = (int)MathF.Round(CenterY - h / 2);
+    FillRect(SilhouetteColour, originX + x0, originY + top, x1 - x0, (int)MathF.Round(h));
+  }
+
+  // A side wall at lateral position wallX, running the length of square d.
+  // Drawn a column at a time, like DrawGeneratedSide, since its height
+  // changes along its length.
+  void SilhouetteSide(float wallX, int d, int originX, int originY)
+  {
+    float zNear = WallZ(d), zFar = WallZ(d + 1);
+    float sxNear = CenterX + Fx * wallX / zNear;
+    float sxFar = CenterX + Fx * wallX / zFar;
+    int from = Math.Max(0, (int)MathF.Floor(MathF.Min(sxNear, sxFar)));
+    int to = Math.Min(ViewW, (int)MathF.Ceiling(MathF.Max(sxNear, sxFar)));
+
+    for (int sx = from; sx < to; sx++)
+    {
+      // Clamped rather than skipped, so the end columns are filled too and
+      // there's no gap where a side wall meets a front wall.
+      float z = Math.Clamp(Fx * wallX / (sx + 0.5f - CenterX), zNear, zFar);
+      float h = Fy / z;
+      FillRect(SilhouetteColour, originX + sx, originY + (int)MathF.Round(CenterY - h / 2), 1, (int)MathF.Round(h));
+    }
+  }
+
+  static Rgb _orange = new(0xff, 0xa9, 0x36);
+  static Rgb _pink = new(0xe6, 0x75, 0x95);
+  static Rgb _purple = new(0x92, 0x63, 0x90);
+  static Rgb _darkPurple = new(0x46, 0x46, 0x78);
   // Sky bands from the top of the view down to the horizon, ground below it.
   // Whatever isn't covered by squares in view shows this.
   void DrawBackground(GameState gs, int originX, int originY)
   {
-    Rgb[] bands;
     Rgb ground;
-
+    (Rgb rgb, double h)[] bands;
     if (gs.CurrRegion != "town") {
-      bands = [new(0, 0, 0)];
+      bands = [(new(0, 0, 0), 1.0)];
       ground = new(0, 0, 0);
     }
-    else if (gs.DayTime) 
+    else if (gs.Sunrise || gs.Sunset) 
     {
-      bands = [new(64, 104, 184), new(86, 128, 204), new(112, 154, 220), new(146, 184, 232), new(178, 206, 238)];
+      // I used this palette from lospec for these colours: https://lospec.com/palette-list/sunset-8
+      bands = [(_darkPurple, 0.62), 
+                   (_purple, 0.10),
+                  (_pink, 0.02),
+                  (_purple, 0.02),
+                  (_pink, 0.03), 
+                  (_purple, 0.06), 
+                  (_pink, 0.12),
+                  (_orange, 0.03)];
+      ground = new(78, 45, 27);
+    }
+    else if (gs.DayTime)
+    {
+      bands = [(new(64, 104, 184), 0.2), (new(86, 128, 204), 0.2), (new(112, 154, 220), 0.2), (new(146, 184, 232), 0.2), (new(178, 206, 238), 0.2)];
       ground = new(122, 84, 56);
     }
     else 
     {
-      bands = [new(4, 6, 20), new(8, 11, 32), new(14, 18, 46), new(22, 28, 62)];
+      bands = [(new(4, 6, 20), 0.25), (new(8, 11, 32), 0.25), (new(14, 18, 46), 0.25), (new(22, 28, 62), 0.25)];
       ground = new(0, 0, 0);
     }
 
-    for (int i = 0; i < bands.Length; i++)
+    int top = 0;
+    for (int j = 0; j < bands.Length; j++)
     {
-      int top = (int)(CenterY * i / bands.Length), bottom = (int)(CenterY * (i + 1) / bands.Length);
-      FillRect(bands[i], originX, originY + top, ViewW, bottom - top);
+      //int top = (int)(CenterY * i / bands.Length);
+      int h = (int)Math.Round(CenterY * bands[j].h);
+      //int bottom = (int)(CenterY * (i + 1) / bands.Length);
+      FillRect(bands[j].rgb, originX, originY + top, ViewW, h);
+      top += h;
     }
+
     FillRect(ground, originX, originY + (int)CenterY, ViewW, ViewH - (int)CenterY);
   }
 
