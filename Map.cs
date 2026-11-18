@@ -14,7 +14,7 @@ namespace BardsTaleKnockOff;
 enum Ceiling : byte { None, Stone }
 enum Floor : byte { Stone, Dirt }
 
-enum Edge : byte { Open, PermWall, Wall, StoneDoor, IllusoryWall }
+enum Edge : byte { Open, PermWall, Wall, StoneDoor, IllusoryWall, HouseWall, HouseDoor }
 
 static class EdgeExt
 {
@@ -24,6 +24,8 @@ static class EdgeExt
     Edge.Wall => "walls.png",
     Edge.StoneDoor => "doors.png",
     Edge.IllusoryWall => "walls.png",
+    Edge.HouseWall => "house.png",
+    Edge.HouseDoor => "house_door.png",
     _ => null
   };
 }
@@ -134,7 +136,7 @@ class DungeonLevel
     var tile = TileAt(x, y);
     Edge edge = tile.EdgeForDir(side);
     
-    if (edge == Edge.Wall || edge == Edge.PermWall)
+    if (edge == Edge.Wall || edge == Edge.PermWall || edge == Edge.HouseWall)
       return false;
     
     var (dx, dy) = side.Delta();
