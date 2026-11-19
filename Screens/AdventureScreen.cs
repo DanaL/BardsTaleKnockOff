@@ -70,7 +70,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       case SDL_Scancode.SDL_SCANCODE_5:
       case SDL_Scancode.SDL_SCANCODE_6:
         int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
-        if (slot <= app.Roster.Count)
+        if (GS.Party.Members[slot] is Character)
           app.Screens.Push(new CharacterScreen(app, slot));
         break;
       case SDL_Scancode.SDL_SCANCODE_C:
@@ -284,7 +284,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     // to me?
     if (_idleTime > 10_000)
     {
-      if (GS.CurrLevel == 0 && GS.DayTime && GS.CurrLevel == 0)
+      if (GS.CurrRegion == "town" && GS.DayTime)
       {
         foreach (var character in GS.Party.Members.OfType<Character>())
         {
@@ -415,11 +415,11 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
   {
     int odds = 4;
 
-    if (app.GameState.CurrLevel == 0 && app.GameState.DayTime)
+    if (app.GameState.CurrRegion == "town" && app.GameState.DayTime)
     {
       odds = 7;
     }
-    else if (app.GameState.CurrLevel == 0 && !app.GameState.DayTime)
+    else if (app.GameState.CurrRegion == "town" && !app.GameState.DayTime)
     {
       odds = 5;
     }
