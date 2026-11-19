@@ -39,7 +39,7 @@ static class Util
   const string GameFolder = "DanasBardsTale";
   public static double ToDouble(string s) => double.Parse(s, System.Globalization.CultureInfo.InvariantCulture);
 
-  public static readonly List<Dir> Cardinals = [ Dir.North, Dir.South, Dir.East, Dir.West];
+  public static readonly Dir[] Cardinals = [ Dir.North, Dir.South, Dir.East, Dir.West];
   
   public static readonly Dictionary<string, List<List<(Monsters, int)>>> MonsterTable = new()
   {

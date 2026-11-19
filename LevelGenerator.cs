@@ -240,6 +240,85 @@ class LevelGenerator
     }
   }
 
+  static void SparseRooms(HashSet<int> hallways, List<Room> rooms, Rng rng)
+  {
+    HashSet<(int, int)> roomSqs = [];
+
+    for (int j = 0; j < 10; j++)
+    {
+      var template = _roomTemplates[rng.Next(_roomTemplates.Count)];
+      Room? r = SetSingleRoom(template, roomSqs, hallways, rng);
+      if (r is not null)
+        rooms.Add(r);
+    }
+  }
+
+  static void BlobbedRooms(HashSet<int> hallways, List<Room> rooms, Rng rng)
+  {
+    RoomBlob rb = new(10, 10, rng);
+    var (roomTemplates, blobs) = rb.Generate();
+    int offsetX = 3, offsetY = 3;
+    foreach (Room rt in roomTemplates)
+    {
+      Room r = new(rt.H, rt.W);
+      foreach (var sq in rt.Floors.Keys)
+      {
+        (int X, int Y) floor = (sq.X + offsetX, sq.Y + offsetY);
+        r.Floors[floor] = rt.Floors[sq];
+        hallways.Remove(floor.Y * DungeonLevel.MAP_SIZE + floor.X);        
+      }
+      foreach (Door d in rt.Exits)
+      {
+        r.Exits.Add(d with { X = d.X + offsetX, Y = d.Y + offsetY});
+      }
+      rooms.Add(r);
+    }
+
+    // Now set add at least one door on the exterior of each blob. This is 
+    // the simple case. I can imagine navigation puzzles where say only one
+    // blob has an exterior door and you teleport from blob to blob to get
+    // to a goal
+    foreach (var k in blobs.Keys)
+    {
+      var walls = ExteriorWalls(rooms, blobs[k], hallways);
+      var door = walls[rng.Next(walls.Count)];
+      
+      // setting the tile opposite the door to also be a door is handled
+      // in BlobbedRoom()'s caller
+      Room r = rooms[door.RoomId];
+      r.Floors[(door.X, door.Y)] = door.Dir switch
+      {
+        Dir.North => r.Floors[(door.X, door.Y)] with { EdgeN = Edge.StoneDoor},
+        Dir.South => r.Floors[(door.X, door.Y)] with { EdgeS = Edge.StoneDoor},
+        Dir.East => r.Floors[(door.X, door.Y)] with { EdgeE = Edge.StoneDoor},
+        _ => r.Floors[(door.X, door.Y)] with { EdgeW = Edge.StoneDoor},
+      };
+      r.Exits.Add(new(door.X, door.Y, door.Dir));
+    }
+  }
+
+  static List<(int RoomId, int X, int Y, Dir Dir)> ExteriorWalls(List<Room> rooms, HashSet<int> blob, HashSet<int> hallways)
+  {
+    HashSet<(int RoomId, int X, int Y, Dir Dir)> walls = [];
+
+    foreach (int roomId in blob)
+    {
+      Room room = rooms[roomId];
+      foreach (var (floorx, floory) in room.Floors.Keys)
+      {
+        foreach (Dir dir in Util.Cardinals)
+        {
+          var (deltax, deltay) = dir.Delta();
+          int otherx = floorx + deltax, othery = floory + deltay;
+          if (hallways.Contains(othery * DungeonLevel.MAP_SIZE + otherx))
+            walls.Add((roomId, floorx, floory, dir));
+        }
+      }
+    }
+
+    return [.. walls];
+  }
+
   static List<Room> Mazify(DungeonLevel lvl, Rng rng)
   {
     // By hallways, I mean all tiles that aren't in "official" rooms
@@ -249,14 +328,8 @@ class LevelGenerator
 
     // Place some rooms
     List<Room> rooms = [];
-    HashSet<(int, int)> roomSqs = [];
-    for (int j = 0; j < 10; j++)
-    {
-      var template = _roomTemplates[rng.Next(_roomTemplates.Count)];
-      Room? r = PickRoom(template, roomSqs, hallways, rng);
-      if (r is not null)
-        rooms.Add(r);
-    }
+        
+    BlobbedRooms(hallways, rooms, rng);
 
     DisjointSet ds = new(MATRIX_SIZE);
     List<int> nodes = [];
@@ -319,7 +392,7 @@ class LevelGenerator
         var closet = closets[i];
         rooms.Add(MakeCloset(closet.X, closet.Y, closet.Tile, lvl));
         closets.RemoveAt(i);
-        roomSqs.Add((closet.X, closet.Y));
+        //roomSqs.Add((closet.X, closet.Y));
       }
     }
   
@@ -391,7 +464,7 @@ class LevelGenerator
     }
   }
 
-  static Room? PickRoom(Room template, HashSet<(int, int)> roomSqs, HashSet<int> hallways, Rng rng)
+  static Room? SetSingleRoom(Room template, HashSet<(int, int)> roomSqs, HashSet<int> hallways, Rng rng)
   {
     int roomX, roomY;
     int tries = 0;
@@ -406,10 +479,10 @@ class LevelGenerator
 
       // make sure we don't overlap with any other rooms
       bool overlap = false;
-      foreach (var k in template.Floors.Keys)
+      foreach (var (X, Y) in template.Floors.Keys)
       {
-        int actualX = roomX + k.X;
-        int actualY = roomY + k.Y;
+        int actualX = roomX + X;
+        int actualY = roomY + Y;
 
         if (roomSqs.Contains((actualX, actualY)))
         {
@@ -757,12 +830,10 @@ class RoomBlob(int height, int width, Rng rng)
   List<Box> _boxes = [];
   List<Room> _rooms = [];
 
-  public List<Room> Generate()
+  public (List<Room>, Dictionary<int, HashSet<int>>)  Generate()
   {
     _boxes = Partition(0, height, 0, width, rng);
 
-    Dump();
-    
     foreach (var box in _boxes)
     {
       Room r = new(box.H, box.W);      
@@ -794,7 +865,17 @@ class RoomBlob(int height, int width, Rng rng)
       ds.Union(wall.A, wall.B);
     }
 
-    return _rooms;
+    Dictionary<int, HashSet<int>> blobs = [];
+    for (int j = 0; j < _rooms.Count; j++)
+    {
+      int id = ds.Find(j);
+      if (!blobs.ContainsKey(id))
+        blobs[id] = [ j ];
+      else
+        blobs[id].Add(j);
+    }
+
+    return (_rooms, blobs);
   }
 
   void AddDoor(int a, int b, int x, int y, Dir dirFromA)
@@ -803,13 +884,20 @@ class RoomBlob(int height, int width, Rng rng)
     var roomA = _rooms[a];
     var roomB = _rooms[b];
 
-    roomA.Floors[(x, y)] = dirFromA == Dir.East
-          ? roomA.Floors[(x, y)] with { EdgeE = Edge.StoneDoor }
-          : roomA.Floors[(x, y)] with { EdgeS = Edge.StoneDoor};
-
-    roomB.Floors[(x + dx, y + dy)] = dirFromA == Dir.East
-          ? roomB.Floors[(x + dx, y + dy)] with { EdgeW = Edge.StoneDoor}
-          : roomB.Floors[(x + dx, y + dy)] with { EdgeN = Edge.StoneDoor};
+    if (dirFromA == Dir.East)
+    {
+      roomA.Floors[(x, y)] = roomA.Floors[(x, y)] with { EdgeE = Edge.StoneDoor };
+      roomA.Exits.Add(new Door(x, y, Dir.East));
+      roomB.Floors[(x + dx, y + dy)] = roomB.Floors[(x + dx, y + dy)] with { EdgeW = Edge.StoneDoor};
+      roomB.Exits.Add(new Door(x + dx, y + dy, Dir.West));
+    }
+    else
+    {
+      roomA.Floors[(x, y)] = roomA.Floors[(x, y)] with { EdgeS = Edge.StoneDoor };
+      roomA.Exits.Add(new Door(x, y, Dir.South));
+      roomB.Floors[(x + dx, y + dy)] = roomB.Floors[(x + dx, y + dy)] with { EdgeN = Edge.StoneDoor};
+      roomB.Exits.Add(new Door(x + dx, y + dy, Dir.North));
+    }
   }
 
   List<SharedWall> SharedWalls()
@@ -854,59 +942,7 @@ class RoomBlob(int height, int width, Rng rng)
     return walls;  
   }
 
-  // Prints the boxes as ASCII outlines, 4 characters across and 2 down per
-  // square, with each box labelled with a letter.
-  public void Dump()
-  {
-    for (int i = 0; i < _boxes.Count; i++)
-    {
-       Console.WriteLine($"{(char)('A' + i % 26)}  {_boxes[i]}");
-    }
-    int rows = 2 * height + 1, cols = 4 * width + 1;
-    char[,] grid = new char[rows, cols];
-    for (int r = 0; r < rows; r++)
-      for (int c = 0; c < cols; c++)
-        grid[r, c] = ' ';
-
-    for (int i = 0; i < _boxes.Count; i++)
-    {
-      var b = _boxes[i];
-      int r0 = 2 * b.Y, r1 = 2 * (b.Y + b.H);
-      int c0 = 4 * b.X, c1 = 4 * (b.X + b.W);
-
-      for (int c = c0; c <= c1; c++)
-      {
-        Line(r0, c, '-');
-        Line(r1, c, '-');
-      }
-      for (int r = r0; r <= r1; r++)
-      {
-        Line(r, c0, '|');
-        Line(r, c1, '|');
-      }
-      foreach (var (r, c) in new[] { (r0, c0), (r0, c1), (r1, c0), (r1, c1) })
-        grid[r, c] = '+';
-
-      grid[(r0 + r1) / 2, (c0 + c1) / 2] = (char)('A' + i % 26);
-    }
-
-    for (int r = 0; r < rows; r++)
-    {
-      var line = new System.Text.StringBuilder();
-      for (int c = 0; c < cols; c++)
-        line.Append(grid[r, c]);
-      Console.WriteLine(line.ToString().TrimEnd());
-    }
-
-    // Don't let a wall overwrite a corner drawn by a neighbouring box.
-    void Line(int r, int c, char ch)
-    {
-      if (grid[r, c] != '+')
-        grid[r, c] = ch;
-    }
-  }
-
-  List<Box> Partition(int top, int bottom, int left, int right, Rng rng)
+  static List<Box> Partition(int top, int bottom, int left, int right, Rng rng)
   {
     int height = bottom - top;
     int width = right - left;
