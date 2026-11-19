@@ -367,7 +367,7 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
   }
 
   // Silhouettes are buildings against the sunset, so nearly black.
-  static readonly Rgb SilhouetteColour = new(0x2a, 0x22, 0x3a);
+  static readonly Rgb _silhouetteColour = new(0x2a, 0x22, 0x3a);
 
   // A wall facing the party, across square lat, at distance z.
   void SilhouetteFront(int lat, float z, int originX, int originY)
@@ -376,7 +376,7 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
     int x1 = (int)MathF.Round(CenterX + Fx * (lat + 0.5f) / z);
     float h = Fy / z;
     int top = (int)MathF.Round(CenterY - h / 2);
-    FillRect(SilhouetteColour, originX + x0, originY + top, x1 - x0, (int)MathF.Round(h));
+    FillRect(_silhouetteColour, originX + x0, originY + top, x1 - x0, (int)MathF.Round(h));
   }
 
   // A side wall at lateral position wallX, running the length of square d.
@@ -396,7 +396,7 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
       // there's no gap where a side wall meets a front wall.
       float z = Math.Clamp(Fx * wallX / (sx + 0.5f - CenterX), zNear, zFar);
       float h = Fy / z;
-      FillRect(SilhouetteColour, originX + sx, originY + (int)MathF.Round(CenterY - h / 2), 1, (int)MathF.Round(h));
+      FillRect(_silhouetteColour, originX + sx, originY + (int)MathF.Round(CenterY - h / 2), 1, (int)MathF.Round(h));
     }
   }
 
@@ -450,13 +450,35 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
 
     FillRect(ground, originX, originY + (int)CenterY, ViewW, ViewH - (int)CenterY);
 
-    if (!gs.DayTime && !gs.Sunset)
+    if (!gs.DayTime && !gs.Sunset && !gs.Sunset)
+      DrawStars(gs);
+  }
+
+  static Rgb _white = new(0xff, 0xff, 0xff);
+  static Rgb _faintWhite = new(0xa0, 0xa8, 0xc0);
+  static Rgb _paleBlue = new(0xb4, 0xd2, 0xff);
+  static Rgb _spookyRed = new(0x97, 0x0b, 0x23);
+  static readonly Dictionary<Dir, (int X, int Y, Rgb Colour)[]> _starMap = new()
+  {
+    [Dir.North] = [(40, 10, _white), (42, 40, _paleBlue), (50, 25, _white), (100, 20, _white), (120, 30, _white), (142, 37, _paleBlue), (145, 15, _white)],
+    [Dir.South] = [(35, 12, _white), (42, 17, _faintWhite), (44, 20, _faintWhite), (65, 32, _spookyRed),
+          (90, 60, _white), (110, 55, _white), (113, 40, _paleBlue), (125, 12, _paleBlue), (131, 22, _white), (144, 17, _white)],
+    [Dir.East] = [(20, 40, _white), (28, 42, _white), (40, 38, _paleBlue), (48, 43, _paleBlue), (55, 40, _white), (66, 41, _white),
+                    (150, 15, _white), (129, 55, _white), (90, 44, _paleBlue), (100, 20, _white) ],
+    [Dir.West] = [(31, 35, _white), (41, 27, _paleBlue), (35, 19, _white), (48, 33, _white), (61, 10, _white),
+                  (145, 20, _white), (125, 15, _white), (125, 30, _paleBlue), (131, 28, _paleBlue),
+                  (110, 25, _white), (117, 42, _white), (129, 43, _white),
+                  (80, 50, _paleBlue), (92, 46, _paleBlue)
+                ]
+  };
+
+  void DrawStars(GameState gs)
+  {
+    // draw a star
+    foreach (var star in _starMap[gs.Facing])
     {
-      // draw a star
-      SDL_SetRenderDrawColor(_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
-      SDL_RenderPoint(_renderer, 100, 20);
-      SDL_RenderPoint(_renderer, 10, 10);
-      SDL_RenderPoint(_renderer, 50, 30);
+      SDL_SetRenderDrawColor(_renderer, star.Colour.R, star.Colour.G, star.Colour.B, 0xFF);      
+      SDL_RenderPoint(_renderer, star.X, star.Y);
     }
   }
 

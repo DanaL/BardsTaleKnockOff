@@ -111,7 +111,7 @@ class GameState
       Say("You don't want to get your boots wet.");
       return;
     }
-    
+
     var (dx, dy) = dir.Delta();
     X = DungeonLevel.Wrap(X + dx);
     Y = DungeonLevel.Wrap(Y + dy);
