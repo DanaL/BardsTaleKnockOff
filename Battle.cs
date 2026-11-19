@@ -398,7 +398,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
   void MonsterCaseFreezeFoes(Monster m)
   {
-    Messages.Enqueue($"{m.Name.IndefArticle().Capitalize() } casts Freeze Foes the party!");
+    Messages.Enqueue($"{m.Name.IndefArticle().Capitalize() } casts Freeze Foes on the party!");
 
     foreach (var c in gs.Party.Members.OfType<Character>())
     {

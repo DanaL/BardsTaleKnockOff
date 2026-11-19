@@ -665,7 +665,7 @@ class EncounterScreen : IScreen
     _blurb = _app.Rng.Next(4) switch
     {
       0 => $"You find yourself face-to-face with {desc}!",
-      1 => $"The sudden scream of battle brings your party to a half. You are confront {desc}!",
+      1 => $"The sudden scream of battle brings your party to a halt. You are confronted by {desc}!",
       2 => $"You curse as monsters charge you. You face {desc}!",
       _ => $"The denizens of this foul place assault you! You face {desc}!"
     };
