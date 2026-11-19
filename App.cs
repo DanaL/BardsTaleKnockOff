@@ -16,7 +16,7 @@ namespace BardsTaleKnockOff;
 
 // Everything that lives for the whole run of the program, as opposed to one
 // screen. Every screen gets a reference to this.
-unsafe class App(SDL_Window* window)
+unsafe class App(SDL_Window* window, Rng rng)
 {
   public ScreenStack Screens { get; } = new();
 
@@ -29,8 +29,8 @@ unsafe class App(SDL_Window* window)
   public GameState GameState { get; set; } = new GameState();
   public string CampaignName { get; set; } = "";
   
-  public Rng Rng { get; set; } = new Rng(DateTime.UtcNow.GetHashCode());
-
+  public Rng Rng { get; set; } = rng;
+  
   public void Init()
   {    
     string townMapPath = ResourcePath.GetDataFilePath("town.txt");

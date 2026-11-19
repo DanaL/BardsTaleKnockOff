@@ -66,77 +66,6 @@ class LevelGenerator
   const int NUM_LEVELS = 4;
   const int MATRIX_SIZE = DungeonLevel.MAP_SIZE * DungeonLevel.MAP_SIZE;
 
-  static readonly List<Room> _roomTemplates = [
-    new Room(2, 2) { Exits = [ new(0, 1, Dir.South) ],
-       Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Wall),
-                  [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
-                  [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.StoneDoor, Edge.Open, Edge.Wall),
-                  [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open) },
-        },
-    new Room(2, 2) { Exits = [ new(0, 0, Dir.North) ],
-       Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.StoneDoor, Edge.Open, Edge.Open, Edge.Wall),
-                  [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
-                  [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
-                  [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open) },
-        },
-    new Room(2, 2) { Exits = [ new(0, 0, Dir.West) ],
-       Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.StoneDoor),
-                  [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
-                  [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
-                  [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open) },
-        },
-    new Room(2, 2) { Exits = [ new(1, 1, Dir.East) ],
-       Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Wall),
-                  [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
-                  [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
-                  [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.StoneDoor, Edge.Open) },
-        },
-    new Room(3, 3) { Exits = [ new(0, 1, Dir.West), new (2, 1, Dir.East)],
-      Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Wall),
-                 [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Open),
-                 [(2,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
-
-                 [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Open, Edge.StoneDoor),
-                 [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Open, Edge.Open),
-                 [(2,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.StoneDoor, Edge.Open),
-
-                 [(0,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
-                 [(1,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Open),
-                 [(2,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open),
-                 }
-        },
-    new Room(3, 3) { Exits = [ new(0, 0, Dir.North), new (2, 2, Dir.South)],
-      Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.StoneDoor, Edge.Open, Edge.Open, Edge.Wall),
-                 [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Open),
-                 [(2,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
-
-                 [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Open, Edge.Wall),
-                 [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Open, Edge.Open),
-                 [(2,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Open, Edge.Wall, Edge.Open),
-
-                 [(0,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
-                 [(1,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Open),
-                 [(2,2)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.StoneDoor, Edge.Wall, Edge.Open),
-                 }
-        },
-    new Room(2, 3) { Exits = [ new(0, 0, Dir.West) ],
-      Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.StoneDoor),
-                 [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Open),
-                 [(2,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
-                 [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
-                 [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Open),
-                 [(2,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open) },
-      },
-    new Room(2, 3) { Exits = [ new(2, 1, Dir.East) ],
-      Floors = { [(0,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Wall),
-                 [(1,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Open),
-                 [(2,0)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open),
-                 [(0,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall),
-                 [(1,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Open),
-                 [(2,1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.StoneDoor, Edge.Open) },
-      },
-  ];
-
   static List<int> DisjointNeighbours(int n, DisjointSet ds, HashSet<int> hallways)
   {
     List<int> neighbours = [];
@@ -240,60 +169,85 @@ class LevelGenerator
     }
   }
 
-  static void SparseRooms(HashSet<int> hallways, List<Room> rooms, Rng rng)
+  static void BlobbedRooms(HashSet<int> hallways, List<Room> rooms, Dictionary<int, HashSet<int>> roomBlobs, Rng rng)
   {
-    HashSet<(int, int)> roomSqs = [];
-
-    for (int j = 0; j < 10; j++)
+    int half = DungeonLevel.MAP_SIZE / 2;
+    List<(int X, int Y)> blobSpots = rng.Next(7) switch
     {
-      var template = _roomTemplates[rng.Next(_roomTemplates.Count)];
-      Room? r = SetSingleRoom(template, roomSqs, hallways, rng);
-      if (r is not null)
-        rooms.Add(r);
-    }
-  }
+      // three blobs
+      0 => [(rng.Next(1, half), half), (1, 1), (half, 1)],
+      1 => [(rng.Next(1, half), 1), (1, half), (half, half)],
+      2 => [(half, rng.Next(1, half)), (1, 1), (1, half)],
+      3 => [(1, rng.Next(1, half)), (half, 1), (half, half)],
+      // one in each half
+      4 => [(1, rng.Next(1, 8)), (half, rng.Next(1, 8))],
+      5 => [(rng.Next(1, 8), 1), (rng.Next(1, 8), half)],
+      // one in each quadrant
+      6 => [(1, 1), (half, 1), (1, half), (half, half)],
+      // one blob roughly in the middle
+      _ => [(DungeonLevel.MAP_SIZE / 4 + rng.Next(-2, 3), DungeonLevel.MAP_SIZE / 4 + rng.Next(-2, 3))]
+    };
 
-  static void BlobbedRooms(HashSet<int> hallways, List<Room> rooms, Rng rng)
-  {
-    RoomBlob rb = new(10, 10, rng);
-    var (roomTemplates, blobs) = rb.Generate();
-    int offsetX = 3, offsetY = 3;
-    foreach (Room rt in roomTemplates)
+    foreach (var (offsetX, offsetY) in blobSpots)
     {
-      Room r = new(rt.H, rt.W);
-      foreach (var sq in rt.Floors.Keys)
+      List<Room> tweakedRooms = [];
+      RoomBlob rb = new(10, 10, rng);
+      var (roomTemplates, blobs) = rb.Generate();
+      foreach (Room rt in roomTemplates)
       {
-        (int X, int Y) floor = (sq.X + offsetX, sq.Y + offsetY);
-        r.Floors[floor] = rt.Floors[sq];
-        hallways.Remove(floor.Y * DungeonLevel.MAP_SIZE + floor.X);        
+        Room r = new(rt.H, rt.W);
+        foreach (var sq in rt.Floors.Keys)
+        {
+          (int X, int Y) floor = (sq.X + offsetX, sq.Y + offsetY);
+          r.Floors[floor] = rt.Floors[sq];
+          hallways.Remove(floor.Y * DungeonLevel.MAP_SIZE + floor.X);
+        }
+        foreach (Door d in rt.Exits)
+        {
+          r.Exits.Add(d with { X = d.X + offsetX, Y = d.Y + offsetY });
+        }
+        tweakedRooms.Add(r);
       }
-      foreach (Door d in rt.Exits)
+
+      // Now set add at least one door on the exterior of each blob. This is 
+      // the simple case. I can imagine navigation puzzles where say only one
+      // blob has an exterior door and you teleport from blob to blob to get
+      // to a goal
+      foreach (var k in blobs.Keys)
       {
-        r.Exits.Add(d with { X = d.X + offsetX, Y = d.Y + offsetY});
+        var walls = ExteriorWalls(tweakedRooms, blobs[k], hallways);
+        var (roomId, x, y, dir) = walls[rng.Next(walls.Count)];
+        SetDoor(tweakedRooms, roomId, x, y, dir);
+
+        // add a second door to a room blob sometimes
+        if (rng.Next(3) == 0)
+        {
+          var (roomId2, x2, y2, dir2) = walls[rng.Next(walls.Count)];
+          SetDoor(tweakedRooms, roomId2, x2, y2, dir2);
+        }
       }
-      rooms.Add(r);
+
+      rooms.AddRange(tweakedRooms);
+
+      foreach (var kvp in blobs)
+      {
+        roomBlobs[kvp.Key] = kvp.Value;
+      }
     }
 
-    // Now set add at least one door on the exterior of each blob. This is 
-    // the simple case. I can imagine navigation puzzles where say only one
-    // blob has an exterior door and you teleport from blob to blob to get
-    // to a goal
-    foreach (var k in blobs.Keys)
+    static void SetDoor(List<Room> rooms, int roomId, int x, int y, Dir dir)
     {
-      var walls = ExteriorWalls(rooms, blobs[k], hallways);
-      var door = walls[rng.Next(walls.Count)];
-      
       // setting the tile opposite the door to also be a door is handled
       // in BlobbedRoom()'s caller
-      Room r = rooms[door.RoomId];
-      r.Floors[(door.X, door.Y)] = door.Dir switch
+      Room r = rooms[roomId];
+      r.Floors[(x, y)] = dir switch
       {
-        Dir.North => r.Floors[(door.X, door.Y)] with { EdgeN = Edge.StoneDoor},
-        Dir.South => r.Floors[(door.X, door.Y)] with { EdgeS = Edge.StoneDoor},
-        Dir.East => r.Floors[(door.X, door.Y)] with { EdgeE = Edge.StoneDoor},
-        _ => r.Floors[(door.X, door.Y)] with { EdgeW = Edge.StoneDoor},
+        Dir.North => r.Floors[(x, y)] with { EdgeN = Edge.StoneDoor },
+        Dir.South => r.Floors[(x, y)] with { EdgeS = Edge.StoneDoor },
+        Dir.East => r.Floors[(x, y)] with { EdgeE = Edge.StoneDoor },
+        _ => r.Floors[(x, y)] with { EdgeW = Edge.StoneDoor },
       };
-      r.Exits.Add(new(door.X, door.Y, door.Dir));
+      r.Exits.Add(new(x, y, dir));
     }
   }
 
@@ -319,18 +273,113 @@ class LevelGenerator
     return [.. walls];
   }
 
-  static List<Room> Mazify(DungeonLevel lvl, Rng rng)
+  static void FullyConnectLevel(DungeonLevel lvl, HashSet<int> hallways, List<Room> rooms, Rng rng)
   {
-    // By hallways, I mean all tiles that aren't in "official" rooms
-    HashSet<int> hallways = [];    
-    for (int j = 0; j < MATRIX_SIZE; j++)
-      hallways.Add(j);
+    HashSet<int> roomSqs = [];
+    foreach (var room in rooms)
+    {
+      foreach (var (X, Y) in room.Floors.Keys)
+        roomSqs.Add(Y * DungeonLevel.MAP_SIZE + X);
+    }
 
-    // Place some rooms
-    List<Room> rooms = [];
-        
-    BlobbedRooms(hallways, rooms, rng);
+    DisjointSet ds = new(MATRIX_SIZE);
+    bool[] filled = new bool[MATRIX_SIZE];
 
+    // Hallway squares that are next to a room square, with the direction of
+    // the room square. Grouped by hallway region, keyed by the region's root
+    // in ds.
+    Dictionary<int, List<Door>> roomAdj = [];
+
+    List<int> halls = [.. hallways];
+    halls.Shuffle(rng);
+
+    foreach (int start in halls)
+    {
+      if (filled[start])
+        continue;
+
+      List<Door> adj = [];
+      Queue<int> q = new();
+      q.Enqueue(start);
+      filled[start] = true;
+
+      while (q.Count > 0)
+      {
+        int sq = q.Dequeue();
+        int x = sq % DungeonLevel.MAP_SIZE, y = sq / DungeonLevel.MAP_SIZE;
+        Tile tile = lvl.TileAt(x, y);
+
+        foreach (Dir dir in Util.Cardinals)
+        {
+          var (dx, dy) = dir.Delta();
+          int nx = DungeonLevel.Wrap(x + dx), ny = DungeonLevel.Wrap(y + dy);
+          int nb = ny * DungeonLevel.MAP_SIZE + nx;
+
+          // Note room squares whatever the edge between us is
+          if (roomSqs.Contains(nb))
+            adj.Add(new Door(x, y, dir));
+
+          Edge edge = tile.EdgeForDir(dir);
+          if (edge is not Edge.Open || !hallways.Contains(nb))
+            continue;
+          if (ds.Find(nb) == ds.Find(sq))
+            continue;
+
+          ds.Union(sq, nb);
+          filled[nb] = true;
+          q.Enqueue(nb);
+        }
+      }
+      
+      roomAdj[ds.Find(start)] = adj;
+    }
+
+    Dictionary<int, int> regions = [];
+    foreach (var sq in hallways)
+    {
+      int k = ds.Find(sq);
+      if (!regions.ContainsKey(k))
+        regions[k] = 1;
+      else
+        regions[k] += 1;
+    }
+    List<(int Region, int Count)> enclaves = [.. regions.Select(kvp => (kvp.Key, kvp.Value))
+                                                        .OrderByDescending(s => s.Value)];
+
+    if (enclaves.Count > 1)
+    {
+      foreach (var (regionId, _) in enclaves.Skip(1))
+      {
+        var doorOpts = roomAdj[regionId];
+        Door door = doorOpts[rng.Next(doorOpts.Count)];
+        var (doorX, doorY, dir) = door;
+        Tile tile = lvl.TileAt(door.X, door.Y);
+        tile = dir switch
+        {
+          Dir.North => tile with { EdgeN = Edge.StoneDoor },
+          Dir.South => tile with { EdgeS = Edge.StoneDoor },
+          Dir.East => tile with { EdgeE = Edge.StoneDoor },
+          _ => tile with { EdgeW = Edge.StoneDoor }
+        };
+        lvl.SetTile(doorX, doorY, tile);
+
+        var (deltaX, deltaY) = dir.Delta();
+        int otherX = doorX + deltaX, otherY = doorY + deltaY;
+        tile = lvl.TileAt(otherX, otherY);
+        tile = dir.Opposite() switch
+        {
+          Dir.North => tile with { EdgeN = Edge.StoneDoor },
+          Dir.South => tile with { EdgeS = Edge.StoneDoor },
+          Dir.East => tile with { EdgeE = Edge.StoneDoor },
+          _ => tile with { EdgeW = Edge.StoneDoor }
+        };
+        lvl.SetTile(otherX, otherY, tile);
+      }
+    }
+  }
+
+  static List<Room> Mazify(DungeonLevel lvl, HashSet<int> hallways, List<Room> rooms, Rng rng)
+  {
     DisjointSet ds = new(MATRIX_SIZE);
     List<int> nodes = [];
     GetDisjointNodes(nodes, ds, hallways);
@@ -350,6 +399,8 @@ class LevelGenerator
         lvl.SetTile(k.X, k.Y, room.Floors[k]);
       }
     }
+
+
 
     // We do the doors in a separate loop so that we don't overwrite
     // doors when rooms abut each other
@@ -371,6 +422,11 @@ class LevelGenerator
       }
     }
 
+    return rooms;
+  }
+
+  static void AddClosets(DungeonLevel lvl, List<Room> rooms, Rng rng)
+  {
     // Make a handful of closets (1x1 rooms)
     List<(int X, int Y, Tile Tile)> closets = [];
     for (int x = 0; x < DungeonLevel.MAP_SIZE; x++)
@@ -392,127 +448,73 @@ class LevelGenerator
         var closet = closets[i];
         rooms.Add(MakeCloset(closet.X, closet.Y, closet.Tile, lvl));
         closets.RemoveAt(i);
-        //roomSqs.Add((closet.X, closet.Y));
       }
-    }
-  
-    return rooms;
-
-    static Room MakeCloset(int x, int y, Tile tile, DungeonLevel lvl)
-    {
-      Dir doorDir;
-
-      if (tile.EdgeE == Edge.Open) 
-      {
-        Tile tweaked = tile with { EdgeE = Edge.StoneDoor };
-        Tile other = lvl.TileAt(x + 1, y);
-        other = other with { EdgeW = Edge.StoneDoor };
-        lvl.SetTile(x, y, tweaked);
-        lvl.SetTile(x + 1, y, other);
-        doorDir = Dir.East;
-      }
-      else if (tile.EdgeW == Edge.Open) 
-      {
-        Tile tweaked = tile with { EdgeW = Edge.StoneDoor };
-        Tile other = lvl.TileAt(x - 1, y);
-        other = other with { EdgeE = Edge.StoneDoor };
-        lvl.SetTile(x, y, tweaked);
-        lvl.SetTile(x - 1, y, other);
-        doorDir = Dir.West;
-      }
-      else if (tile.EdgeN == Edge.Open) 
-      {
-        Tile tweaked = tile with { EdgeN = Edge.StoneDoor };
-        Tile other = lvl.TileAt(x, y - 1);
-        other = other with { EdgeS = Edge.StoneDoor };
-        lvl.SetTile(x, y, tweaked);
-        lvl.SetTile(x, y - 1, other);
-        doorDir = Dir.North;
-      }
-      else
-      {
-        Tile tweaked = tile with { EdgeS = Edge.StoneDoor };
-        Tile other = lvl.TileAt(x, y + 1);
-        other = other with { EdgeN = Edge.StoneDoor };
-        lvl.SetTile(x, y, tweaked);
-        lvl.SetTile(x, y + 1, other);
-        doorDir = Dir.South;
-      }
-
-      Room room = new(1, 1);
-      room.Floors[(x, y)] = lvl.TileAt(x, y);
-      room.Exits.Add(new(x, y, doorDir));
-
-      return room;
-    }
-
-    static bool IsCloset(Tile tile)
-    {
-      int walls = 0;
-      int open = 0;
-
-      if (tile.EdgeE == Edge.Wall) ++walls;
-      if (tile.EdgeE == Edge.Open) ++open;
-      if (tile.EdgeW == Edge.Wall) ++walls;
-      if (tile.EdgeW == Edge.Open) ++open;
-      if (tile.EdgeN == Edge.Wall) ++walls;
-      if (tile.EdgeN == Edge.Open) ++open;
-      if (tile.EdgeS == Edge.Wall) ++walls;
-      if (tile.EdgeS == Edge.Open) ++open;
-
-      return walls == 3 && open == 1;
     }
   }
 
-  static Room? SetSingleRoom(Room template, HashSet<(int, int)> roomSqs, HashSet<int> hallways, Rng rng)
+  static Room MakeCloset(int x, int y, Tile tile, DungeonLevel lvl)
   {
-    int roomX, roomY;
-    int tries = 0;
+    Dir doorDir;
 
-    // Try to find a place for the room
-    while (true)
+    if (tile.EdgeE == Edge.Open)
     {
-      ++tries;
-
-      roomX = rng.Next(0, DungeonLevel.MAP_SIZE - template.W);
-      roomY = rng.Next(0, DungeonLevel.MAP_SIZE - template.H);
-
-      // make sure we don't overlap with any other rooms
-      bool overlap = false;
-      foreach (var (X, Y) in template.Floors.Keys)
-      {
-        int actualX = roomX + X;
-        int actualY = roomY + Y;
-
-        if (roomSqs.Contains((actualX, actualY)))
-        {
-          overlap = true;
-          break;
-        }
-      }
-
-      if (!overlap)
-        break;
-
-      if (tries > 25)
-        return null;
+      Tile tweaked = tile with { EdgeE = Edge.StoneDoor };
+      Tile other = lvl.TileAt(x + 1, y);
+      other = other with { EdgeW = Edge.StoneDoor };
+      lvl.SetTile(x, y, tweaked);
+      lvl.SetTile(x + 1, y, other);
+      doorDir = Dir.East;
+    }
+    else if (tile.EdgeW == Edge.Open)
+    {
+      Tile tweaked = tile with { EdgeW = Edge.StoneDoor };
+      Tile other = lvl.TileAt(x - 1, y);
+      other = other with { EdgeE = Edge.StoneDoor };
+      lvl.SetTile(x, y, tweaked);
+      lvl.SetTile(x - 1, y, other);
+      doorDir = Dir.West;
+    }
+    else if (tile.EdgeN == Edge.Open)
+    {
+      Tile tweaked = tile with { EdgeN = Edge.StoneDoor };
+      Tile other = lvl.TileAt(x, y - 1);
+      other = other with { EdgeS = Edge.StoneDoor };
+      lvl.SetTile(x, y, tweaked);
+      lvl.SetTile(x, y - 1, other);
+      doorDir = Dir.North;
+    }
+    else
+    {
+      Tile tweaked = tile with { EdgeS = Edge.StoneDoor };
+      Tile other = lvl.TileAt(x, y + 1);
+      other = other with { EdgeN = Edge.StoneDoor };
+      lvl.SetTile(x, y, tweaked);
+      lvl.SetTile(x, y + 1, other);
+      doorDir = Dir.South;
     }
 
-    Room room = new(template.H, template.W);
-    foreach (var k in template.Floors.Keys)
-    {
-      int actualX = roomX + k.X;
-      int actualY = roomY + k.Y;
-      room.Floors[(actualX, actualY)] = template.Floors[k];
-      roomSqs.Add((actualX, actualY));
-
-      hallways.Remove(actualY * DungeonLevel.MAP_SIZE + actualX);
-    }
-
-    foreach (var exit in template.Exits)
-      room.Exits.Add(exit with { X = exit.X + roomX, Y = exit.Y + roomY });
+    Room room = new(1, 1);
+    room.Floors[(x, y)] = lvl.TileAt(x, y);
+    room.Exits.Add(new(x, y, doorDir));
 
     return room;
+  }
+
+  static bool IsCloset(Tile tile)
+  {
+    int walls = 0;
+    int open = 0;
+
+    if (tile.EdgeE == Edge.Wall) ++walls;
+    if (tile.EdgeE == Edge.Open) ++open;
+    if (tile.EdgeW == Edge.Wall) ++walls;
+    if (tile.EdgeW == Edge.Open) ++open;
+    if (tile.EdgeN == Edge.Wall) ++walls;
+    if (tile.EdgeN == Edge.Open) ++open;
+    if (tile.EdgeS == Edge.Wall) ++walls;
+    if (tile.EdgeS == Edge.Open) ++open;
+
+    return walls == 3 && open == 1;
   }
 
   // Not pathfinding, just finding the shortest paths from 
@@ -528,16 +530,16 @@ class LevelGenerator
 
     while (q.Count > 0)
     {
-      (int cx, int cy) = q.Dequeue();      
+      (int cx, int cy) = q.Dequeue();
       int d = distances[cy * w + cx];
-      
+
       // if the neighbour distance is already less than or equal to distance
       // of square we just reached, we can stop because that other path is 
       // shorter. Otherwise, set neighbour distance in the matrix to new 
       // shortest value and add neighbour to queue
-      foreach (Dir dir in new[] { Dir.North, Dir.South, Dir.East, Dir.West})
+      foreach (Dir dir in new[] { Dir.North, Dir.South, Dir.East, Dir.West })
       {
-        if (!lvl.Passable(cx, cy, dir)) 
+        if (!lvl.Passable(cx, cy, dir))
           continue;
         var (deltax, deltay) = dir.Delta();
         int nx = DungeonLevel.Wrap(cx + deltax);
@@ -552,7 +554,7 @@ class LevelGenerator
       }
     }
 
-    (int, int)[] result = new(int, int)[MATRIX_SIZE];
+    (int, int)[] result = new (int, int)[MATRIX_SIZE];
     for (int j = 0; j < MATRIX_SIZE; j++)
       result[j] = (j, distances[j]);
 
@@ -606,7 +608,24 @@ class LevelGenerator
       }
     }
 
-    var rooms = Mazify(lvl, rng);
+    // By hallways, I mean all tiles that aren't in "official" rooms
+    HashSet<int> hallways = [];
+    for (int j = 0; j < MATRIX_SIZE; j++)
+      hallways.Add(j);
+
+    for (int j = 0; j < MATRIX_SIZE; j++)
+      hallways.Add(j);
+
+    // Place some rooms
+    List<Room> rooms = [];
+    Dictionary<int, HashSet<int>> roomBlobs = [];
+
+    BlobbedRooms(hallways, rooms, roomBlobs, rng);
+
+    Mazify(lvl, hallways, rooms, rng);
+    FullyConnectLevel(lvl, hallways, rooms, rng);
+
+    AddClosets(lvl, rooms, rng);
 
     return (rooms, lvl);
   }
@@ -620,7 +639,7 @@ class LevelGenerator
       var (rooms, lvl) = GenLevel(rng);
 
       List<(int X, int Y)> hallwaySqs = [];
-      HashSet<(int, int)> roomSqs = [];      
+      HashSet<(int, int)> roomSqs = [];
       foreach (Room r in rooms)
       {
         foreach (var sq in r.Floors.Keys)
@@ -660,12 +679,12 @@ class LevelGenerator
       {
         int rx = rng.Next(DungeonLevel.MAP_SIZE);
         int ry = rng.Next(DungeonLevel.MAP_SIZE);
-        MakeDarkArea(lvl, rx, ry, rng.Next(3));        
+        MakeDarkArea(lvl, rx, ry, rng.Next(3));
       }
 
       levels.Add(lvl);
     }
-    
+
     SetStairs(levels, rng);
 
     gs.Regions["dungeon"] = levels;
@@ -676,7 +695,7 @@ class LevelGenerator
     Queue<(int X, int Y)> q = new();
     q.Enqueue((x, y));
     HashSet<(int, int)> visited = [];
-    
+
     while (q.Count > 0)
     {
       var sq = q.Dequeue();
@@ -751,7 +770,7 @@ class LevelGenerator
       return enc;
     }
   }
-  
+
   static void EraseWall(DungeonLevel lvl, List<(int X, int Y)> hallwaySqs, HashSet<(int, int)> roomSqs, Rng rng)
   {
     List<(int, int, Dir)> opts = [];
@@ -770,13 +789,13 @@ class LevelGenerator
         opts.Add((sq.X + 1, sq.Y, Dir.East));
       if (tile.EdgeW == Edge.Wall && !roomSqs.Contains((sq.X - 1, sq.Y)))
         opts.Add((sq.X - 1, sq.Y, Dir.West));
-      
+
       if (opts.Count == 0)
         continue;
-            
+
       (int nx, int ny, Dir dir) = opts[rng.Next(opts.Count)];
       Erase(lvl, tile, sq.X, sq.Y, nx, ny, dir);
-      
+
       break;
     }
 
@@ -815,7 +834,7 @@ class LevelGenerator
   // Eventually, deeper levels will have meaner traps like Gas Cloud, etc
   static Feature PickTrap(int level, Rng rng)
   {
-    List<Feature> opts = [ Feature.Trap_Dart, Feature.Trap_Blades, Feature.Trap_PoisonedNeedles ];
+    List<Feature> opts = [Feature.Trap_Dart, Feature.Trap_Blades, Feature.Trap_PoisonedNeedles];
 
     return opts[rng.Next(opts.Count)];
   }
@@ -830,13 +849,13 @@ class RoomBlob(int height, int width, Rng rng)
   List<Box> _boxes = [];
   List<Room> _rooms = [];
 
-  public (List<Room>, Dictionary<int, HashSet<int>>)  Generate()
+  public (List<Room>, Dictionary<int, HashSet<int>>) Generate()
   {
     _boxes = Partition(0, height, 0, width, rng);
 
     foreach (var box in _boxes)
     {
-      Room r = new(box.H, box.W);      
+      Room r = new(box.H, box.W);
       for (int y = box.Y; y < box.Y + box.H; y++)
       {
         for (int x = box.X; x < box.X + box.W; x++)
@@ -870,7 +889,7 @@ class RoomBlob(int height, int width, Rng rng)
     {
       int id = ds.Find(j);
       if (!blobs.ContainsKey(id))
-        blobs[id] = [ j ];
+        blobs[id] = [j];
       else
         blobs[id].Add(j);
     }
@@ -888,14 +907,14 @@ class RoomBlob(int height, int width, Rng rng)
     {
       roomA.Floors[(x, y)] = roomA.Floors[(x, y)] with { EdgeE = Edge.StoneDoor };
       roomA.Exits.Add(new Door(x, y, Dir.East));
-      roomB.Floors[(x + dx, y + dy)] = roomB.Floors[(x + dx, y + dy)] with { EdgeW = Edge.StoneDoor};
+      roomB.Floors[(x + dx, y + dy)] = roomB.Floors[(x + dx, y + dy)] with { EdgeW = Edge.StoneDoor };
       roomB.Exits.Add(new Door(x + dx, y + dy, Dir.West));
     }
     else
     {
       roomA.Floors[(x, y)] = roomA.Floors[(x, y)] with { EdgeS = Edge.StoneDoor };
       roomA.Exits.Add(new Door(x, y, Dir.South));
-      roomB.Floors[(x + dx, y + dy)] = roomB.Floors[(x + dx, y + dy)] with { EdgeN = Edge.StoneDoor};
+      roomB.Floors[(x + dx, y + dy)] = roomB.Floors[(x + dx, y + dy)] with { EdgeN = Edge.StoneDoor };
       roomB.Exits.Add(new Door(x + dx, y + dy, Dir.North));
     }
   }
@@ -920,7 +939,7 @@ class RoomBlob(int height, int width, Rng rng)
           int y1 = Math.Min(a.Y + a.H, b.Y + b.H);
           if (y0 < y1)
           {
-            List<(int ,int)> pts = [.. Enumerable.Range(y0, y1 - y0).Select(y => (a.X + a.W - 1, y))];
+            List<(int, int)> pts = [.. Enumerable.Range(y0, y1 - y0).Select(y => (a.X + a.W - 1, y))];
             walls.Add(new(j, k, pts, Dir.East));
           }
         }
@@ -932,14 +951,14 @@ class RoomBlob(int height, int width, Rng rng)
           int x1 = Math.Min(a.X + a.W, b.X + b.W);
           if (x0 < x1)
           {
-            List<(int ,int)> pts = [.. Enumerable.Range(x0, x1 - x0).Select(x => (x, a.Y + a.H - 1))];
+            List<(int, int)> pts = [.. Enumerable.Range(x0, x1 - x0).Select(x => (x, a.Y + a.H - 1))];
             walls.Add(new(j, k, pts, Dir.South));
           }
         }
-      }  
+      }
     }
 
-    return walls;  
+    return walls;
   }
 
   static List<Box> Partition(int top, int bottom, int left, int right, Rng rng)
@@ -952,11 +971,11 @@ class RoomBlob(int height, int width, Rng rng)
 
     bool canSplitX = width > MAX_ROOM;
     bool canSplitY = height > MAX_ROOM;
-     if (!canSplitX && !canSplitY)
-      return [ new(X: left, Y: top, H: height, W: width) ];
+    if (!canSplitX && !canSplitY)
+      return [new(X: left, Y: top, H: height, W: width)];
 
     List<Box> boxes = [];
-    bool splitX = canSplitX && (!canSplitY || rng.Next(2) == 0);    
+    bool splitX = canSplitX && (!canSplitY || rng.Next(2) == 0);
     if (splitX)
     {
       int x = Split(left, right, rng);

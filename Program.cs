@@ -27,10 +27,6 @@ unsafe class Program
 
   static int Main()
   {
-    // RoomBlob blobber = new(10, 10, new Rng(DateTime.UtcNow.GetHashCode()));
-    // blobber.Generate();
-    // blobber.Dump();
-
     if (!SDL_Init(SDL_InitFlags.SDL_INIT_VIDEO))
     {
       Console.Error.WriteLine($"SDL_Init failed: {SDL_GetError()}");
@@ -81,7 +77,12 @@ unsafe class Program
       new ViewRenderer(renderer, assetDir),
       Path.Combine(assetDir, "m5x7.ttf"));
 
-    var app = new App(window);    
+    int seed = DateTime.UtcNow.GetHashCode();
+    Console.WriteLine(seed);
+    //seed = -1324917972;
+    Rng rng = new(seed);
+
+    var app = new App(window, rng);    
     app.Screens.Push(new MainMenuScreen(app));
 
     ulong lastTick = SDL_GetTicks();
