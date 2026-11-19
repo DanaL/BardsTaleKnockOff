@@ -748,25 +748,24 @@ class LevelGenerator
   }
 }
 
+record struct SharedWall(int A, int B, List<(int X, int Y)> Sqs, Dir DirFromA);
 record struct Box(int X, int Y, int H, int W);
 class RoomBlob(int height, int width, Rng rng)
 {
   const int MAX_ROOM = 3;
 
   List<Box> _boxes = [];
+  List<Room> _rooms = [];
 
-  public void Generate()
+  public List<Room> Generate()
   {
     _boxes = Partition(0, height, 0, width, rng);
+
+    Dump();
+    
     foreach (var box in _boxes)
     {
-      Room r = new(box.H, box.W);
-      // add the corners
-      r.Floors[(box.X, box.Y)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Open, Edge.Wall);
-      r.Floors[(box.X, box.Y + box.H - 1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Open, Edge.Wall);
-      r.Floors[(box.X + box.W - 1, box.Y)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Wall, Edge.Open, Edge.Wall, Edge.Open);
-      r.Floors[(box.X + box.W - 1, box.Y + box.H - 1)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, Edge.Open, Edge.Wall, Edge.Wall, Edge.Open);
-
+      Room r = new(box.H, box.W);      
       for (int y = box.Y; y < box.Y + box.H; y++)
       {
         for (int x = box.X; x < box.X + box.W; x++)
@@ -778,7 +777,81 @@ class RoomBlob(int height, int width, Rng rng)
           r.Floors[(x, y)] = new Tile(Floor.Stone, Ceiling.Stone, Feature.None, n, s, e, w);
         }
       }
-    }      
+
+      _rooms.Add(r);
+    }
+
+    var sharedWalls = SharedWalls();
+    sharedWalls.Shuffle(rng);
+
+    DisjointSet ds = new(_boxes.Count);
+    foreach (var wall in sharedWalls)
+    {
+      if (ds.Find(wall.A) == ds.Find(wall.B))
+        continue;
+      var (x, y) = wall.Sqs[rng.Next(wall.Sqs.Count)];
+      AddDoor(wall.A, wall.B, x, y, wall.DirFromA);
+      ds.Union(wall.A, wall.B);
+    }
+
+    return _rooms;
+  }
+
+  void AddDoor(int a, int b, int x, int y, Dir dirFromA)
+  {
+    var (dx, dy) = dirFromA.Delta();
+    var roomA = _rooms[a];
+    var roomB = _rooms[b];
+
+    roomA.Floors[(x, y)] = dirFromA == Dir.East
+          ? roomA.Floors[(x, y)] with { EdgeE = Edge.StoneDoor }
+          : roomA.Floors[(x, y)] with { EdgeS = Edge.StoneDoor};
+
+    roomB.Floors[(x + dx, y + dy)] = dirFromA == Dir.East
+          ? roomB.Floors[(x + dx, y + dy)] with { EdgeW = Edge.StoneDoor}
+          : roomB.Floors[(x + dx, y + dy)] with { EdgeN = Edge.StoneDoor};
+  }
+
+  List<SharedWall> SharedWalls()
+  {
+    List<SharedWall> walls = [];
+
+    for (int j = 0; j < _boxes.Count; j++)
+    {
+      for (int k = 0; k < _boxes.Count; k++)
+      {
+        if (j == k)
+          continue;
+        var a = _boxes[j];
+        var b = _boxes[k];
+
+        // is b directly east?
+        if (a.X + a.W == b.X)
+        {
+          int y0 = Math.Max(a.Y, b.Y);
+          int y1 = Math.Min(a.Y + a.H, b.Y + b.H);
+          if (y0 < y1)
+          {
+            List<(int ,int)> pts = [.. Enumerable.Range(y0, y1 - y0).Select(y => (a.X + a.W - 1, y))];
+            walls.Add(new(j, k, pts, Dir.East));
+          }
+        }
+
+        // is b directly south?
+        if (a.Y + a.H == b.Y)
+        {
+          int x0 = Math.Max(a.X, b.X);
+          int x1 = Math.Min(a.X + a.W, b.X + b.W);
+          if (x0 < x1)
+          {
+            List<(int ,int)> pts = [.. Enumerable.Range(x0, x1 - x0).Select(x => (x, a.Y + a.H - 1))];
+            walls.Add(new(j, k, pts, Dir.South));
+          }
+        }
+      }  
+    }
+
+    return walls;  
   }
 
   // Prints the boxes as ASCII outlines, 4 characters across and 2 down per
