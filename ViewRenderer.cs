@@ -449,6 +449,15 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
     }
 
     FillRect(ground, originX, originY + (int)CenterY, ViewW, ViewH - (int)CenterY);
+
+    if (!gs.DayTime && !gs.Sunset)
+    {
+      // draw a star
+      SDL_SetRenderDrawColor(_renderer, 0xFF, 0xFF, 0xFF, 0xFF);
+      SDL_RenderPoint(_renderer, 100, 20);
+      SDL_RenderPoint(_renderer, 10, 10);
+      SDL_RenderPoint(_renderer, 50, 30);
+    }
   }
 
   void FillRect(Rgb colour, int x, int y, int w, int h)
