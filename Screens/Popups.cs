@@ -26,6 +26,8 @@ class PopupScreen(App app, string text) : IScreen
 class ConfirmScreen(App app, string question, Action onYes) : IScreen
 {
   public bool IsOverlay => true;
+  public string? Image { get; init; }
+  public string Caption { get; init; } = "";
 
   public void OnKey(SDL_KeyboardEvent key)
   {
@@ -42,5 +44,11 @@ class ConfirmScreen(App app, string question, Action onYes) : IScreen
     }
   }
 
-  public void Draw(GameUI ui) => ui.DrawPrompt([question, "", "Y) Yes    N) No"]);
+  public void Draw(GameUI ui)
+  {
+    if (Image is not null)
+      ui.DrawImage(Image, Caption, app.GameState);
+
+    ui.DrawPrompt([question, "", "Y) Yes    N) No"]);
+  }
 }

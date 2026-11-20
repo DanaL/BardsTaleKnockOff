@@ -207,6 +207,11 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
           app.Screens.Push(es);
         }
         break;
+      case Feature.Lever:
+        app.Screens.Push(new ConfirmScreen(app, "You stumble across a lever! Pull it?", PullLever));
+        if (IsEncounter())
+          app.Screens.Push(new EncounterScreen(app));
+        break;
       default:
         if (IsEncounter())
           app.Screens.Push(new EncounterScreen(app));
@@ -218,6 +223,11 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
       foreach (string s in msg.Split('\n'))
         GS.Say(s);
     }    
+  }
+
+  void PullLever()
+  {
+    
   }
 
   void Trap(Feature trapType)
