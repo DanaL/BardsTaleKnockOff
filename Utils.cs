@@ -31,8 +31,12 @@ class AbortBattleException(string caster) : Exception(caster) {}
 // line with a unique tag, or saving a fact of that type throws.
 [JsonPolymorphic]
 [JsonDerivedType(typeof(FlagFact), "flag")]
+[JsonDerivedType(typeof(PortcullisStateFact), "portcullis")]
+[JsonDerivedType(typeof(LeverFact), "lever")]
 abstract record Fact(string Key);
 record FlagFact(string Key, bool Value) : Fact(Key);
+record PortcullisStateFact(int X, int Y, bool Open) : Fact($"Portcullis#{X},{Y}");
+record LeverFact(int LeverX, int LeverY, int PortcullisX, int PortcullisY) : Fact($"Lever#{LeverX},{LeverY}");
 
 static class Util
 {
@@ -64,6 +68,30 @@ static class Util
     ],
   };
   
+  public static void SetDoor(DungeonLevel lvl, Door exit, Edge newDoor)
+  {
+    Tile tile = lvl.TileAt(exit.X, exit.Y);
+    Tile gate = exit.Dir switch
+    {
+      Dir.North => tile with { EdgeN = newDoor },
+      Dir.South => tile with { EdgeS = newDoor },
+      Dir.East => tile with { EdgeE = newDoor },
+      _ => tile with { EdgeW = newDoor }
+    };
+    lvl.SetTile(exit.X, exit.Y, gate);
+
+    var (deltaX, deltaY) = exit.Dir.Delta();
+    int otherX = exit.X + deltaX, otherY = exit.Y + deltaY;
+    Tile other = exit.Dir.Opposite() switch
+    {
+      Dir.North => lvl.TileAt(otherX, otherY) with { EdgeN = newDoor },
+      Dir.South => lvl.TileAt(otherX, otherY) with { EdgeS = newDoor },
+      Dir.East => lvl.TileAt(otherX, otherY) with { EdgeE = newDoor },
+      _ => lvl.TileAt(otherX, otherY) with { EdgeW = newDoor }
+    };
+    lvl.SetTile(otherX, otherY, other);  
+  }
+
   public static int Distance(int x1, int y1, int x2, int y2)
   {
     int dx = Math.Abs(x1 - x2);

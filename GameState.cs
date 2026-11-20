@@ -13,8 +13,7 @@ namespace BardsTaleKnockOff;
 
 class GameState
 {
-  public Dictionary<string, List<DungeonLevel>> Regions = [];
-  //public List<DungeonLevel> Maps { get; set; } = [];
+  public Dictionary<string, List<DungeonLevel>> Regions = [];  
   public Party Party { get; set; } = new Party();
   public DateTime Alert { get; set; } = DateTime.MinValue;
 

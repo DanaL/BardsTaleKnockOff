@@ -78,8 +78,9 @@ unsafe class Program
       Path.Combine(assetDir, "m5x7.ttf"));
 
     int seed = DateTime.UtcNow.GetHashCode();
+    seed = -1827369015;
     Console.WriteLine(seed);
-    //seed = -1324917972;
+    
     Rng rng = new(seed);
 
     var app = new App(window, rng);    

@@ -66,6 +66,78 @@ class LevelGenerator
   const int NUM_LEVELS = 4;
   const int MATRIX_SIZE = DungeonLevel.MAP_SIZE * DungeonLevel.MAP_SIZE;
 
+  public static void GenMainDungeon(GameState gs, Rng rng)
+  {
+    List<DungeonLevel> levels = [];
+    int arrivalStairsX = 0, arrivalStairsY = 0;
+
+    for (int ln = 0; ln < NUM_LEVELS; ln++)
+    {
+      var (rooms, lvl) = GenLevel(rng);
+
+      List<(int X, int Y)> hallwaySqs = [];
+      HashSet<(int, int)> roomSqs = [];
+      foreach (Room r in rooms)
+      {
+        foreach (var sq in r.Floors.Keys)
+          roomSqs.Add(sq);
+      }
+      for (int x = 0; x < DungeonLevel.MAP_SIZE; x++)
+      {
+        for (int y = 0; y < DungeonLevel.MAP_SIZE; y++)
+        {
+          var sq = (x, y);
+          if (!roomSqs.Contains(sq))
+            hallwaySqs.Add(sq);
+        }
+      }
+
+      // Add a few random traps in the level's hallways
+      int numOfTraps = rng.Next(1, 4);
+      for (int k = 0; k < numOfTraps; k++)
+      {
+        var sq = hallwaySqs[rng.Next(hallwaySqs.Count)];
+        hallwaySqs.Remove(sq);
+        Tile t = lvl.TileAt(sq.X, sq.Y);
+        lvl.SetTile(sq.X, sq.Y, t with { Feature = PickTrap(ln, rng) });
+      }
+
+      // Knock out a few walls
+      int numToErase = rng.Next(7, 10);
+      for (int k = 3; k <= numToErase; k++)
+        EraseWall(lvl, hallwaySqs, roomSqs, rng);
+
+      // Sometimes add fixed encounters
+      SetFixedEncounters(lvl, ln, rooms, rng);
+
+      // Add a few areas of darkness
+      int numDarkAreas = rng.Next(0, 4);
+      for (int j = 0; j < numDarkAreas; j++)
+      {
+        int rx = rng.Next(DungeonLevel.MAP_SIZE);
+        int ry = rng.Next(DungeonLevel.MAP_SIZE);
+        MakeDarkArea(lvl, rx, ry, rng.Next(3));
+      }
+
+      // Set the arrival (up) stairs
+      Feature upStairs = ln > 0 ? Feature.StairsUp : Feature.Special8;
+      Tile tile = lvl.TileAt(arrivalStairsX, arrivalStairsY);
+      lvl.SetTile(arrivalStairsX, arrivalStairsY, tile with { Feature = upStairs });
+
+      // Add the stairs to the next level
+      if (ln == 0)
+        (arrivalStairsX, arrivalStairsY) = SetGatedStairs(lvl, 0, 0, rooms, gs, rng);
+      else if (ln < NUM_LEVELS - 1)
+      {          
+        (arrivalStairsX, arrivalStairsY) = SetStairs(lvl, arrivalStairsX, arrivalStairsY, rng);
+      }
+
+      levels.Add(lvl);
+    }
+
+    gs.Regions["dungeon"] = levels;
+  }
+
   static List<int> DisjointNeighbours(int n, DisjointSet ds, HashSet<int> hallways)
   {
     List<int> neighbours = [];
@@ -592,80 +664,79 @@ class LevelGenerator
     return (rooms, lvl);
   }
 
-  public static void GenMainDungeon(GameState gs, Rng rng)
+  static (int, int) SetGatedStairs(DungeonLevel lvl, int arrivalX, int arrivalY, List<Room> rooms, GameState gs, Rng rng)
   {
-    List<DungeonLevel> levels = [];
-    int arrivalStairsX = 0, arrivalStairsY = 0;
-
-    for (int ln = 0; ln < NUM_LEVELS; ln++)
+    // First we need to find a room we can lock with a portcullis to place 
+    // the stairs in.
+    Dictionary<int, int> roomSqs = [];
+    for (int j = 0; j < rooms.Count; j++)
     {
-      var (rooms, lvl) = GenLevel(rng);
-
-      List<(int X, int Y)> hallwaySqs = [];
-      HashSet<(int, int)> roomSqs = [];
-      foreach (Room r in rooms)
+      // We only care about rooms with one exit that we can lock up
+      if (rooms[j].Exits.Count != 1)
+        continue;
+      foreach (var (loc, _) in rooms[j].Floors.Where(sq => sq.Value.Feature == Feature.None))
       {
-        foreach (var sq in r.Floors.Keys)
-          roomSqs.Add(sq);
+        roomSqs[loc.Y * DungeonLevel.MAP_SIZE + loc.X] = j;
       }
-      for (int x = 0; x < DungeonLevel.MAP_SIZE; x++)
-      {
-        for (int y = 0; y < DungeonLevel.MAP_SIZE; y++)
-        {
-          var sq = (x, y);
-          if (!roomSqs.Contains(sq))
-            hallwaySqs.Add(sq);
-        }
-      }
-
-      // Add a few random traps in the level's hallways
-      int numOfTraps = rng.Next(1, 4);
-      for (int k = 0; k < numOfTraps; k++)
-      {
-        var sq = hallwaySqs[rng.Next(hallwaySqs.Count)];
-        hallwaySqs.Remove(sq);
-        Tile t = lvl.TileAt(sq.X, sq.Y);
-        lvl.SetTile(sq.X, sq.Y, t with { Feature = PickTrap(ln, rng) });
-      }
-
-      // Knock out a few walls
-      int numToErase = rng.Next(7, 10);
-      for (int k = 3; k <= numToErase; k++)
-        EraseWall(lvl, hallwaySqs, roomSqs, rng);
-
-      // Sometimes add fixed encounters
-      SetFixedEncounters(lvl, ln, rooms, rng);
-
-      // Add a few areas of darkness
-      int numDarkAreas = rng.Next(0, 4);
-      for (int j = 0; j < numDarkAreas; j++)
-      {
-        int rx = rng.Next(DungeonLevel.MAP_SIZE);
-        int ry = rng.Next(DungeonLevel.MAP_SIZE);
-        MakeDarkArea(lvl, rx, ry, rng.Next(3));
-      }
-
-      // Set the arrival (up) stairs
-      Feature upStairs = ln > 0 ? Feature.StairsUp : Feature.Special8;
-      Tile tile = lvl.TileAt(arrivalStairsX, arrivalStairsY);
-      lvl.SetTile(arrivalStairsX, arrivalStairsY, tile with { Feature = upStairs });
-
-      // Add the stairs to the next level
-      if (ln < NUM_LEVELS - 1)
-      {          
-        (arrivalStairsX, arrivalStairsY) = SetStairs(lvl, arrivalStairsX, arrivalStairsY, rng);
-      }
-
-      levels.Add(lvl);
     }
 
-    gs.Regions["dungeon"] = levels;
+    // I think this will never happen but just in case...
+    if (roomSqs.Count == 0)
+      return (-1, -1);
+
+    var distances = StepCounts(arrivalX, arrivalY, lvl);
+    List<int> distantSqs = [.. distances.OrderByDescending(i => i.D)
+                                        .Where(i => roomSqs.ContainsKey(i.Sq))
+                                        .Take(MATRIX_SIZE / 3)
+                                        .Select(i => i.Sq)];
+
+    var stairsSq = distantSqs[rng.Next(distantSqs.Count)];
+    int stairsX = stairsSq % DungeonLevel.MAP_SIZE;
+    int stairsY = stairsSq / DungeonLevel.MAP_SIZE;
+    Tile tile = lvl.TileAt(stairsX, stairsY);
+    lvl.SetTile(stairsX, stairsY, tile with { Feature = Feature.StairsDown });
+
+    int roomId = roomSqs[stairsSq];
+    Room portcullisRoom = rooms[roomId];
+    var exit = portcullisRoom.Exits[0];
+    Util.SetDoor(lvl, exit, Edge.Portcullis);
+
+    var fact = new PortcullisStateFact(exit.X, exit.Y, false);
+    gs.FactDb[fact.Key] = fact;
+
+    // Now place the lever
+    foreach (var (X, Y) in portcullisRoom.Floors.Keys)
+      roomSqs.Remove(Y * DungeonLevel.MAP_SIZE + Y);
+    int leverSq = roomSqs.Keys.ElementAt(rng.Next(roomSqs.Count));
+    int leverX = leverSq % DungeonLevel.MAP_SIZE;
+    int leverY = leverSq / DungeonLevel.MAP_SIZE;
+    Tile leverTile = lvl.TileAt(leverX, leverY) with { Feature = Feature.Lever };
+    lvl.SetTile(leverX, leverY, leverTile);
+
+    var leverFact = new LeverFact(leverX, leverY, exit.X, exit.Y);
+    gs.FactDb[leverFact.Key] = leverFact;
+
+    // We should add a complication to the lever room. An encounter within,
+    // replace doors with illusory walls, etc
+    Room leverRoom = rooms[roomSqs[leverSq]];
+    ComplicateRoom(lvl, leverRoom, rng);
+
+    return (stairsX, stairsY);
+  }
+
+  static void ComplicateRoom(DungeonLevel lvl, Room room, Rng rng)
+  {
+    // Make all the exits illusory walls
+    foreach (var door in room.Exits)
+    {
+      Util.SetDoor(lvl, door, Edge.IllusoryWall);
+    }
   }
 
   // BT's levels were neatly stacked, by which I mean if the stairs down were
   // at 4, 10 then the arrival stairs/stairs up on the next level would be at
   // 4, 10 as well
-  static (int X, int Y) SetStairs(DungeonLevel lvl, int arrivalX, int arrivalY, Rng rng)
+  static (int, int) SetStairs(DungeonLevel lvl, int arrivalX, int arrivalY, Rng rng)
   {    
     // For the stairs down, pick a tile that's further away from the 
     // stairs up

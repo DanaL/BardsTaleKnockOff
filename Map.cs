@@ -38,9 +38,10 @@ static class EdgeExt
 
 // Something standing in the middle of a square, drawn as a sprite that fills
 // the square (e.g. a tree). Unlike edges, these belong to the square itself.
-enum Feature : byte { None, Burgemeester, Encounter, Tree, Guild, House, Shop, Special1, Special2, Special3, Special4,                    
-                      Special5, Special6, Special7, Special8, Spinner, StairsUp, StairsDown, Tavern, Teleporter, Temple, 
-                      TrainingHall, Trap_Blades, Trap_Dart, Trap_PoisonedNeedles, Water }
+enum Feature : byte { None, Burgemeester, Encounter, Guild, House, Lever, Shop, Special1, Special2, 
+                      Special3, Special4, Special5, Special6, Special7, Special8, Spinner, StairsUp, 
+                      StairsDown, Tavern, Teleporter, Temple, TrainingHall, Trap_Blades, Trap_Dart, 
+                      Trap_PoisonedNeedles, Tree, Water }
 
 static class FeatureExt
 {
