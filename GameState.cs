@@ -99,11 +99,14 @@ class GameState
 
   public void TryMove(Dir dir)
   {
-    var delta = dir.Delta();
+    var delta = dir.Delta();    
     Tile next = CurrMap.TileAt(X + delta.dx, Y + delta.dy);
+
     if (!CurrMap.Passable(X, Y, dir))
     {
-      Say("Ouch! You can't go that way.");
+      Edge edge = CurrTile.EdgeForDir(Facing);
+      string s = edge == Edge.Portcullis ? "A stout portcullis bars your way." : "Ouch! You can't go that way.";
+      Say(s);
       return;
     }
     else if (next.Feature == Feature.Water)
