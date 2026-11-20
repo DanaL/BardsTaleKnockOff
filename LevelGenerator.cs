@@ -400,8 +400,6 @@ class LevelGenerator
       }
     }
 
-
-
     // We do the doors in a separate loop so that we don't overwrite
     // doors when rooms abut each other
     foreach (Room room in rooms)
@@ -561,42 +559,6 @@ class LevelGenerator
     return result;
   }
 
-  // BT's levels were neatly stacked, by which I mean if the 
-  // stairs down were at 4, 10 then the arrival stairs/stairs up
-  // on the next level would be at 4, 10 as well
-  static void SetStairs(List<DungeonLevel> levels, Rng rng)
-  {
-    var arrivalTile = levels[0].TileAt(0, 0);
-    levels[0].SetTile(0, 0, arrivalTile with { Feature = Feature.Special8 });
-    int startx = 0, starty = 0; // Per bard's tale tradition the arrival
-                                // stairs on level 1 of a dungeon are always
-                                // at 0, 0
-
-    for (int lvl = 0; lvl < NUM_LEVELS - 1; lvl++)
-    {
-      var map = levels[lvl];
-      var nextMap = levels[lvl + 1];
-
-      // For the stairs down, pick a tile that's further away from the 
-      // stairs up
-      var distances = StepCounts(startx, starty, map);
-      List<int> distantSqs = [.. distances.OrderByDescending(i => i.D)
-                                          .Take(MATRIX_SIZE / 3)
-                                          .Select(i => i.Sq)];
-      int stairsSq = distantSqs[rng.Next(distantSqs.Count)];
-      int stairsX = stairsSq % DungeonLevel.MAP_SIZE;
-      int stairsY = stairsSq / DungeonLevel.MAP_SIZE;
-      Tile tile = map.TileAt(stairsX, stairsY);
-      map.SetTile(stairsX, stairsY, tile with { Feature = Feature.StairsDown });
-
-      tile = nextMap.TileAt(stairsX, stairsY);
-      nextMap.SetTile(stairsX, stairsY, tile with { Feature = Feature.StairsUp });
-
-      startx = stairsX;
-      starty = stairsY;
-    }
-  }
-
   static (List<Room>, DungeonLevel) GenLevel(Rng rng)
   {
     DungeonLevel lvl = new();
@@ -633,6 +595,7 @@ class LevelGenerator
   public static void GenMainDungeon(GameState gs, Rng rng)
   {
     List<DungeonLevel> levels = [];
+    int arrivalStairsX = 0, arrivalStairsY = 0;
 
     for (int ln = 0; ln < NUM_LEVELS; ln++)
     {
@@ -682,12 +645,42 @@ class LevelGenerator
         MakeDarkArea(lvl, rx, ry, rng.Next(3));
       }
 
+      // Set the arrival (up) stairs
+      Feature upStairs = ln > 0 ? Feature.StairsUp : Feature.Special8;
+      Tile tile = lvl.TileAt(arrivalStairsX, arrivalStairsY);
+      lvl.SetTile(arrivalStairsX, arrivalStairsY, tile with { Feature = upStairs });
+
+      // Add the stairs to the next level
+      if (ln < NUM_LEVELS - 1)
+      {          
+        (arrivalStairsX, arrivalStairsY) = SetStairs(lvl, arrivalStairsX, arrivalStairsY, rng);
+      }
+
       levels.Add(lvl);
     }
 
-    SetStairs(levels, rng);
-
     gs.Regions["dungeon"] = levels;
+  }
+
+  // BT's levels were neatly stacked, by which I mean if the stairs down were
+  // at 4, 10 then the arrival stairs/stairs up on the next level would be at
+  // 4, 10 as well
+  static (int X, int Y) SetStairs(DungeonLevel lvl, int arrivalX, int arrivalY, Rng rng)
+  {    
+    // For the stairs down, pick a tile that's further away from the 
+    // stairs up
+    var distances = StepCounts(arrivalX, arrivalY, lvl);
+    List<int> distantSqs = [.. distances.OrderByDescending(i => i.D)
+                                        .Take(MATRIX_SIZE / 3)
+                                        .Select(i => i.Sq)];
+
+    int stairsSq = distantSqs[rng.Next(distantSqs.Count)];
+    int stairsX = stairsSq % DungeonLevel.MAP_SIZE;
+    int stairsY = stairsSq / DungeonLevel.MAP_SIZE;
+    Tile tile = lvl.TileAt(stairsX, stairsY);
+    lvl.SetTile(stairsX, stairsY, tile with { Feature = Feature.StairsDown });
+
+    return (stairsX, stairsY);
   }
 
   static void MakeDarkArea(DungeonLevel lvl, int x, int y, int range)
