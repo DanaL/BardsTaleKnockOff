@@ -24,6 +24,9 @@ internal class Serialize
 {
   const string DungeonRegion = "dungeon";
 
+  // Shared by save and load so they always agree on what gets serialized.
+  static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = false, IncludeFields = true };
+
   static string CampaignDir(string campaign) => Path.Combine(Util.SavePath, campaign);
   static string DatPath(string campaign) => Path.Combine(CampaignDir(campaign), $"{campaign}.dat");
   static string LevelPath(string campaign, int level) =>
@@ -48,7 +51,7 @@ internal class Serialize
     }
 
     SaveGameInfo sgi = new(app.Roster, party, app.GameState.Turn, app.GameState.FactDb);
-    var bytes = JsonSerializer.SerializeToUtf8Bytes(sgi, new JsonSerializerOptions { WriteIndented = false, IncludeFields = true });
+    var bytes = JsonSerializer.SerializeToUtf8Bytes(sgi, JsonOptions);
 
     // In the future, when this is a real game, I'm going to have check player names for invalid characters or build a
     // little database of players vs saved games
@@ -96,7 +99,7 @@ internal class Serialize
     string path = DatPath(app.CampaignName);
 
     var bytes = File.ReadAllBytes(path);
-    var sgi = JsonSerializer.Deserialize<SaveGameInfo>(bytes) ?? throw new Exception("Failure to deserialize save file :(");
+    var sgi = JsonSerializer.Deserialize<SaveGameInfo>(bytes, JsonOptions) ?? throw new Exception("Failure to deserialize save file :(");
     foreach (var c in sgi.Roster.OrderBy(ch => ch.Name))
       app.Roster.Add(c);
 
