@@ -59,13 +59,14 @@ class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, i
 
 enum Monsters
 {
-  Goblin, Orc, Skeleton, Conjurer0, Magician0, FeralDog, Spider, Ogre, Nomad, Barbarian, Wolf, BlackWidow  
+  Goblin, Orc, Skeleton, Conjurer0, Magician0, FeralDog, Spider, Ogre, Nomad, Barbarian, Wolf, BlackWidow, Slime
 }
 
 class MonsterCatalog
 {
   public static Monster Get(Monsters id, Rng rng) => id switch
   {
+    Monsters.Slime => new Monster("Slime", 9, rng.Next(3, 8), 19, 1, 4, 60, rng.Next(20, 61), MonsterScript.Melee, "slimes", "slime.png", MonsterFlag.None, 1),
     Monsters.Goblin => new Monster("Goblin", 10, rng.Next(3, 8), 19, 1, 4, 60, rng.Next(20, 51), MonsterScript.Melee, "attacks", "goblin.png", MonsterFlag.None, 1),
     Monsters.Orc => new Monster("Orc", 8, rng.Next(3, 12), 18, 2, 8, 90, rng.Next(20, 81), MonsterScript.Melee, "attacks", "orc.png", MonsterFlag.None, 1),
     Monsters.Skeleton => new Monster("Skeleton", 6, rng.Next(7, 16), 18, 3, 12, 110, rng.Next(20, 81), MonsterScript.Melee, "claws at", "skeleton.png", MonsterFlag.Undead, 1),
