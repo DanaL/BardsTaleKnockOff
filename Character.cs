@@ -9,6 +9,8 @@
 // with this software. If not, 
 // see <http://creativecommons.org/publicdomain/zero/1.0/>.
 
+using System.Text.Json.Serialization;
+
 namespace BardsTaleKnockOff;
 
 enum Lineage { Human, Orc, Dwarf, Gnome, Elf, Goblin }
@@ -76,6 +78,7 @@ class Character
     _ => throw new Exception($"Unknown role: {Role}!"),
   };
 
+  [JsonIgnore]
   public Item? ReadiedWeapon
   {
     get
@@ -87,6 +90,7 @@ class Character
     }
   }
   
+  [JsonIgnore]
   public Item? EquippedBow
   {
     get
@@ -101,6 +105,7 @@ class Character
     }
   }
   
+  [JsonIgnore]
   public int AC
   {
     get
@@ -419,6 +424,8 @@ class Party
   public bool Contains(Character c) => Members.Contains(c);
 
   public List<TempBuff> Buffs = [];
+
+  public HashSet<int> QuestItems = [];
 
   public bool Add(Character c)
   {

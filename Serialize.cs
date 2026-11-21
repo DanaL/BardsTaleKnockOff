@@ -16,7 +16,7 @@ namespace BardsTaleKnockOff;
 record struct PartyInfo(int Slot, string Name);
 record SaveFileInfo(string CampaignName, string Path);
 record SaveGameInfo(List<Character> Roster, List<PartyInfo> Party, ulong Turn, Dictionary<string, Fact>? Facts,
-                      Dictionary<int, Item>? UniqueItems);
+                      Dictionary<int, Item>? UniqueItems, HashSet<int>? QuestItems);
 
 // A campaign is saved as a folder named after it, holding <campaign>.dat
 // (roster, party, facts...) and the generated dungeon levels as
@@ -51,7 +51,8 @@ internal class Serialize
         party.Add(new PartyInfo(s, c.Name));
     }
 
-    SaveGameInfo sgi = new(app.Roster, party, app.GameState.Turn, app.GameState.FactDb, ItemCatalog.UniqueItems);
+    SaveGameInfo sgi = new(app.Roster, party, app.GameState.Turn, app.GameState.FactDb, ItemCatalog.UniqueItems,
+        app.GameState.Party.QuestItems);
     var bytes = JsonSerializer.SerializeToUtf8Bytes(sgi, JsonOptions);
 
     // In the future, when this is a real game, I'm going to have check player names for invalid characters or build a
@@ -114,5 +115,6 @@ internal class Serialize
     app.GameState.FactDb = sgi.Facts ?? [];
 
     ItemCatalog.LoadUniqueItems(sgi.UniqueItems);
+    app.GameState.Party.QuestItems = sgi.QuestItems;
   }
 } 
