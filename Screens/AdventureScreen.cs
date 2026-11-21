@@ -208,7 +208,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         }
         break;
       case Feature.Lever:
-        app.Screens.Push(new ConfirmScreen(app, "You stumble across a lever! Pull it?", PullLever));
+        app.Screens.Push(new ConfirmScreen(app, "You stumble across a lever! Pull it?", PullLever) { Image = "lever.png" });
         if (IsEncounter())
           app.Screens.Push(new EncounterScreen(app));
         break;
@@ -227,7 +227,22 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 
   void PullLever()
   {
+    var leverKey = $"Lever#{GS.X},{GS.Y}";
     
+    if (!GS.FactDb.ContainsKey(leverKey) || GS.FactDb[leverKey] is not LeverFact leverFact)
+      return;
+
+    int portcullisX = leverFact.PortcullisX;
+    int portcullisY = leverFact.PortcullisY;
+    var portcullisKey = $"PortcullisState#{portcullisX},{portcullisY}";
+    if (!GS.FactDb.ContainsKey(portcullisKey) || GS.FactDb[portcullisKey] is not PortcullisStateFact pFact)
+      return;
+    
+    Tile portcullisTile = GS.CurrMap.TileAt(pFact.X, pFact.Y);
+    Edge door = portcullisTile.EdgeForDir(pFact.Dir);
+    Edge newDoor = door == Edge.Portcullis ? Edge.Open : Edge.Portcullis;
+    Util.SetDoor(GS.CurrMap, new(pFact.X, pFact.Y, pFact.Dir), newDoor);
+    app.Screens.Push(new PopupScreen(app, "The echoes of grinding machinery reverberate through the Underhalls."));
   }
 
   void Trap(Feature trapType)

@@ -701,7 +701,7 @@ class LevelGenerator
     var exit = portcullisRoom.Exits[0];
     Util.SetDoor(lvl, exit, Edge.Portcullis);
 
-    var fact = new PortcullisStateFact(exit.X, exit.Y, false);
+    var fact = new PortcullisStateFact(exit.X, exit.Y, exit.Dir, false);
     gs.FactDb[fact.Key] = fact;
 
     // Now place the lever

@@ -35,7 +35,7 @@ class AbortBattleException(string caster) : Exception(caster) {}
 [JsonDerivedType(typeof(LeverFact), "lever")]
 abstract record Fact(string Key);
 record FlagFact(string Key, bool Value) : Fact(Key);
-record PortcullisStateFact(int X, int Y, bool Open) : Fact($"Portcullis#{X},{Y}");
+record PortcullisStateFact(int X, int Y, Dir Dir, bool Open) : Fact($"Portcullis#{X},{Y}");
 record LeverFact(int LeverX, int LeverY, int PortcullisX, int PortcullisY) : Fact($"Lever#{LeverX},{LeverY}");
 
 static class Util
