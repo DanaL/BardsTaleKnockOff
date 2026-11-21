@@ -664,6 +664,38 @@ class LevelGenerator
     return (rooms, lvl);
   }
 
+  static (int, int) SetIdolPuzzle(DungeonLevel lvl, int arrivalX, int arrivalY, List<Room> rooms, GameState gs, Rng rng)
+  {
+    Dictionary<int, int> roomSqs = [];
+    for (int j = 0; j < rooms.Count; j++)
+    {
+      // We only care about rooms with one exit that we can lock up
+      if (rooms[j].Exits.Count != 1)
+        continue;
+      foreach (var (loc, _) in rooms[j].Floors.Where(sq => sq.Value.Feature == Feature.None))
+      {
+        roomSqs[loc.Y * DungeonLevel.MAP_SIZE + loc.X] = j;
+      }
+    }
+
+    // I think this will never happen but just in case...
+    if (roomSqs.Count == 0)
+      return (-1, -1);
+
+    var distances = StepCounts(arrivalX, arrivalY, lvl);
+    List<int> distantSqs = [.. distances.OrderByDescending(i => i.D)
+                                        .Where(i => roomSqs.ContainsKey(i.Sq))
+                                        .Take(MATRIX_SIZE / 3)
+                                        .Select(i => i.Sq)];
+
+    var idolSq = distantSqs[rng.Next(distantSqs.Count)];
+    int idolX = idolSq % DungeonLevel.MAP_SIZE;
+    int idolY = idolSq / DungeonLevel.MAP_SIZE;
+    Tile tile = lvl.TileAt(idolX, idolY);
+
+    return (idolX, idolY);
+  }
+
   static (int, int) SetGatedStairs(DungeonLevel lvl, int arrivalX, int arrivalY, List<Room> rooms, GameState gs, Rng rng)
   {
     // First we need to find a room we can lock with a portcullis to place 
