@@ -18,7 +18,7 @@ namespace BardsTaleKnockOff;
 
 enum ItemType { Misc, Weapon, Armour, Gloves, Shield, Helmet, Ring, Bow, Ammunition }
 
-class Item
+record Item
 {
   public required int Id { get; init; }
   public required string Name { get; init; }
@@ -38,6 +38,25 @@ class Item
 
 class ItemCatalog
 {
+  public const int UNIQUE_ITEM_ID_SEED = 10_000;
+
+  // Quest/unique items that are created per campaign
+  public static Dictionary<int, Item> UniqueItems { get; private set; } = [];
+  static int _nextUniqueId = UNIQUE_ITEM_ID_SEED;
+
+  public static void LoadUniqueItems(Dictionary<int, Item>? items)
+  {
+    UniqueItems = items ?? [];
+    _nextUniqueId = UniqueItems.Count == 0 ? UNIQUE_ITEM_ID_SEED : UniqueItems.Keys.Max() + 1;
+  }
+
+  public static Item AddUniqueItem(Item template)
+  {
+    Item item = template with { Id = _nextUniqueId++ };
+    UniqueItems[item.Id] = item;
+    return item;
+  }
+
   public const int TORCH = 0;
 
   public const int BROADSWORD = 1;
@@ -95,6 +114,7 @@ class ItemCatalog
     SHORTBOW => new() { Id = SHORTBOW, Name = "Shortbow", Type = ItemType.Bow, Value = 50, DamageDie = 6, NumDamageDice = 1, UseableBy = NONCASTER },
     LONGBOW => new() { Id = LONGBOW, Name = "Longbow", Type = ItemType.Bow, Value = 100, DamageDie = 8, NumDamageDice = 1, UseableBy = Role.Warrior | Role.Archer },
     ARROW => new() { Id = ARROW, Name = "Arrow", Type = ItemType.Ammunition, Value = 2, UseableBy = NONCASTER, Useable = true, Stackable = true },
+    _ when UniqueItems.TryGetValue(id, out var item) => item,
     _ => throw new Exception($"Item {id} is not defined!")
   };
   
