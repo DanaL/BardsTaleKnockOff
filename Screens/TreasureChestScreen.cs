@@ -174,7 +174,7 @@ class TreasureChestScreen : IScreen
       {
         var table = _tables[_app.GameState.CurrRegion][_app.GameState.CurrLevel];
         int itemId = table[_app.Rng.Next(table.Count)];
-        s = GiveItem(itemId);
+        s = _app.GameState.Party.GiveItem(itemId, _app.Rng);
         if (s != "")
           _msgBuffer.Add(s);
       }  
@@ -185,28 +185,6 @@ class TreasureChestScreen : IScreen
 
     if (OnLoot is not null)
       OnLoot();
-  }
-
-  string GiveItem(int itemId)
-  {
-    List<Character> party = [];
-    for (int j = 0; j < Party.MAX_PARTY_SIZE; j++)
-    {
-      if (_app.GameState.Party.Members[j] is Character c && !c.InventoryFull)
-        party.Add(c);
-    }
-
-    if (party.Count == 0)
-      return "";
-    
-    Item item = ItemCatalog.Item(itemId);
-    var finder = party[_app.Rng.Next(party.Count)];
-    int count = itemId == ItemCatalog.ARROW ? 10 : 1;
-    string s = $"{finder.Name} finds ";
-    s += count > 1 ? $"{count} {item.Name.Pluralize()}" : item.Name.IndefArticle();
-    finder.AddItem(itemId, count);
-
-    return s;
   }
 
   void Triggered()

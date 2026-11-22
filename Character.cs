@@ -454,6 +454,38 @@ class Party
     return false;
   }
 
+  public string GiveItem(int itemId, Rng rng)
+  {
+    Item item = ItemCatalog.Item(itemId);
+
+    if (item.Type == ItemType.Quest)
+    {
+      QuestItems.Add(itemId);
+      return $"The party picks up {item.Name.DefArticle()}.";
+    }
+    else
+    {
+      List<Character> party = [];
+    for (int j = 0; j < MAX_PARTY_SIZE; j++)
+    {
+      if (Members[j] is Character c && !c.InventoryFull && !c.Incapacitated)
+        party.Add(c);
+    }
+
+    if (party.Count == 0)
+      return "";
+    
+    
+    var finder = party[rng.Next(party.Count)];
+    int count = itemId == ItemCatalog.ARROW ? 10 : 1;
+    string s = $"{finder.Name} finds ";
+    s += count > 1 ? $"{count} {item.Name.Pluralize()}" : item.Name.IndefArticle();
+    finder.AddItem(itemId, count);
+
+    return s;
+    }    
+  }
+
   public void CheckBuffs(ulong turn)
   {
     Buffs = [.. Buffs.Where(b => b.ExpiresOn > turn)];

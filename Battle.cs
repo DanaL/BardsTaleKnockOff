@@ -769,9 +769,6 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     _goldWon += m.Gold;
     ++_monstersDefeated;
     Foes[group].Monsters.RemoveAt(index);
-
-    if (m.DefeatFact is Fact fact)
-      gs.FactDb[fact.Key] = fact;
   }
 
   int Initiative(Character c)

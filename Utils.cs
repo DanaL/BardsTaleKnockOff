@@ -33,10 +33,17 @@ class AbortBattleException(string caster) : Exception(caster) {}
 [JsonDerivedType(typeof(FlagFact), "flag")]
 [JsonDerivedType(typeof(PortcullisStateFact), "portcullis")]
 [JsonDerivedType(typeof(LeverFact), "lever")]
+[JsonDerivedType(typeof(StatueFact), "statue")]
+[JsonDerivedType(typeof(ItemDropBattleFact), "itemdropbattle")]
+[JsonDerivedType(typeof(BattleWonFact), "battlewon")]
 abstract record Fact(string Key);
 record FlagFact(string Key, bool Value) : Fact(Key);
 record PortcullisStateFact(int X, int Y, Dir Dir, bool Open) : Fact($"Portcullis#{X},{Y}");
-record LeverFact(int LeverX, int LeverY, int PortcullisX, int PortcullisY) : Fact($"Lever#{LeverX},{LeverY}");
+record LeverFact(int LeverX, int X, int Y, int PortcullisY) : Fact($"Lever#{X},{Y}");
+record StatueFact(int X, int Y, string Desc, int UnlockedById) : Fact($"Statue#{X},{Y}");
+record ItemDropBattleFact(int X, int Y, int ItemId, Monsters Monster, int MonsterCount,
+                              string Desc) : Fact($"ItemDropBattle#{X},{Y}");
+record BattleWonFact(int X, int Y) : Fact($"BattleWon#{X},{Y}");
 
 static class Util
 {

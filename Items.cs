@@ -16,7 +16,7 @@ namespace BardsTaleKnockOff;
 // because swords can't become rusty, buffed, etc. At least not yet. So for
 // the early stages of this project I'll just have a big lookup table.
 
-enum ItemType { Misc, Weapon, Armour, Gloves, Shield, Helmet, Ring, Bow, Ammunition }
+enum ItemType { Misc, Weapon, Armour, Gloves, Shield, Helmet, Ring, Bow, Ammunition, Quest }
 
 record Item
 {
@@ -54,6 +54,7 @@ class ItemCatalog
   {
     Item item = template with { Id = _nextUniqueId++ };
     UniqueItems[item.Id] = item;
+
     return item;
   }
 

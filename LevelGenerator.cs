@@ -126,7 +126,8 @@ class LevelGenerator
 
       // Add the stairs to the next level
       if (ln == 0)
-        (arrivalStairsX, arrivalStairsY) = SetGatedStairs(lvl, 0, 0, rooms, gs, rng);
+        //(arrivalStairsX, arrivalStairsY) = SetGatedStairs(lvl, 0, 0, rooms, gs, rng);
+        (arrivalStairsX, arrivalStairsY) = SetIdolPuzzle(lvl, 0, 0, 0, rooms, gs, rng);
       else if (ln < NUM_LEVELS - 1)
       {          
         (arrivalStairsX, arrivalStairsY) = SetStairs(lvl, arrivalStairsX, arrivalStairsY, rng);
@@ -664,7 +665,7 @@ class LevelGenerator
     return (rooms, lvl);
   }
 
-  static (int, int) SetIdolPuzzle(DungeonLevel lvl, int arrivalX, int arrivalY, List<Room> rooms, GameState gs, Rng rng)
+  static (int, int) SetIdolPuzzle(DungeonLevel lvl, int levelNum, int arrivalX, int arrivalY, List<Room> rooms, GameState gs, Rng rng)
   {
     Dictionary<int, int> roomSqs = [];
     for (int j = 0; j < rooms.Count; j++)
@@ -691,8 +692,56 @@ class LevelGenerator
     var idolSq = distantSqs[rng.Next(distantSqs.Count)];
     int idolX = idolSq % DungeonLevel.MAP_SIZE;
     int idolY = idolSq / DungeonLevel.MAP_SIZE;
-    Tile tile = lvl.TileAt(idolX, idolY);
 
+    idolX = 1;
+    idolY = 0;
+
+
+
+
+    Tile tile = lvl.TileAt(idolX, idolY);
+    lvl.SetTile(idolX, idolY, tile with { Feature = Feature.Statue });
+    string idolDesc = "You stand before a demonic visage, carved from obsidian. It holds its clawed hands toward you, as though beckoning to have something placed in them.";
+    
+    // Now we need to create the special encounter
+    List<(int X, int Y)> encounterSqs = [];
+    foreach (var sq in roomSqs.Keys)
+    {
+      int sqX = sq % DungeonLevel.MAP_SIZE;
+      int sqY = sq / DungeonLevel.MAP_SIZE;
+      if (Util.Distance(sqX, sqY, idolX, idolY) >= 4)
+        encounterSqs.Add((sqX, sqY));
+    }    
+    var (encounterX, encounterY) = encounterSqs[rng.Next(encounterSqs.Count)];
+
+    encounterX = 1;
+    encounterY = 1;
+
+    Tile encounterTile = lvl.TileAt(encounterX, encounterY);
+    lvl.SetTile(encounterX, encounterY, encounterTile with { Feature = Feature.SpecialEncounter });
+
+    (Monsters monster, string monsterName, int count) = levelNum switch
+    {
+      < 3 => (Monsters.Slime, "slime", 1),
+      _ => (Monsters.Ogre, "ogre", levelNum + 4) // eventually higher level monsters
+    };
+
+    string colour = rng.Next(4) switch
+    {
+      0 => "Blue",
+      1 => "Red",
+      2 => "Green",
+      _ => "Amber"
+    };
+    Item gem = new() { Id = 0, Name = $"{colour} Gem", Type = ItemType.Quest, Value = 200, DamageDie = 1, NumDamageDice = 1, UseableBy = Role.Warrior };
+    gem = ItemCatalog.AddUniqueItem(gem);
+    string encDesc = $"A group of {monsterName.Pluralize()} are tossing around a glowing {colour} Gem in some sort of game.";
+
+    ItemDropBattleFact dropFact = new(encounterX, encounterY, gem.Id, monster, count, encDesc);
+    StatueFact statueFact = new(idolX, idolY, idolDesc, gem.Id);
+    gs.FactDb[dropFact.Key] = dropFact;
+    gs.FactDb[statueFact.Key] = statueFact;
+    
     return (idolX, idolY);
   }
 

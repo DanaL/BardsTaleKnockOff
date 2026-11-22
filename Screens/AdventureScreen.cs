@@ -131,15 +131,15 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         }
         break;
       case Feature.Special2:
-        if (!GS.FactDb.ContainsKey("TownOgreSlain"))
-        {
-          Monster ogre = MonsterCatalog.Get(Monsters.Ogre, app.Rng);
-          ogre.DefeatFact = new FlagFact("TownOgreSlain", true);
-          ogre.HP = 35; // an especially tough ogre
-          ogre.Rank += 1;
-          app.Screens.Push(new BattleScreen(app, [new() { Monsters = [ogre], Distance = 10 }], false) { RetreatLoc = (19, 8, app.GameState.Facing.Opposite()), VictoryMessage = "A sinister aura emanates from the portal to the east." });
-          app.Screens.Push(new PopupScreen(app, "An enormous ogre bars your path!"));
-        }
+        // if (!GS.FactDb.ContainsKey("TownOgreSlain"))
+        // {
+        //   Monster ogre = MonsterCatalog.Get(Monsters.Ogre, app.Rng);
+        //   ogre.DefeatFact = new FlagFact("TownOgreSlain", true);
+        //   ogre.HP = 35; // an especially tough ogre
+        //   ogre.Rank += 1;
+        //   app.Screens.Push(new BattleScreen(app, [new() { Monsters = [ogre], Distance = 10 }], false) { RetreatLoc = (19, 8, app.GameState.Facing.Opposite()), VictoryMessage = "A sinister aura emanates from the portal to the east." });
+        //   app.Screens.Push(new PopupScreen(app, "An enormous ogre bars your path!"));
+        // }
         break;
       case Feature.Special3:
         if (!GS.FactDb.ContainsKey("TutorialChestFound"))
@@ -179,6 +179,24 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         app.Screens.Push(new StairsScreen(app, false));
         if (IsEncounter())
           app.Screens.Push(new EncounterScreen(app));
+        break;
+      case Feature.Statue:
+        string statueKey = $"Statue#{GS.X},{GS.Y}";
+        if (GS.FactDb.TryGetValue(statueKey, out var fact) && fact is StatueFact statueFact)
+        {
+          app.Screens.Push(new PopupScreen(app, statueFact.Desc));
+        }
+        break;
+      case Feature.SpecialEncounter:
+        if (!GS.FactDb.ContainsKey($"BattleWon#{GS.X},{GS.Y}"))
+        {
+          string battleFactKey = $"ItemDropBattle#{GS.X},{GS.Y}";
+          if (GS.FactDb.TryGetValue(battleFactKey, out var fact2) && fact2 is ItemDropBattleFact battleFact)
+          {
+            string prompt = $"{battleFact.Desc} Confront them?";
+            app.Screens.Push(new ConfirmScreen(app, prompt, () => { RunSpecialEncounter(battleFact); }));
+          }
+        }
         break;
       case Feature.Teleporter:
         if (GS.CurrMap.Teleporters.TryGetValue((GS.X, GS.Y), out (int, int) dest))
@@ -225,6 +243,22 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     }    
   }
 
+  void RunSpecialEncounter(ItemDropBattleFact battleFact)
+  {
+    List<Monster> monsters = [];
+    for (int j = 0; j < battleFact.MonsterCount; j++)
+      monsters.Add(MonsterCatalog.Get(battleFact.Monster, app.Rng));
+   
+    Item prize = ItemCatalog.Item(battleFact.ItemId);
+    BattleScreen bs = new(app, [new() { Monsters = monsters, Distance = 10 }], false) 
+    { 
+      ItemDrop = battleFact.ItemId, 
+      VictoryMessage = $"You find {prize.Name.IndefArticle()}",
+      VictoryFact = new BattleWonFact(GS.X, GS.Y)
+    };
+    app.Screens.Push(bs);
+  }
+
   void PullLever()
   {
     var leverKey = $"Lever#{GS.X},{GS.Y}";
@@ -232,8 +266,8 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     if (!GS.FactDb.ContainsKey(leverKey) || GS.FactDb[leverKey] is not LeverFact leverFact)
       return;
 
-    int portcullisX = leverFact.PortcullisX;
-    int portcullisY = leverFact.PortcullisY;
+    int portcullisX = leverFact.X;
+    int portcullisY = leverFact.Y;
     var portcullisKey = $"PortcullisState#{portcullisX},{portcullisY}";
     if (!GS.FactDb.ContainsKey(portcullisKey) || GS.FactDb[portcullisKey] is not PortcullisStateFact pFact)
       return;
@@ -452,6 +486,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     if (app.GameState.Party.Buffs.Any(b => b.Buff == Buff.SoftStep))
       odds *= 2;
     
+    return false;
     return app.Rng.Next(odds) == 0;
   }
 

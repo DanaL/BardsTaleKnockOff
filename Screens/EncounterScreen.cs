@@ -20,9 +20,12 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
   // if the player flees some special encounters, like a guarded door, we
   // might want to move them to a different location
   public (int X, int Y, Dir Dir) RetreatLoc = (-1, -1, Dir.None); 
+  public int ItemDrop { get; set; } = -1;
 
   // A message to be written after the player wins the fight
   public string VictoryMessage { get; set; } = "";
+  // A fact to be set upon Victory
+  public Fact? VictoryFact { get; set; } = null;
 
   const SDL_Scancode ATTACK_KEY = SDL_Scancode.SDL_SCANCODE_A;
   const SDL_Scancode DEFEND_KEY = SDL_Scancode.SDL_SCANCODE_D;
@@ -343,7 +346,30 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
       gold = (int)(gold * scale);
     }
 
-    if (_app.GameState.CurrRegion == "town" || _app.Rng.Next(8) == 0)
+    if (ItemDrop != -1)
+    {      
+      int xpPerChar = int.Max(xp / _app.GameState.Party.Alive, 1);
+
+      for (int j = 0; j < Party.MAX_PARTY_SIZE; j++)
+      {
+        if (_app.GameState.Party.Members[j] is Character c && !c.Incapacitated)
+        {
+          c.XP += xpPerChar;
+        }
+      }
+
+      _app.GameState.Say("You emerge victorious from battle!");
+      _app.GameState.Say("");
+      _app.GameState.Say($"Each survivor receives {xpPerChar} XP!");
+      _app.GameState.Say("");
+
+      string s = _app.GameState.Party.GiveItem(ItemDrop, _app.Rng);
+      _app.GameState.Say(s);
+
+      _image = "treasure.png";
+      _caption = "Victory!";
+    }
+    else if (_app.GameState.CurrRegion == "town" || _app.Rng.Next(8) == 0)
     {        
       // If gold given is less than the # of alive characters, I'm giving a
       // little extra gold but who cares...
@@ -372,6 +398,9 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
       TreasureChestScreen scr = new(_app, gold, ItemsFound(monstersDefeated), xp);
       _app.Screens.Push(scr);
     }
+
+    if (VictoryFact is not null)
+      _app.GameState.FactDb[VictoryFact.Key] = VictoryFact;
 
     // if this was a fixed encounter, we want to clear it out for this current
     // visit to the dungeon.
