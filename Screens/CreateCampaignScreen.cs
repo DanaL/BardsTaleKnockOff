@@ -62,7 +62,6 @@ class CreateCampaignScreen(App app) : IScreen
           Serialize.WriteDungeon(app.GameState, app.CampaignName);
           app.Screens.Replace(new GuildScreen(app));
         }
-        //app.Screens.Push(new PickLineageScreen(app, _name));
         break;
       case SDL_Keycode.SDLK_ESCAPE:
         app.Screens.Replace(new MainMenuScreen(app));

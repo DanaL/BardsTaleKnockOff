@@ -15,7 +15,7 @@ namespace BardsTaleKnockOff;
 
 // The display and input side of a fight: collects each character's action,
 // then shows the round's messages one at a time. The rules live in Battle.
-class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickScreen, IInventorySelectionScreen
+sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickScreen, IInventorySelectionScreen
 {
   // if the player flees some special encounters, like a guarded door, we
   // might want to move them to a different location
@@ -654,7 +654,7 @@ class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPartyPickSc
   }
 }
 
-class EncounterScreen : IScreen
+sealed class EncounterScreen : IScreen
 {
   public (int X, int Y, Dir Dir) RetreatLoc = (-1, -1, Dir.None); 
 

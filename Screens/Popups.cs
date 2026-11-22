@@ -16,8 +16,15 @@ namespace BardsTaleKnockOff;
 class PopupScreen(App app, string text) : IScreen
 {
   public bool IsOverlay => true;
+  public Action? OnDismiss { get; set;} = null;
 
-  public void OnKey(SDL_KeyboardEvent key) => app.Screens.Pop();
+  public void OnKey(SDL_KeyboardEvent key)
+  {
+    app.Screens.Pop();
+    if (OnDismiss is Action)
+      OnDismiss();
+  }
+
   public void Draw(GameUI ui) => ui.DrawPrompt([text]);
 }
 

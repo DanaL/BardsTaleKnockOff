@@ -16,7 +16,7 @@ namespace BardsTaleKnockOff;
 // Walking around the map. This is where the main adventuring loop lives:
 // exploring now; random encounters (push a combat screen, pop it when the
 // fight ends), shops and so on later.
-class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
+sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
 {
   GameState GS => app.GameState;
 
@@ -82,7 +82,7 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
     }
   }
 
-  void CheckLocation()
+  public void CheckLocation()
   {
     _idleTime = 0;
 
@@ -184,8 +184,10 @@ class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScreen
         string statueKey = $"Statue#{GS.X},{GS.Y}";
         if (GS.FactDb.TryGetValue(statueKey, out var fact) && fact is StatueFact statueFact)
         {
-          app.Screens.Push(new PopupScreen(app, statueFact.Desc));
+          app.Screens.Push(new StatueScreen(app, statueFact));
         }
+        if (IsEncounter())
+          app.Screens.Push(new EncounterScreen(app));
         break;
       case Feature.SpecialEncounter:
         if (!GS.FactDb.ContainsKey($"BattleWon#{GS.X},{GS.Y}"))

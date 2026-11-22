@@ -30,7 +30,8 @@ internal class Serialize
 
   static string CampaignDir(string campaign) => Path.Combine(Util.SavePath, campaign);
   static string DatPath(string campaign) => Path.Combine(CampaignDir(campaign), $"{campaign}.dat");
-  static string LevelPath(string campaign, int level) =>
+  
+  public static string LevelPath(string campaign, int level) =>
     Path.Combine(CampaignDir(campaign), $"{DungeonRegion}{level + 1:D2}.txt");
 
   public static bool CampaignExists(string campaign) => Directory.Exists(CampaignDir(campaign));
