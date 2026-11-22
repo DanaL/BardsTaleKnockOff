@@ -437,6 +437,8 @@ class Party
     return true;
   }
 
+  public bool HasBuff(Buff buff) => Buffs.Any(b => b.Buff == buff);
+
   public bool HasLight()
   {
     foreach (var b in Buffs)

@@ -63,6 +63,24 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
         Divination();
         CheckForSpinner();
         break;
+      case SDL_Scancode.SDL_SCANCODE_Q:
+        if (!GS.Party.HasBuff(Buff.Levitation))
+          GS.Say("You have no way to ascend.");
+        else if (GS.CurrTile.Ceiling != Ceiling.Hole)
+          GS.Say("There is nowhere to go!");
+        else
+        {
+          --GS.CurrLevel;
+          GS.Say("You rise upward to the floor above!");
+          CheckLocation();
+          ResolveTurn();
+          Divination();
+          CheckForSpinner();
+        }
+        break;        
+      case SDL_Scancode.SDL_SCANCODE_Z:
+        HandleDescending();
+        break;
       case SDL_Scancode.SDL_SCANCODE_1:
       case SDL_Scancode.SDL_SCANCODE_2:
       case SDL_Scancode.SDL_SCANCODE_3:
@@ -79,6 +97,43 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
       case SDL_Scancode.SDL_SCANCODE_N:
         app.Screens.Push(new ReorderPartyScreen(app, null, ""));
         break;
+    }
+  }
+
+  public void HandleDescending()
+  {        
+    if (GS.CurrTile.Floor != Floor.Hole)
+      GS.Say("You cannot descend here.");
+    else if (GS.Party.HasBuff(Buff.Levitation))
+    {
+      GS.Say("You drift downward into the gloom.");
+      Descend();
+    }
+    else
+    {      
+      app.Screens.Push(new ConfirmScreen(app, "Really leap into the hole?", JumpIntoHole));
+    }
+
+    void JumpIntoHole()
+    {
+      foreach (var c in GS.Party.Members.OfType<Character>())      
+      {
+        int dmg = app.Rng.Next(1, 7) + app.Rng.Next(1, 7);
+        string s = c.ReceiveDmg(dmg);
+        GS.Say($"{c.Name} takes {dmg} damage from the fall!");
+        if (s != "")
+          GS.Say(s);
+      }
+      Descend();
+    }
+
+    void Descend()
+    {
+      ++GS.CurrLevel;
+      CheckLocation();
+      ResolveTurn();
+      Divination();
+      CheckForSpinner();
     }
   }
 
@@ -131,15 +186,14 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
         }
         break;
       case Feature.Special2:
-        // if (!GS.FactDb.ContainsKey("TownOgreSlain"))
-        // {
-        //   Monster ogre = MonsterCatalog.Get(Monsters.Ogre, app.Rng);
-        //   ogre.DefeatFact = new FlagFact("TownOgreSlain", true);
-        //   ogre.HP = 35; // an especially tough ogre
-        //   ogre.Rank += 1;
-        //   app.Screens.Push(new BattleScreen(app, [new() { Monsters = [ogre], Distance = 10 }], false) { RetreatLoc = (19, 8, app.GameState.Facing.Opposite()), VictoryMessage = "A sinister aura emanates from the portal to the east." });
-        //   app.Screens.Push(new PopupScreen(app, "An enormous ogre bars your path!"));
-        // }
+        if (!GS.FactDb.ContainsKey("TownOgreSlain"))
+        {
+          Monster ogre = MonsterCatalog.Get(Monsters.Ogre, app.Rng);
+          ogre.HP = 35; // an especially tough ogre
+          ogre.Rank += 1;
+          app.Screens.Push(new BattleScreen(app, [new() { Monsters = [ogre], Distance = 10 }], false) { RetreatLoc = (19, 8, app.GameState.Facing.Opposite()), VictoryMessage = "A sinister aura emanates from the portal to the east." });
+          app.Screens.Push(new PopupScreen(app, "An enormous ogre bars your path!"));
+        }
         break;
       case Feature.Special3:
         if (!GS.FactDb.ContainsKey("TutorialChestFound"))
@@ -237,6 +291,11 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
           app.Screens.Push(new EncounterScreen(app));
         break;
     }
+
+    if (GS.CurrTile.Ceiling == Ceiling.Hole)
+      GS.Say("There is a hole in the ceiling above you, out of reach.");
+    if (GS.CurrTile.Floor == Floor.Hole)
+      GS.Say("There is a hole in the ground here, revealing darkness below.");
 
     if (GS.CurrMap.Messages.TryGetValue((GS.X, GS.Y), out var msg))
     {

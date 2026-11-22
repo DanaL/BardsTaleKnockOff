@@ -124,6 +124,7 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
       tex = (nint)LoadTexture(Path.Combine(_assetDir, name));
       _sheets[name] = tex;
     }
+
     return (SDL_Texture*)tex;
   }
 
@@ -137,6 +138,7 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
     if (tex == null)
       throw new Exception($"Couldn't create texture for {path}: {SDL_GetError()}");
     SDL_SetTextureScaleMode(tex, SDL_ScaleMode.SDL_SCALEMODE_NEAREST);
+    
     return tex;
   }
 
@@ -212,7 +214,7 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
 
   public void Draw(GameState gs, bool revealSecretDoors, int originX, int originY)
   {
-    bool indoors = gs.CurrRegion == "town";
+    bool outdoors = gs.CurrRegion == "town";
     int px = gs.X;
     int py = gs.Y;
     Dir facing = gs.Facing;
@@ -223,8 +225,6 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
     var (fx, fy) = facing.Delta();
     var (rx, ry) = facing.TurnRight().Delta();
 
-    var ceilingTex = indoors ? null : Sheet("ceiling.png");
-
     // Generated pieces can hang off the edge of the view; keep them out of
     // whatever is drawn beside it.
     var clip = new SDL_Rect { x = originX, y = originY, w = ViewW, h = ViewH };
@@ -233,6 +233,8 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
     var stoneFloorTexture = Sheet("floor.png");
     var dirtTexture = Sheet("dirt.png");
     var waterTexture = Sheet("water.png");
+    var holeCeilingTexture = Sheet("hole_ceiling.png");
+    var holeFloorTexture = Sheet("hole_floor.png");
 
     // View range r: squares 0..r are drawn, fading into the dark towards the
     // far edge of square r (the "twilight" square). Its far wall sits right at
@@ -246,7 +248,7 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
     // must be drawn after the walls. Otherwise the walls stick out below the
     // floor and doors look like they're floating.
     _fogFar = WallZ(viewRange + 1);
-    _fogMin = indoors && gs.DayTime ? DaylightFogMin : 0f;
+    _fogMin = outdoors && gs.DayTime ? DaylightFogMin : 0f;
 
     DrawBackground(gs, originX, originY);
     if (gs.CurrRegion == "town" && (gs.Sunset || gs.Sunrise))
@@ -280,9 +282,17 @@ unsafe class ViewRenderer(SDL_Renderer* renderer, string assetDir)
         {
           Floor.Dirt => dirtTexture,
           Floor.Water => waterTexture,
+          Floor.Hole => holeFloorTexture,
           _ => stoneFloorTexture
         };
         DrawFloorAndCeiling(floorTex, lat, depth, false);
+
+        var ceilingTex = tile.Ceiling switch
+        {
+          Ceiling.Stone => Sheet("ceiling.png"),
+          Ceiling.Hole => Sheet("hole_ceiling.png"),
+          _ => null
+        };
         DrawFloorAndCeiling(ceilingTex, lat, depth, true);
 
         // Features stand on the floor, so they go after it. (Tree sprites

@@ -11,8 +11,8 @@
 
 namespace BardsTaleKnockOff;
 
-enum Ceiling : byte { None, Stone }
-enum Floor : byte { Stone, Dirt, Water }
+enum Ceiling : byte { None, Stone, Hole }
+enum Floor : byte { Stone, Dirt, Water, Hole }
 
 enum Edge : byte { Open, PermWall, Wall, StoneDoor, IllusoryWall, HouseWall, HouseDoor, HouseWallGr, HouseDoorGr,
                       Portcullis }
