@@ -682,6 +682,14 @@ sealed class EncounterScreen : IScreen
     else
       _groups = monsters;
     
+    // _groups = [ new MonsterGroup() { Monsters = [ 
+    //     MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng), MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng),
+    //     MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng), MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng),
+    //     MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng), MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng),
+    //     MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng), MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng),
+    //     MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng), MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng),        
+    //     MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng) ], Distance = 10 }];
+
     List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g.Name : g.Name.Pluralize())} ({g.Distance}')")];
     string desc = summaries.Count switch
     {
@@ -709,7 +717,6 @@ sealed class EncounterScreen : IScreen
     else if (_app.GameState.CurrTile.Feature == Feature.House)
       monsterOptions.Add((Monsters.Spider, 4));
 
-    List<Monster> monsterGroup = [];
     (Monsters monsterId, int count) = monsterOptions[_app.Rng.Next(monsterOptions.Count)];
     _groups.Add(GenGroup(monsterId, count, 10, _app.Rng));
     if (gs.CurrRegion == "town" && _app.Rng.Next(4) == 0) 
@@ -741,14 +748,7 @@ sealed class EncounterScreen : IScreen
         _groups.Add(group);
         distance += 10;
       }      
-    }
-
-    //_groups = [];
-    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(Monsters.Goblin, app.Rng), MonsterCatalog.Get(Monsters.Goblin, app.Rng), MonsterCatalog.Get(Monsters.Goblin, app.Rng)], Distance = 10});
-    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(Monsters.Spider, app.Rng) ], Distance = 10});
-    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(Monsters.Magician0, app.Rng), MonsterCatalog.Get(Monsters.Magician0, app.Rng)], Distance = 90});
-    //_groups.Add(new() { Monsters = [MonsterCatalog.Get(Monsters.Skeleton, app.Rng), MonsterCatalog.Get(Monsters.Skeleton, app.Rng), MonsterCatalog.Get(Monsters.Skeleton, app.Rng)], Distance = 40});    
-    //_groups = [ new() { Monsters = [ MonsterCatalog.Get(Monsters.BlackWidow, app.Rng) ], Distance = 10} ];
+    }    
   }
 
   static MonsterGroup GenGroup(Monsters monsterId, int num, int distance, Rng rng)

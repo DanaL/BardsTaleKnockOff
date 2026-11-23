@@ -523,10 +523,43 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
           target.Condition = "POISONED";
         }
       }
+      if (m.HasFlag(MonsterFlag.Corrosion))
+      {        
+        CheckCorrosion(m, target);
+      }
     }
     else
     {
       Messages.Enqueue($"{n} {m.Verb} {target.Name} and misses!");
+    }
+  }
+
+  void CheckCorrosion(Monster m, Character victim)
+  {
+    if (rng.Next(3) >= 0)
+    {
+      Messages.Enqueue($"The attack of the {m.Name} is acidic!");
+      List<int> slots = [];
+      for (int j = 0; j < Character.INVENTORY_SLOTS; j++)
+      {
+        if (victim.Inventory[j] is InvSlot i && i.Equipped)
+          slots.Add(j);
+      }
+
+      if (slots.Count == 0)
+        return;
+      
+      int slot = slots[rng.Next(slots.Count)];
+      if (victim.Inventory[slot] is not InvSlot invSlot)
+        return;
+
+      int corrodedId = ItemCatalog.CorrodedId(invSlot.Id);
+      if (corrodedId != invSlot.Id)
+      {
+        Item item = ItemCatalog.Item(invSlot.Id);
+        Messages.Enqueue($"Their {item.Name} corrodes!");
+        victim.Inventory[slot] = invSlot with { Id = corrodedId };
+      }
     }
   }
 

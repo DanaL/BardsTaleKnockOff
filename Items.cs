@@ -87,6 +87,20 @@ class ItemCatalog
 
   public const int ARROW = 21;
 
+  public const int CORRODED_BROADSWORD = 23;
+  public const int CORRODED_SHORTSWORD = 24;
+  public const int CORRODED_DAGGER = 25;
+  public const int CORRODED_HALBERD = 26;
+  public const int CORRODED_MACE = 27;
+  public const int CORRODED_WARAXE = 28;
+  public const int CORRODED_CHAIN_MAIL = 29;
+  public const int CORRODED_SPLINT_MAIL = 30;
+  public const int CORRODED_PLATE_ARMOUR = 31;
+  public const int CORRODED_GAUNTLETS = 32;
+  public const int CORRODED_HELM = 33;
+  public const int CORRODED_BUCKLER = 34;
+  public const int CORRODED_TOWER_SHIELD = 35;
+
   const Role ALL = Role.Warrior | Role.Rogue | Role.Hunter | Role.Conjurer | Role.Magician
                       | Role.Sorcerer | Role.Wizard | Role.Trickster | Role.Archer | Role.Paladin;
   const Role NONCASTER = Role.Warrior | Role.Rogue | Role.Hunter | Role.Trickster | Role.Archer | Role.Paladin;
@@ -115,6 +129,21 @@ class ItemCatalog
     SHORTBOW => new() { Id = SHORTBOW, Name = "Shortbow", Type = ItemType.Bow, Value = 50, DamageDie = 6, NumDamageDice = 1, UseableBy = NONCASTER },
     LONGBOW => new() { Id = LONGBOW, Name = "Longbow", Type = ItemType.Bow, Value = 100, DamageDie = 8, NumDamageDice = 1, UseableBy = Role.Warrior | Role.Archer },
     ARROW => new() { Id = ARROW, Name = "Arrow", Type = ItemType.Ammunition, Value = 2, UseableBy = NONCASTER, Useable = true, Stackable = true },
+
+    CORRODED_BROADSWORD => new() { Id = CORRODED_BROADSWORD, Name = "Corroded Broadsword", AttackBonus = -1, Type = ItemType.Weapon, Value = 20, DamageDie = 4, NumDamageDice = 1, UseableBy = FIGHTER | Role.Hunter },
+    CORRODED_SHORTSWORD => new() { Id = CORRODED_SHORTSWORD, Name = "Corroded Shortsword", AttackBonus = -1, Type = ItemType.Weapon, Value = 8, DamageDie = 3, NumDamageDice = 1, UseableBy = Role.Warrior | Role.Paladin | Role.Archer | Role.Hunter | Role.Rogue | Role.Trickster },
+    CORRODED_WARAXE => new() { Id = CORRODED_WARAXE, Name = "Corroded War axe", AttackBonus = -1, Type = ItemType.Weapon, Value = 16, DamageDie = 4, NumDamageDice = 1, UseableBy = FIGHTER | Role.Hunter },
+    CORRODED_DAGGER => new() { Id = CORRODED_DAGGER, Name = "Corroded Dagger", AttackBonus = -1, Type = ItemType.Weapon, Value = 5, DamageDie = 2, NumDamageDice = 1, UseableBy = ALL },
+    CORRODED_HALBERD => new() { Id = CORRODED_HALBERD, Name = "Corroded Halberd", AttackBonus = -1, Type = ItemType.Weapon, Value = 50, DamageDie = 8, NumDamageDice = 1, UseableBy = FIGHTER | Role.Hunter },
+    CORRODED_CHAIN_MAIL => new() { Id = CORRODED_CHAIN_MAIL, Name = "Corroded Chain Mail", Type = ItemType.Armour, Value = 35, ACMod = 2, UseableBy = FIGHTER | Role.Hunter },
+    CORRODED_SPLINT_MAIL => new() { Id = CORRODED_SPLINT_MAIL, Name = "Corroded Splint Mail", Type = ItemType.Armour, Value = 75, ACMod = 3, UseableBy = FIGHTER },
+    CORRODED_PLATE_ARMOUR => new() { Id = CORRODED_PLATE_ARMOUR, Name = "Corroded Plate Armour", Type = ItemType.Armour, Value = 125, ACMod = 4, UseableBy = FIGHTER },
+    CORRODED_GAUNTLETS => new() { Id = CORRODED_GAUNTLETS, Name = "Corroded Gauntlets", Type = ItemType.Gloves, Value = 10, ACMod = 0, UseableBy = FIGHTER },
+    CORRODED_HELM => new() { Id = CORRODED_HELM, Name = "Corroded Helm", Type = ItemType.Helmet, Value = 12, ACMod = 0, UseableBy = FIGHTER },
+    CORRODED_BUCKLER => new() { Id = CORRODED_BUCKLER, Name = "Corroded Buckler", Type = ItemType.Shield, Value = 10, ACMod = 0, UseableBy = NONCASTER },
+    CORRODED_TOWER_SHIELD => new() { Id = CORRODED_TOWER_SHIELD, Name = "Corroded Tower Shield", Type = ItemType.Shield, Value = 25, ACMod = 1, UseableBy = FIGHTER },
+    CORRODED_MACE => new() { Id = CORRODED_MACE, Name = "Corroded Mace", AttackBonus = -1, Type = ItemType.Weapon, Value = 15, DamageDie = 4, NumDamageDice = 1, UseableBy = NONCASTER },
+
     _ when UniqueItems.TryGetValue(id, out var item) => item,
     _ => throw new Exception($"Item {id} is not defined!")
   };
@@ -132,4 +161,22 @@ class ItemCatalog
 
     return consumed;    
   }
+
+  public static int CorrodedId(int itemId)  => itemId switch 
+  {
+    BROADSWORD => CORRODED_BROADSWORD,
+    SHORTSWORD => CORRODED_SHORTSWORD,
+    WARAXE => CORRODED_WARAXE, 
+    DAGGER => CORRODED_DAGGER,
+    HALBERD => CORRODED_HALBERD,
+    CHAIN_MAIL => CORRODED_CHAIN_MAIL,
+    SPLINT_MAIL => CORRODED_SPLINT_MAIL,
+    PLATE_ARMOUR => CORRODED_PLATE_ARMOUR,
+    GAUNTLETS => CORRODED_GAUNTLETS,
+    HELM => CORRODED_HELM,
+    BUCKLER => CORRODED_BUCKLER,
+    TOWER_SHIELD => CORRODED_TOWER_SHIELD,
+    MACE => CORRODED_MACE,
+    _ => itemId
+  };
 }

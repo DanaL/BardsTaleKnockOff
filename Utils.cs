@@ -62,16 +62,16 @@ static class Util
     ["dungeon"] = [ 
     /* Level 1 */ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
                     (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
-                    (Monsters.Barbarian, 8), (Monsters.Slime, 8) ],
+                    (Monsters.Barbarian, 8), (Monsters.Slime, 8), (Monsters.AcidicSlime, 6) ],
     /* Level 2 */ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
                     (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
-                    (Monsters.Barbarian, 8), (Monsters.Wolf, 8), (Monsters.Slime, 8) ],
+                    (Monsters.Barbarian, 8), (Monsters.Wolf, 8), (Monsters.Slime, 8), (Monsters.AcidicSlime, 6) ],
     /* Level 3 */ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
                     (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
-                    (Monsters.Barbarian, 8), (Monsters.Wolf, 8), (Monsters.BlackWidow, 8) ],
+                    (Monsters.Barbarian, 8), (Monsters.Wolf, 8), (Monsters.BlackWidow, 8), (Monsters.AcidicSlime, 6) ],
     /* Level 4 */ [ (Monsters.Goblin, 8), (Monsters.Orc, 8), (Monsters.Skeleton, 4), (Monsters.FeralDog, 8),
                     (Monsters.Conjurer0, 4), (Monsters.Magician0, 4), (Monsters.Spider, 4), (Monsters.Nomad, 4),
-                    (Monsters.Barbarian, 8), (Monsters.Wolf, 8), (Monsters.BlackWidow, 8) ],
+                    (Monsters.Barbarian, 8), (Monsters.Wolf, 8), (Monsters.BlackWidow, 8), (Monsters.AcidicSlime, 6) ],
     ],
   };
   
