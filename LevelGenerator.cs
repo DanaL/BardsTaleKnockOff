@@ -722,7 +722,7 @@ class LevelGenerator
 
     (Monsters monster, string monsterName, int count) = levelNum switch
     {
-      < 3 => (Monsters.Slime, "slime", 1),
+      < 3 => (Monsters.Ogre, "ogre", levelNum + 4),
       _ => (Monsters.Ogre, "ogre", levelNum + 4) // eventually higher level monsters
     };
 
