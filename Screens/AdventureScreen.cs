@@ -250,7 +250,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
           if (GS.FactDb.TryGetValue(battleFactKey, out var fact2) && fact2 is ItemDropBattleFact battleFact)
           {
             string prompt = $"{battleFact.Desc} Confront them?";
-            app.Screens.Push(new ConfirmScreen(app, prompt, () => { RunSpecialEncounter(battleFact); }));
+            app.Screens.Push(new ConfirmScreen(app, prompt, () => { RunItemDropBattle(battleFact); }));
           }
         }
         break;
@@ -287,6 +287,15 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
           app.Screens.Push(new EncounterScreen(app));
         break;
       case Feature.StairGuardian:
+        if (!GS.FactDb.ContainsKey($"BattleWon#{GS.X},{GS.Y},{GS.CurrLevel}"))
+        {
+          string guardianKey = $"StairGuardian#{GS.X},{GS.Y},{GS.CurrLevel}";
+          if (GS.FactDb.TryGetValue(guardianKey, out var gf) && gf is StairGuardianFact guardianFact)
+          {
+            string prompt = $"{guardianFact.Desc} Will you approach?";
+            app.Screens.Push(new ConfirmScreen(app, prompt, () => { RunStairGuardianBattle(guardianFact); }));
+          }
+        }
         break;
       default:
         if (IsEncounter())
@@ -306,7 +315,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
     }    
   }
 
-  void RunSpecialEncounter(ItemDropBattleFact battleFact)
+  void RunItemDropBattle(ItemDropBattleFact battleFact)
   {
     List<Monster> monsters = [];
     for (int j = 0; j < battleFact.MonsterCount; j++)
@@ -320,6 +329,29 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
       VictoryFact = new BattleWonFact(GS.X, GS.Y, GS.CurrLevel)
     };
     app.Screens.Push(bs);
+  }
+
+  void RunStairGuardianBattle(StairGuardianFact fact)
+  {
+    Monster m = MonsterCatalog.Get(fact.Monster, app.Rng);
+    m.HP += fact.BonusHP;
+
+     BattleScreen bs = new(app, [new() { Monsters = [ m ], Distance = 10 }], false) 
+    { 
+      VictoryFact = new BattleWonFact(GS.X, GS.Y, GS.CurrLevel),
+      VictoryHandler = Victory
+    };
+    app.Screens.Push(bs);
+
+    void Victory()
+    {
+      Tile tile = app.GameState.CurrMap.TileAt(app.GameState.X, app.GameState.Y);
+      app.GameState.CurrMap.SetTile(app.GameState.X, app.GameState.Y, tile with { Feature = Feature.StairsDown });
+      string savePath = Serialize.LevelPath(app.CampaignName, app.GameState.CurrLevel);
+      MapDiskUtils.Save(app.GameState.CurrMap, savePath);
+
+      CheckLocation();
+    }
   }
 
   void PullLever()

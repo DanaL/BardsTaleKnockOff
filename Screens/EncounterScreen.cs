@@ -26,6 +26,8 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
   public string VictoryMessage { get; set; } = "";
   // A fact to be set upon Victory
   public Fact? VictoryFact { get; set; } = null;
+  // A function to call on victory
+  public Action? VictoryHandler { get; set; } = null; 
 
   const SDL_Scancode ATTACK_KEY = SDL_Scancode.SDL_SCANCODE_A;
   const SDL_Scancode DEFEND_KEY = SDL_Scancode.SDL_SCANCODE_D;
@@ -402,6 +404,9 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
     if (VictoryFact is not null)
       _app.GameState.FactDb[VictoryFact.Key] = VictoryFact;
 
+    if (VictoryHandler is not null)
+      VictoryHandler();
+      
     // if this was a fixed encounter, we want to clear it out for this current
     // visit to the dungeon.
     Tile tile = _app.GameState.CurrTile;
