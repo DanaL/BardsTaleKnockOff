@@ -38,8 +38,8 @@ static class EdgeExt
 
 // Something standing in the middle of a square, drawn as a sprite that fills
 // the square (e.g. a tree). Unlike edges, these belong to the square itself.
-enum Feature : byte { None, Burgemeester, Encounter, Guild, House, Pillar, Lever, Shop, SpecialEncounter, Special1, 
-                      Special2, Special3, Special4, Special5, Special6, Special7, Special8, Spinner, StairGuardian, 
+enum Feature : byte { None, Burgemeester, Encounter, Guild, House, Pillar, Lever, MoatLever, Shop, SpecialEncounter, 
+                      Special1, Special2, Special3, Special4, Special5, Special6, Special7, Special8, Spinner, StairGuardian, 
                       StairsUp, StairsDown, Statue, Tavern, Teleporter, Temple, TrainingHall, Trap_Blades, Trap_Dart, 
                       Trap_PoisonedNeedles, Tree, Water }
 
@@ -145,10 +145,10 @@ class DungeonLevel
     var tile = TileAt(x, y);
     Edge edge = tile.EdgeForDir(side);
     
-    if (edge is Edge.Wall or Edge.PermWall or Edge.HouseWall or Edge.HouseWallGr or Edge.Portcullis)
+    //if (edge is Edge.Wall or Edge.PermWall or Edge.HouseWall or Edge.HouseWallGr or Edge.Portcullis)
+    //  return false;
+    if (edge is Edge.PermWall or Edge.Portcullis)
       return false;
-    // if (edge is Edge.PermWall or Edge.Portcullis)
-    //   return false;
       
     var (dx, dy) = side.Delta();
     return !TileAt(x + dx, y + dy).Feature.Blocks();

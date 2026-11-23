@@ -124,10 +124,21 @@ class LevelGenerator
       Tile tile = lvl.TileAt(arrivalStairsX, arrivalStairsY);
       lvl.SetTile(arrivalStairsX, arrivalStairsY, tile with { Feature = upStairs });
 
+      //(arrivalStairsX, arrivalStairsY) = SetGatedStairs(lvl, 0, 0, rooms, gs, rng);
+      //(arrivalStairsX, arrivalStairsY) = SetIdolPuzzle(lvl, 0, 0, 0, rooms, gs, rng);
+      // StairGuardian()
+      List<(Room, int)> moatCandidates = [];
+      for (int j = 0; j < rooms.Count; j++)
+      {
+        if (rooms[j].H >= 3 && rooms[j].W >= 3)
+          moatCandidates.Add((rooms[j], j));
+      }
+
       // Add the stairs to the next level
-      if (ln == 0)
+      if (moatCandidates.Count > 0 && ln == 0)
         //(arrivalStairsX, arrivalStairsY) = SetGatedStairs(lvl, 0, 0, rooms, gs, rng);
-        (arrivalStairsX, arrivalStairsY) = SetIdolPuzzle(lvl, 0, 0, 0, rooms, gs, rng);
+        (arrivalStairsX, arrivalStairsY) = SetMoatedStairs(lvl, 0, rooms, moatCandidates, gs, rng);
+        //(arrivalStairsX, arrivalStairsY) = SetIdolPuzzle(lvl, 0, 0, 0, rooms, gs, rng);
       else if (ln < NUM_LEVELS - 1)
       {          
         (arrivalStairsX, arrivalStairsY) = SetStairs(lvl, arrivalStairsX, arrivalStairsY, rng);
@@ -663,6 +674,76 @@ class LevelGenerator
     AddClosets(lvl, rooms, rng);
 
     return (rooms, lvl);
+  }
+
+  static (int, int) SetMoatedStairs(DungeonLevel lvl, int levelNum, List<Room> rooms, List<(Room, int)> moatCandidate,  GameState gs, Rng rng)
+  {
+    var (moatRoom, roomId) = moatCandidate[rng.Next(moatCandidate.Count)];
+    int cornerX = int.MaxValue, cornerY = int.MaxValue;
+    foreach (var (X, Y) in moatRoom.Floors.Keys)
+    {
+      // Our rooms are always rectangular
+      if (X < cornerX || Y < cornerY)
+      {
+        cornerX = X;
+        cornerY = Y;
+      }
+
+      Tile t = moatRoom.Floors[(X, Y)];
+      foreach (Dir dir in Util.Cardinals)
+      {
+        if (t.EdgeForDir(dir) is not Edge.Open)
+          Util.SetDoor(lvl, new(X, Y, dir), Edge.Open);
+      }
+    }
+    int stairsX = cornerX + 1;
+    int stairsY = cornerY + 1;
+    for (int x = 0; x <= 2; x++)
+    {
+      for (int y = 0; y <= 2; y++)
+      {
+        int waterX = cornerX + x;
+        int waterY = cornerY + y;
+        if (waterX == stairsX && waterY == stairsY)
+          continue;
+        Tile tile = lvl.TileAt(waterX, waterY);
+        lvl.SetTile(waterX, waterY, tile with { Floor = Floor.Water, Feature = Feature.Water });
+      }
+    }
+    rooms.RemoveAt(roomId);
+
+    Tile stairs = lvl.TileAt(stairsX, stairsY);
+    lvl.SetTile(stairsX, stairsY, stairs with { Feature = Feature.StairsDown });
+
+    // Place the lever along one of the walls
+    int leverRoomId = rng.Next(rooms.Count);
+    Room leverRoom = rooms[leverRoomId];
+    List<(int X, int Y, Tile Tile)> opts = [];
+    foreach (var sq in leverRoom.Floors.Keys)
+    {      
+      Tile tile = leverRoom.Floors[sq];
+      bool hasWall = false;
+      foreach (Dir dir in Util.Cardinals)
+      {
+        if (tile.EdgeForDir(dir) is Edge.Wall or Edge.PermWall)
+        {
+          opts.Add((sq.X, sq.Y, tile));
+          hasWall = true;
+          break;
+        }       
+      }
+       if (hasWall)
+          continue;      
+    }
+    rooms.RemoveAt(leverRoomId);
+
+    ComplicateRoom(lvl, leverRoom, rng);
+    var (leverX, leverY, leverTile) = opts[rng.Next(opts.Count)];
+    var leverFact = new MoatLeverFact(leverX, leverY, levelNum, stairsX, stairsY);
+    gs.FactDb[leverFact.Key] = leverFact;
+    lvl.SetTile(leverX, leverY, leverTile with {Feature = Feature.MoatLever});
+
+    return (stairsX, stairsY);
   }
 
   static (int, int) SetIdolPuzzle(DungeonLevel lvl, int levelNum, int arrivalX, int arrivalY, List<Room> rooms, GameState gs, Rng rng)

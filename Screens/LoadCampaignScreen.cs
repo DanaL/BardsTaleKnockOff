@@ -54,6 +54,8 @@ class LoadCampaignScreen(App app) : IScreen
         app.Init();
         Serialize.LoadSaveGame(app);
         app.Screens.Replace(new GuildScreen(app));
+
+        app.GameState.FactDb["MoatLever#12,7,0"] = new MoatLeverFact(12, 7, 0, 9, 11);
         break;
       case SDL_Keycode.SDLK_ESCAPE:
         app.Screens.Replace(new MainMenuScreen(app));

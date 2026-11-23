@@ -282,7 +282,13 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
         }
         break;
       case Feature.Lever:
-        app.Screens.Push(new ConfirmScreen(app, "You stumble across a lever! Pull it?", PullLever) { Image = "lever.png" });
+        app.Screens.Push(new ConfirmScreen(app, "You find a lever! Pull it?", PullGateLever) { Image = "lever.png" });
+        if (IsEncounter())
+          app.Screens.Push(new EncounterScreen(app));
+        break;
+      case Feature.MoatLever:
+        if (GS.FactDb.TryGetValue($"MoatLever#{GS.X},{GS.Y},{GS.CurrLevel}", out var val) && val is MoatLeverFact moatLeverFact)
+          app.Screens.Push(new ConfirmScreen(app, "You find a lever! Pull it?", () => { PullMoatLever(moatLeverFact); }) { Image = "lever.png" });
         if (IsEncounter())
           app.Screens.Push(new EncounterScreen(app));
         break;
@@ -354,15 +360,46 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
     }
   }
 
-  void PullLever()
+  void PullMoatLever(MoatLeverFact leverFact)
   {
-    var leverKey = $"Lever#{GS.X},{GS.Y}";
+    bool bridgeRaised = false;
+    foreach (var dir in Util.Cardinals)
+    {
+      var (deltaX, deltaY) = dir.Delta();
+      int otherX = leverFact.StairsX + deltaX;
+      int otherY = leverFact.StairsY + deltaY;
+      Tile tile = GS.CurrMap.TileAt(otherX, otherY);
+      if (tile.Feature == Feature.Water)
+      {
+        GS.CurrMap.SetTile(otherX, otherY, tile with { Feature = Feature.None, Floor = Floor.Stone });
+        bridgeRaised = true;
+      }
+    }
+
+    string s;
+    if (bridgeRaised)
+    {
+      string savePath = Serialize.LevelPath(app.CampaignName, app.GameState.CurrLevel);
+      MapDiskUtils.Save(app.GameState.CurrMap, savePath);  
+      s = "The echoes of grinding machinery reverberate through the Underhalls.";
+    }
+    else
+    {
+      s = "Click.";
+    }
+    
+    app.Screens.Push(new PopupScreen(app, s));
+  }
+
+  void PullGateLever()
+  {
+    var leverKey = $"Lever#{GS.X},{GS.Y},{GS.CurrLevel}";
     
     if (!GS.FactDb.ContainsKey(leverKey) || GS.FactDb[leverKey] is not LeverFact leverFact)
       return;
 
-    int portcullisX = leverFact.X;
-    int portcullisY = leverFact.Y;
+    int portcullisX = leverFact.PortcullisX;
+    int portcullisY = leverFact.PortcullisY;
     var portcullisKey = $"PortcullisState#{portcullisX},{portcullisY},{GS.CurrLevel}";
     if (!GS.FactDb.ContainsKey(portcullisKey) || GS.FactDb[portcullisKey] is not PortcullisStateFact pFact)
       return;
@@ -581,7 +618,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
     if (app.GameState.Party.Buffs.Any(b => b.Buff == Buff.SoftStep))
       odds *= 2;
     
-    //return false;
+    return false;
     return app.Rng.Next(odds) == 0;
   }
 
