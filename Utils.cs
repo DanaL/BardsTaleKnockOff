@@ -36,14 +36,16 @@ class AbortBattleException(string caster) : Exception(caster) {}
 [JsonDerivedType(typeof(StatueFact), "statue")]
 [JsonDerivedType(typeof(ItemDropBattleFact), "itemdropbattle")]
 [JsonDerivedType(typeof(BattleWonFact), "battlewon")]
+[JsonDerivedType(typeof(StairGuardianFact), "stairguardian")]
 abstract record Fact(string Key);
 record FlagFact(string Key, bool Value) : Fact(Key);
-record PortcullisStateFact(int X, int Y, Dir Dir, bool Open) : Fact($"Portcullis#{X},{Y}");
-record LeverFact(int LeverX, int X, int Y, int PortcullisY) : Fact($"Lever#{X},{Y}");
-record StatueFact(int X, int Y, string Desc, int UnlockedById) : Fact($"Statue#{X},{Y}");
-record ItemDropBattleFact(int X, int Y, int ItemId, Monsters Monster, int MonsterCount,
-                              string Desc) : Fact($"ItemDropBattle#{X},{Y}");
-record BattleWonFact(int X, int Y) : Fact($"BattleWon#{X},{Y}");
+record PortcullisStateFact(int X, int Y, int Level, Dir Dir, bool Open) : Fact($"Portcullis#{X},{Y},{Level}");
+record LeverFact(int LeverX, int X, int Y, int Level, int PortcullisY) : Fact($"Lever#{X},{Y},{Level}");
+record StatueFact(int X, int Y, int Level, string Desc, int UnlockedById) : Fact($"Statue#{X},{Y},{Level}");
+record ItemDropBattleFact(int X, int Y, int Level, int ItemId, Monsters Monster, int MonsterCount,
+                              string Desc) : Fact($"ItemDropBattle#{X},{Y},{Level}");
+record BattleWonFact(int X, int Y, int Level) : Fact($"BattleWon#{X},{Y},{Level}");
+record StairGuardianFact(int X, int Y, int Level, Monsters Monster, int BonusHP, string Desc) : Fact($"StairGuardian#{X},{Y},{Level}");
 
 static class Util
 {

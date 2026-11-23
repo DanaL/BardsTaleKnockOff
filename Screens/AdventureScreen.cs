@@ -235,7 +235,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
           app.Screens.Push(new EncounterScreen(app));
         break;
       case Feature.Statue:
-        string statueKey = $"Statue#{GS.X},{GS.Y}";
+        string statueKey = $"Statue#{GS.X},{GS.Y},{GS.CurrLevel}";
         if (GS.FactDb.TryGetValue(statueKey, out var fact) && fact is StatueFact statueFact)
         {
           app.Screens.Push(new StatueScreen(app, statueFact));
@@ -244,9 +244,9 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
           app.Screens.Push(new EncounterScreen(app));
         break;
       case Feature.SpecialEncounter:
-        if (!GS.FactDb.ContainsKey($"BattleWon#{GS.X},{GS.Y}"))
+        if (!GS.FactDb.ContainsKey($"BattleWon#{GS.X},{GS.Y},{GS.CurrLevel}"))
         {
-          string battleFactKey = $"ItemDropBattle#{GS.X},{GS.Y}";
+          string battleFactKey = $"ItemDropBattle#{GS.X},{GS.Y},{GS.CurrLevel}";
           if (GS.FactDb.TryGetValue(battleFactKey, out var fact2) && fact2 is ItemDropBattleFact battleFact)
           {
             string prompt = $"{battleFact.Desc} Confront them?";
@@ -286,6 +286,8 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
         if (IsEncounter())
           app.Screens.Push(new EncounterScreen(app));
         break;
+      case Feature.StairGuardian:
+        break;
       default:
         if (IsEncounter())
           app.Screens.Push(new EncounterScreen(app));
@@ -315,7 +317,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
     { 
       ItemDrop = battleFact.ItemId, 
       VictoryMessage = $"You find {prize.Name.IndefArticle()}",
-      VictoryFact = new BattleWonFact(GS.X, GS.Y)
+      VictoryFact = new BattleWonFact(GS.X, GS.Y, GS.CurrLevel)
     };
     app.Screens.Push(bs);
   }
@@ -329,7 +331,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
 
     int portcullisX = leverFact.X;
     int portcullisY = leverFact.Y;
-    var portcullisKey = $"PortcullisState#{portcullisX},{portcullisY}";
+    var portcullisKey = $"PortcullisState#{portcullisX},{portcullisY},{GS.CurrLevel}";
     if (!GS.FactDb.ContainsKey(portcullisKey) || GS.FactDb[portcullisKey] is not PortcullisStateFact pFact)
       return;
     

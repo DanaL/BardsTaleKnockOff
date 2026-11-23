@@ -693,12 +693,6 @@ class LevelGenerator
     int idolX = idolSq % DungeonLevel.MAP_SIZE;
     int idolY = idolSq / DungeonLevel.MAP_SIZE;
 
-    idolX = 1;
-    idolY = 0;
-
-
-
-
     Tile tile = lvl.TileAt(idolX, idolY);
     lvl.SetTile(idolX, idolY, tile with { Feature = Feature.Statue });
     string idolDesc = "You stand before a demonic visage, carved from obsidian. It holds its clawed hands toward you, as though beckoning to have something placed in them.";
@@ -737,15 +731,15 @@ class LevelGenerator
     gem = ItemCatalog.AddUniqueItem(gem);
     string encDesc = $"A group of {monsterName.Pluralize()} are tossing around a glowing {colour} Gem in some sort of game.";
 
-    ItemDropBattleFact dropFact = new(encounterX, encounterY, gem.Id, monster, count, encDesc);
-    StatueFact statueFact = new(idolX, idolY, idolDesc, gem.Id);
+    ItemDropBattleFact dropFact = new(encounterX, encounterY, levelNum, gem.Id, monster, count, encDesc);
+    StatueFact statueFact = new(idolX, idolY, levelNum, idolDesc, gem.Id);
     gs.FactDb[dropFact.Key] = dropFact;
     gs.FactDb[statueFact.Key] = statueFact;
     
     return (idolX, idolY);
   }
 
-  static (int, int) SetGatedStairs(DungeonLevel lvl, int arrivalX, int arrivalY, List<Room> rooms, GameState gs, Rng rng)
+  static (int, int) SetGatedStairs(DungeonLevel lvl, int levelNum, int arrivalX, int arrivalY, List<Room> rooms, GameState gs, Rng rng)
   {
     // First we need to find a room we can lock with a portcullis to place 
     // the stairs in.
@@ -782,7 +776,7 @@ class LevelGenerator
     var exit = portcullisRoom.Exits[0];
     Util.SetDoor(lvl, exit, Edge.Portcullis);
 
-    var fact = new PortcullisStateFact(exit.X, exit.Y, exit.Dir, false);
+    var fact = new PortcullisStateFact(exit.X, exit.Y, levelNum, exit.Dir, false);
     gs.FactDb[fact.Key] = fact;
 
     // Now place the lever
@@ -794,7 +788,7 @@ class LevelGenerator
     Tile leverTile = lvl.TileAt(leverX, leverY) with { Feature = Feature.Lever };
     lvl.SetTile(leverX, leverY, leverTile);
 
-    var leverFact = new LeverFact(leverX, leverY, exit.X, exit.Y);
+    var leverFact = new LeverFact(leverX, leverY, levelNum, exit.X, exit.Y);
     gs.FactDb[leverFact.Key] = leverFact;
 
     // We should add a complication to the lever room. An encounter within,
