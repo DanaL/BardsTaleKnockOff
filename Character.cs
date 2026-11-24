@@ -79,7 +79,7 @@ class Character
   };
 
   [JsonIgnore]
-  public Item? ReadiedWeapon
+  public Item? EquipedWeapon
   {
     get
     {
@@ -104,6 +104,18 @@ class Character
       return null;
     }
   }
+
+  public bool HasAmmunition()
+  {
+    foreach (var s in Inventory.OfType<InvSlot>())
+    {
+      if (ItemCatalog.Item(s.Id) is Item item && item.Type == ItemType.Ammunition)
+        return true;
+    }
+
+    return false;
+  }
+
   
   [JsonIgnore]
   public int AC

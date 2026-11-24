@@ -680,7 +680,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     }
 
     Monster target = Foes[monsterGroup].Monsters[0];
-    Item? weapon = c.ReadiedWeapon;
+    Item? weapon = c.EquipedWeapon;
 
     string verb;
     if (weapon is null)

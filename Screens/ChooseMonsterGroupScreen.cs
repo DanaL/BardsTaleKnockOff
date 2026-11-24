@@ -35,7 +35,8 @@ class ChooseMonsterGroupScreen(App app, Character c, int range, List<MonsterGrou
 
     int groupNum = key.scancode - SDL_Scancode.SDL_SCANCODE_A;
     src.MonsterGroupChosen(groupNum);
-    app.Screens.Pop();
+    if (app.Screens.Top is not BattleScreen)
+      app.Screens.Pop();
   }
 
   public void Draw(GameUI ui)

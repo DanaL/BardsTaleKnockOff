@@ -34,7 +34,8 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
   const SDL_Scancode HIDE_KEY = SDL_Scancode.SDL_SCANCODE_H;
   const SDL_Scancode CAST_SPELL_KEY = SDL_Scancode.SDL_SCANCODE_C;
   const SDL_Scancode USE_ITEM_KEY = SDL_Scancode.SDL_SCANCODE_U;
-  const SDL_Scancode S_KEY = SDL_Scancode.SDL_SCANCODE_S;
+  const SDL_Scancode SMITE_KEY = SDL_Scancode.SDL_SCANCODE_S;
+  const SDL_Scancode FIRE_BOW_KEY = SDL_Scancode.SDL_SCANCODE_F;
 
   const int PICK_ACTION = 0;
   const int CONFIRM = 1;
@@ -135,8 +136,24 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
           }
           _availableActions = [];
           break;
-        case S_KEY:
+        case SMITE_KEY:
           SpellChosen(Spells.Smite);
+          break;
+        case FIRE_BOW_KEY:
+          if (_app.GameState.Party.Members[_slot] is Character c2)
+          {
+            int ammo = -1;
+            do
+            {
+              ++ammo;
+              if (c2.Inventory[ammo] is InvSlot slot && ItemCatalog.Item(slot.Id) is Item item && item.Type == ItemType.Ammunition)
+                break;
+            }
+            while (ammo < Character.INVENTORY_SLOTS);
+
+            if (ammo > -1)
+              SetupBowShot(c2, ammo);
+          }
           break;
       }
 
@@ -528,8 +545,13 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
 
       if (c.PaladinSpellLevel > 0 && c.MP >= 3)
       {
-        _availableActions.Add(S_KEY);
+        _availableActions.Add(SMITE_KEY);
         lines.Add("S) Smite");
+      }
+      else if (c.EquippedBow is Item bow && c.HasAmmunition())
+      {
+        _availableActions.Add(FIRE_BOW_KEY);
+        lines.Add($"F) Shoot {bow.Name}");
       }
 
       if (c.MaxMP > 0)
@@ -628,13 +650,22 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
     if (_battle.Foes.Count == 1)
     {
       _choices.Add(new(_slot, BattleAction.ShootBow, 0, -1, null, invIdx));
-      _app.Screens.Pop(); 
       ActionChosen();
+      _app.Screens.Pop();
     }
     else
     {
       _pendingAction = BattleAction.ShootBow;
-      _app.Screens.Replace(new ChooseMonsterGroupScreen(_app, c, 90, _battle.Foes, this) { Caption = _caption, Image = _image });  
+
+      ChooseMonsterGroupScreen chooseGroupScr = new(_app, c, 90, _battle.Foes, this)
+      { 
+        Caption = _caption, 
+        Image = _image }
+      ;
+      if (_app.Screens.Top is BattleScreen)
+        _app.Screens.Push(chooseGroupScr);
+      else
+        _app.Screens.Replace(chooseGroupScr);  
     }    
   }
 
