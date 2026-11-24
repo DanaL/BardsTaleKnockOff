@@ -54,6 +54,12 @@ static class FeatureExt
     Feature.Pillar => "pillar.png",
     _ => null
   };
+
+  public static bool IsTrap(this Feature f) => f switch
+  {
+    Feature.Trap_Blades or Feature.Trap_Dart or Feature.Trap_PoisonedNeedles => true,
+    _ => false
+  };
 }
 
 enum Dir { North, East, South, West, None }

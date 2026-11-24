@@ -258,7 +258,7 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
     for (int j = 0; j < 4; j++)
     {
       Tile tile = gs.CurrMap.TileAt(x, y);
-      if (tile.Feature.ToString().StartsWith("Trap_"))
+      if (tile.Feature.IsTrap())
       {
         Tile untrapped = tile with { Feature = Feature.None };
         gs.CurrMap.SetTile(x, y, untrapped);

@@ -417,13 +417,12 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
     if (GS.Party.Buffs.Any(b => b.Buff == Buff.Levitation) && app.Rng.Next(4) > 0)
       return;
 
-    app.Screens.Push(new PopupScreen(app, "A trap!!"));
-
     // Once I have implemented slot S, a monster occupying it will be
     // hit before the character in slot 1.
     switch (trapType)
     {
       case Feature.Trap_Dart:
+        app.Screens.Push(new PopupScreen(app, "A trap!! Darts fly at the party!"));
         if (GS.Party.Members[0] is Character dc)
         {
           foreach (string s in Traps.Darts(dc, app.GameState, app.Rng))
@@ -433,10 +432,16 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
       case Feature.Trap_PoisonedNeedles:
         if (GS.Party.Members[0] is Character nc)
         {
+          app.Screens.Push(new PopupScreen(app, "A trap!! Poisoned needles fly at the party!"));
           foreach (string s in Traps.PoisonNeedles(nc, app.GameState, app.Rng))
             GS.Say(s);
         }        
         break;
+      case Feature.Trap_Blades:
+        app.Screens.Push(new PopupScreen(app, "A trap!! Whirling blades slice through the party!"));
+        foreach (string s in Traps.Blades(GS, app.Rng))
+          GS.Say(s);
+        break;        
     }    
   }
 
