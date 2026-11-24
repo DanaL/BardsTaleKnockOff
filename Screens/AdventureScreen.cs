@@ -30,7 +30,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
   public void OnKey(SDL_KeyboardEvent key)
   {
     if (_glimpseMs > 0)
-      SnuffLight();
+      CheckTileConditions();
 
     switch (key.scancode)
     {
@@ -38,8 +38,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
       case SDL_Scancode.SDL_SCANCODE_W:
         GS.Messages.Clear();
         GS.TryMove(GS.Facing);
-        if (GS.Party.HasLight() && GS.CurrTile.HasFlag(TileFlags.Darkness))
-          SnuffLight();
+        CheckTileConditions();
         CheckLocation();
         ResolveTurn();
         Divination();
@@ -445,12 +444,21 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
     }    
   }
 
-  void SnuffLight()
+  void CheckTileConditions()
   {
-    if (GS.Party.HasLight() && GS.CurrTile.HasFlag(TileFlags.Darkness))
+    if (GS.CurrTile.HasFlag(TileFlags.Darkness) && GS.Party.HasLight())
     {
       GS.Say("Darkness!");
       GS.Party.ClearLightSources();
+    }
+
+    if (GS.CurrTile.HasFlag(TileFlags.Antimagic))
+    {
+      // I think in og BT, antimagic would snuff light from a torch but since
+      // I have it as a separate buff, I'll allow it
+      GS.Party.Buffs = [.. GS.Party.Buffs.Where(b => b.Buff is Buff.Torch)];
+      foreach (var c in GS.Party.Members.OfType<Character>())
+        c.ClearMagicalBuffs();
     }
   }
 
@@ -559,10 +567,17 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
     if (_caster is null)
       return;
 
-    app.GameState.Say($"{_caster.Name} casts {spell.Name}.");
+    GS.Say($"{_caster.Name} casts {spell.Name}.");
     if (_caster.MP < spell.Cost)
     {
-      app.GameState.Say($"But they have insufficient Magic Points!");
+      GS.Say($"But they have insufficient Magic Points!");
+      return;
+    }
+
+    if (GS.CurrTile.HasFlag(TileFlags.Antimagic))
+    {
+      GS.Say($"The spell fizzles!");
+      _caster.MP -= spell.Cost;
       return;
     }
 
@@ -609,21 +624,21 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
 
   bool IsEncounter()
   {
-    int odds = 4;
+    int odds = 5;
 
     if (app.GameState.CurrRegion == "town" && app.GameState.DayTime)
     {
-      odds = 7;
+      odds = 8;
     }
     else if (app.GameState.CurrRegion == "town" && !app.GameState.DayTime)
     {
-      odds = 5;
+      odds = 6;
     }
 
     if (app.GameState.Party.Buffs.Any(b => b.Buff == Buff.SoftStep))
       odds *= 2;
     
-    return false;
+    //return false;
     return app.Rng.Next(odds) == 0;
   }
 
@@ -640,7 +655,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
     {
       _glimpseMs = elapsedMs >= _glimpseMs ? 0 : _glimpseMs - elapsedMs;
       if (_glimpseMs == 0)
-        SnuffLight();
+        CheckTileConditions();
     }
     else if (GS.Party.HasLight() && GS.CurrTile.HasFlag(TileFlags.Darkness))
     {

@@ -378,6 +378,8 @@ class Character
       MP = MaxMP - mpDelta;
     }
   }
+
+  public void ClearMagicalBuffs() => Buffs = [.. Buffs.Where(b => b.Buff is Buff.EbenezumEscape or Buff.Hiding or Buff.Defending)];
 }
 
 class XPTable

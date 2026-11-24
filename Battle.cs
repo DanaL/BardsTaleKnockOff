@@ -173,6 +173,14 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
           {
             Character? partyTarget = choice.TargetPartySlot >= 0 ? gs.Party.Members[choice.TargetPartySlot] : null;
             string s = $"{c.Name} casts {spell.Code}";
+
+            if (gs.CurrTile.HasFlag(TileFlags.Antimagic))
+            {
+              Messages.Enqueue(s + " but the spell fizzles!");
+              c.MP -= spell.Cost;              
+              return;
+            }
+
             if (choice.Spell.Target == SpellTarget.PartyMember && partyTarget is not null)
             {
               s += $" on {partyTarget.Name}";

@@ -97,8 +97,9 @@ static class EncounterExt
 [Flags]
 enum TileFlags : ushort
 {
-  None     = 0b00000000,
-  Darkness = 0b00000001,
+  None      = 0b00000000,
+  Darkness  = 0b00000001,
+  Antimagic = 0b00000010,
 }
 
 record struct Tile(Floor Floor, Ceiling Ceiling, Feature Feature, Edge EdgeN, Edge EdgeS, Edge EdgeE, Edge EdgeW, TileFlags Flags = TileFlags.None)
