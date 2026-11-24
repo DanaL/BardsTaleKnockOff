@@ -56,13 +56,8 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
         break;
       case SDL_Keycode.SDLK_D:
         var (slot, item) = _items[_cursor];
-        n = item.Name;
-        if (slot.Count > 1)
-          n += $" {slot.Count}";
-        app.Screens.Push(new ConfirmScreen(app, $"Discard the {n}?", () =>
-        {
-          DiscardItem(slot, item);
-        }));
+        n = slot.Count == 1 ? item.Name.DefArticle() : $"{slot.Count} {item.Name.Pluralize()}";
+        app.Screens.Push(new ConfirmScreen(app, $"Discard {n}?", () => { DiscardItem(slot, item); }));
         break;
       case SDL_Keycode.SDLK_U:
         UseItem();
@@ -119,10 +114,8 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
     }
     else
     {
-      string n = item.Name;
-      if (slot.Count > 1)
-        n += $" ({slot.Count})";
-      app.Screens.Push(new PopupScreen(app, $"You discard the {n}."));
+      string s = slot.Count == 1 ? item.Name.DefArticle() : $"{slot.Count} {item.Name.Pluralize()}";      
+      app.Screens.Push(new PopupScreen(app, $"You discard {s}."));
 
       character.Inventory[_cursor] = null;
       GetInv();
