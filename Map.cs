@@ -152,10 +152,10 @@ class DungeonLevel
     var tile = TileAt(x, y);
     Edge edge = tile.EdgeForDir(side);
     
-    //if (edge is Edge.Wall or Edge.PermWall or Edge.HouseWall or Edge.HouseWallGr or Edge.Portcullis)
-    //  return false;
-    if (edge is Edge.PermWall or Edge.Portcullis)
+    if (edge is Edge.Wall or Edge.PermWall or Edge.HouseWall or Edge.HouseWallGr or Edge.Portcullis)
       return false;
+    //if (edge is Edge.PermWall or Edge.Portcullis)
+    //  return false;
       
     var (dx, dy) = side.Delta();
     return !TileAt(x + dx, y + dy).Feature.Blocks();

@@ -599,8 +599,7 @@ class LevelGenerator
     return walls == 3 && open == 1;
   }
 
-  // Not pathfinding, just finding the shortest paths from 
-  // a particular location
+  // Not pathfinding, just finding shortest paths from a particular location  
   static (int Sq, int D)[] StepCounts(int x, int y, DungeonLevel lvl)
   {
     int w = DungeonLevel.MAP_SIZE;
@@ -619,7 +618,7 @@ class LevelGenerator
       // of square we just reached, we can stop because that other path is 
       // shorter. Otherwise, set neighbour distance in the matrix to new 
       // shortest value and add neighbour to queue
-      foreach (Dir dir in new[] { Dir.North, Dir.South, Dir.East, Dir.West })
+      foreach (Dir dir in Util.Cardinals)
       {
         if (!lvl.Passable(cx, cy, dir))
           continue;

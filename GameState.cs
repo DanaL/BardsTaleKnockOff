@@ -108,7 +108,7 @@ class GameState
       Say(s);
       return;
     }
-    else if (next.Feature == Feature.Water && !Party.HasBuff(Buff.Levitation))
+    else if (next.Feature == Feature.Water && Party.HasLight() && !Party.HasBuff(Buff.Levitation))
     {
       Say("You don't want to get your boots wet.");
       return;

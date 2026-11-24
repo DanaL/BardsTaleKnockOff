@@ -302,6 +302,12 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
           }
         }
         break;
+      case Feature.Water:
+        if (!GS.Party.HasBuff(Buff.Levitation))
+        {
+          FallIntoWater();
+        }
+        break;
       default:
         if (IsEncounter())
           app.Screens.Push(new EncounterScreen(app));
@@ -318,6 +324,53 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
       foreach (string s in msg.Split('\n'))
         GS.Say(s);
     }    
+  }
+
+  void FallIntoWater()
+  {
+    // Floodfill from the water tile to find the nearest 'safe' tile to get there
+    Queue<(int X, int Y)> q = new();    
+    q.Enqueue((GS.X, GS.Y));
+    HashSet<(int, int)> visited = [];
+    List<(int, int)> opts = [];
+
+    while (q.Count > 0)
+    {
+      (int cx, int cy) = q.Dequeue();
+
+      Tile curr = GS.CurrMap.TileAt(cx, cy);
+      if (visited.Contains((cx, cy)))
+        continue;
+      visited.Add((cx, cy));
+      
+      if (curr.Feature != Feature.Water) 
+      {
+        opts.Add((cx, cy));
+        continue;
+      }
+      
+      foreach (Dir dir in Util.Cardinals)
+      {
+        var (deltaX, deltaY) = dir.Delta();
+        (int X, int Y) adj = (DungeonLevel.Wrap(cx + deltaX), DungeonLevel.Wrap(cy + deltaY));
+        if (!visited.Contains(adj) && GS.CurrMap.Passable(cx, cy, dir))
+          q.Enqueue(adj);
+      }
+    }
+
+    var (landingX, landingY) = opts[app.Rng.Next(opts.Count)];
+    GS.Facing = Util.Cardinals[app.Rng.Next(Util.Cardinals.Length)];
+    GS.X = landingX;
+    GS.Y = landingY;
+
+    foreach (Character c in GS.Party.Members.OfType<Character>())
+    {
+      c.HP = int.Max(1, c.HP / 2);
+    }
+    
+    CheckLocation();
+    
+    app.Screens.Push(new PopupScreen(app, "You plunge into water, barely managing to drag yourselves to safety!"));
   }
 
   void RunItemDropBattle(ItemDropBattleFact battleFact)
@@ -638,7 +691,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
     if (app.GameState.Party.Buffs.Any(b => b.Buff == Buff.SoftStep))
       odds *= 2;
     
-    //return false;
+    return false;
     return app.Rng.Next(odds) == 0;
   }
 
