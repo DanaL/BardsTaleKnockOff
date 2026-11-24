@@ -651,7 +651,8 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
     {
       _choices.Add(new(_slot, BattleAction.ShootBow, 0, -1, null, invIdx));
       ActionChosen();
-      _app.Screens.Pop();
+      if (_app.Screens.Top is not BattleScreen)
+        _app.Screens.Pop();
     }
     else
     {
