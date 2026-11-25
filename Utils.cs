@@ -27,6 +27,21 @@ readonly record struct Rgb(byte R, byte G, byte B);
 
 class AbortBattleException(string caster) : Exception(caster) {}
 
+interface IBeing
+{
+  string Name { get; }  
+  int HP { get; set; }
+  int MaxHP { get; }
+  int AC { get; }
+  int THAC0 { get; }
+  string Condition { get; set; }
+  List<TempBuff> Buffs { get; }
+  bool Incapacitated { get; }
+
+  SaveResult RollSavingThrow(int power, Rng rng);
+  string ReceiveDmg(int dmg);
+}
+
 // Facts are saved polymorphically: each subtype needs a [JsonDerivedType]
 // line with a unique tag, or saving a fact of that type throws.
 [JsonPolymorphic]

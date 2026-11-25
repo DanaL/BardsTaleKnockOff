@@ -25,7 +25,7 @@ enum Role
 
 record struct InvSlot(int Id, bool Equipped, int Count = 1);
 
-class Character
+class Character : IBeing
 {
   public const int INVENTORY_SLOTS = 12;
 
@@ -79,7 +79,7 @@ class Character
   };
 
   [JsonIgnore]
-  public Item? EquipedWeapon
+  public Item? EquippedWeapon
   {
     get
     {

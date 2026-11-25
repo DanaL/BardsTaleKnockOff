@@ -101,6 +101,8 @@ class ItemCatalog
   public const int CORRODED_BUCKLER = 34;
   public const int CORRODED_TOWER_SHIELD = 35;
 
+  public const int WOLF_FGN = 36;
+
   const Role ALL = Role.Warrior | Role.Rogue | Role.Hunter | Role.Conjurer | Role.Magician
                       | Role.Sorcerer | Role.Wizard | Role.Trickster | Role.Archer | Role.Paladin;
   const Role NONCASTER = Role.Warrior | Role.Rogue | Role.Hunter | Role.Trickster | Role.Archer | Role.Paladin;
@@ -129,6 +131,7 @@ class ItemCatalog
     SHORTBOW => new() { Id = SHORTBOW, Name = "Shortbow", Type = ItemType.Bow, Value = 50, DamageDie = 6, NumDamageDice = 1, UseableBy = NONCASTER },
     LONGBOW => new() { Id = LONGBOW, Name = "Longbow", Type = ItemType.Bow, Value = 100, DamageDie = 8, NumDamageDice = 1, UseableBy = Role.Warrior | Role.Archer },
     ARROW => new() { Id = ARROW, Name = "Arrow", Type = ItemType.Ammunition, Value = 2, UseableBy = NONCASTER, Useable = true, Stackable = true },
+    WOLF_FGN => new() { Id = WOLF_FGN, Name = "Wolf Figurine", Type = ItemType.Misc, Value = 150, UseableBy = ALL, Useable = true, Stackable = false },
 
     CORRODED_BROADSWORD => new() { Id = CORRODED_BROADSWORD, Name = "Corroded Broadsword", AttackBonus = -1, Type = ItemType.Weapon, Value = 20, DamageDie = 4, NumDamageDice = 1, UseableBy = FIGHTER | Role.Hunter },
     CORRODED_SHORTSWORD => new() { Id = CORRODED_SHORTSWORD, Name = "Corroded Shortsword", AttackBonus = -1, Type = ItemType.Weapon, Value = 8, DamageDie = 3, NumDamageDice = 1, UseableBy = Role.Warrior | Role.Paladin | Role.Archer | Role.Hunter | Role.Rogue | Role.Trickster },

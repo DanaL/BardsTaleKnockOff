@@ -23,11 +23,12 @@ enum MonsterFlag
 
 enum MonsterScript { Melee, Conjuror0, Magician0 };
 
-class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, int xp, int gold, MonsterScript script, string verb, string image, MonsterFlag flags, int rank)
+class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, int xp, int gold, MonsterScript script, string verb, string image, MonsterFlag flags, int rank) : IBeing
 {
   public string Name { get; } = name;
   public int AC { get; } = ac;
   public int HP { get; set; } = hp;
+  public int MaxHP { get; init; } = hp;
   public int THAC0 { get; } = thac0;
   public int DmgLow { get; } = dmgLow;
   public int DmgHigh { get; } = dmgHigh;
@@ -38,9 +39,10 @@ class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, i
   public string Image { get; } = image;
   public MonsterFlag Flags { get; set; } = flags;
   public int Rank { get; set; } = rank;
-  public string Condition = "";
-
+  public string Condition { get; set; } = "";  
   public List<TempBuff> Buffs { get; set; } = [];
+
+  public bool Incapacitated => HP < 1;
 
   public SaveResult RollSavingThrow(int magicPower, Rng rng)
   {
@@ -55,6 +57,18 @@ class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, i
       return SaveResult.Success;
   }
 
+  public string ReceiveDmg(int dmg)
+  {
+    HP = int.Max(HP - dmg, 0);
+    if (HP < 1)
+    {
+      Condition = "DEAD";
+      return $"{Name} is killed!";
+    }
+
+    return "";
+  }
+  
   public bool HasFlag(MonsterFlag flag) => (Flags & flag) != MonsterFlag.None;
 }
 
