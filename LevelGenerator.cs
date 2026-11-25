@@ -102,11 +102,6 @@ class LevelGenerator
         lvl.SetTile(sq.X, sq.Y, t with { Feature = PickTrap(ln, rng) });
       }
 
-      // Knock out a few walls
-      int numToErase = rng.Next(7, 10);
-      for (int k = 3; k <= numToErase; k++)
-        EraseWall(lvl, hallwaySqs, roomSqs, rng);
-
       // Sometimes add fixed encounters
       SetFixedEncounters(lvl, ln, rooms, rng);
 
@@ -666,13 +661,102 @@ class LevelGenerator
     Dictionary<int, HashSet<int>> roomBlobs = [];
 
     BlobbedRooms(hallways, rooms, roomBlobs, rng);
-
     Mazify(lvl, hallways, rooms, rng);
+    Loopify(lvl, rooms, hallways, rng);
     FullyConnectLevel(lvl, hallways, rooms, rng);
 
     AddClosets(lvl, rooms, rng);
 
     return (rooms, lvl);
+  }
+
+  // Carve some tunnels to make the dungeon less full of dead-ends
+  static void Loopify(DungeonLevel lvl, List<Room> rooms, HashSet<int> hallways, Rng rng)
+  {
+    HashSet<(int, int)> roomSqs = [];
+    foreach (Room r in rooms)
+    {
+      foreach (var k in r.Floors.Keys)
+        roomSqs.Add(k);
+    }
+
+    List<(int X, int Y)> deadends = [];
+    foreach (int sq in hallways)
+    {
+      int x = sq % DungeonLevel.MAP_SIZE;
+      int y = sq / DungeonLevel.MAP_SIZE;
+      if (IsCloset(lvl.TileAt(x, y)))
+        deadends.Add((x, y));
+    }
+    deadends.Shuffle(rng);
+
+    int numOfPaths = int.Min(rng.Next(3, 6), deadends.Count);
+    for (int j = 0; j < numOfPaths; j++)
+    {
+      var (startX, startY) = deadends[j];
+      CarveTunnel(lvl, startX, startY, roomSqs, rng);
+    }
+  }
+
+  static void CarveTunnel(DungeonLevel lvl, int startX, int startY, HashSet<(int X, int Y)> roomSqs, Rng rng)
+  {
+    int maxLength = rng.Next(10, 13);
+    int n = 0;
+
+    int x = startX, y = startY;
+    Dir dir = PickDir(startX, startY);
+    while (n < maxLength)
+    {
+      Tile tile = lvl.TileAt(x, y);
+      var (deltaX, deltaY) = dir.Delta();
+      int nextX = DungeonLevel.Wrap(x + deltaX);
+      int nextY = DungeonLevel.Wrap(y + deltaY);
+      if (ValidDir(nextX, nextY, tile, dir))
+      {
+        Util.SetDoor(lvl, new(x, y, dir), Edge.Open);
+        x = nextX;
+        y = nextY;
+        ++n;
+        continue;
+      }
+
+      // We need to turn
+      List<Dir> turns = [];
+      var (leftX, leftY) = dir.TurnLeft().Delta();
+      nextX = DungeonLevel.Wrap(x + leftX);
+      nextY = DungeonLevel.Wrap(y + leftY);
+      if (ValidDir(nextX, nextY, tile, dir.TurnLeft()))
+        turns.Add(dir.TurnLeft());
+      var (rightX, rightY) = dir.TurnRight().Delta();
+      nextX = DungeonLevel.Wrap(x + rightX);
+      nextY = DungeonLevel.Wrap(y + rightY);
+      if (ValidDir(nextX, nextY, tile, dir.TurnRight()))
+        turns.Add(dir.TurnRight());
+      if (turns.Count == 0)
+        break;
+      dir = turns[rng.Next(turns.Count)];
+    }
+
+    Dir PickDir(int x, int y)
+    {
+      List<Dir> opts = [];
+      Tile tile = lvl.TileAt(x, y);
+      foreach (Dir d in Util.Cardinals)
+      {
+        var (deltaX, deltaY) = d.Delta();
+        int otherX = DungeonLevel.Wrap(x + deltaX);
+        int otherY = DungeonLevel.Wrap(y + deltaY);
+        if (ValidDir(otherX, otherY, tile, d))
+          opts.Add(d);
+      }
+
+      if (opts.Count > 0)
+        return opts[rng.Next(opts.Count)];
+
+      return Dir.None;
+    }
+
+    bool ValidDir(int x, int y, Tile tile, Dir dir) => tile.EdgeForDir(dir) is Edge.Open or Edge.Wall && !roomSqs.Contains((x, y));
   }
 
   static (int, int) SetMoatedStairs(DungeonLevel lvl, int levelNum, List<Room> rooms, List<(Room, int)> moatCandidate,  GameState gs, Rng rng)
@@ -987,66 +1071,6 @@ class LevelGenerator
       }
 
       return enc;
-    }
-  }
-
-  static void EraseWall(DungeonLevel lvl, List<(int X, int Y)> hallwaySqs, HashSet<(int, int)> roomSqs, Rng rng)
-  {
-    List<(int, int, Dir)> opts = [];
-
-    // Try a bunch of times
-    for (int j = 0; j < 100; j++)
-    {
-      opts.Clear();
-      var sq = hallwaySqs[rng.Next(hallwaySqs.Count)];
-      Tile tile = lvl.TileAt(sq.X, sq.Y);
-      if (tile.EdgeN == Edge.Wall && !roomSqs.Contains((sq.X, sq.Y - 1)))
-        opts.Add((sq.X, sq.Y - 1, Dir.North));
-      if (tile.EdgeS == Edge.Wall && !roomSqs.Contains((sq.X, sq.Y + 1)))
-        opts.Add((sq.X, sq.Y + 1, Dir.South));
-      if (tile.EdgeE == Edge.Wall && !roomSqs.Contains((sq.X + 1, sq.Y)))
-        opts.Add((sq.X + 1, sq.Y, Dir.East));
-      if (tile.EdgeW == Edge.Wall && !roomSqs.Contains((sq.X - 1, sq.Y)))
-        opts.Add((sq.X - 1, sq.Y, Dir.West));
-
-      if (opts.Count == 0)
-        continue;
-
-      (int nx, int ny, Dir dir) = opts[rng.Next(opts.Count)];
-      Erase(lvl, tile, sq.X, sq.Y, nx, ny, dir);
-
-      break;
-    }
-
-    static void Erase(DungeonLevel lvl, Tile tile, int tx, int ty, int nx, int ny, Dir dir)
-    {
-      Tile other;
-      switch (dir)
-      {
-        case Dir.North:
-          tile.EdgeN = Edge.Open;
-          other = lvl.TileAt(nx, ny);
-          other.EdgeS = Edge.Open;
-          break;
-        case Dir.South:
-          tile.EdgeS = Edge.Open;
-          other = lvl.TileAt(nx, ny);
-          other.EdgeN = Edge.Open;
-          break;
-        case Dir.East:
-          tile.EdgeE = Edge.Open;
-          other = lvl.TileAt(nx, ny);
-          other.EdgeW = Edge.Open;
-          break;
-        default:
-          tile.EdgeW = Edge.Open;
-          other = lvl.TileAt(nx, ny);
-          other.EdgeE = Edge.Open;
-          break;
-      }
-
-      lvl.SetTile(tx, ty, tile);
-      lvl.SetTile(nx, ny, other);
     }
   }
 
