@@ -88,14 +88,15 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
       app.Screens.Push(new PopupScreen(app, "Those are for combat!"));
       return;
     }
-
+    
     if (!item.Useable)
     {
       app.Screens.Push(new PopupScreen(app, "You know no use for that item."));
       return;
     }
 
-    bool consumed = ItemCatalog.Use(item, app.GameState);
+    Queue<string> mq = [];
+    bool consumed = ItemCatalog.Use(item, app.GameState, character, mq, app.Rng);
     if (consumed)
     {
       character.Inventory[_cursor] = null;
@@ -104,6 +105,8 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
       if (_cursor >= _items.Count)
       _cursor = _items.Count - 1;
     }
+    while (mq.Count > 0)
+      app.GameState.Say(mq.Dequeue());
   }
 
   void DiscardItem(InvSlot slot, Item item)

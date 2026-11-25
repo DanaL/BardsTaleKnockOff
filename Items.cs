@@ -151,7 +151,7 @@ class ItemCatalog
     _ => throw new Exception($"Item {id} is not defined!")
   };
   
-  public static bool Use(Item item, GameState gs)
+  public static bool Use(Item item, GameState gs, Character user, Queue<string> messages, Rng rng)
   {
     bool consumed = false;
 
@@ -159,6 +159,12 @@ class ItemCatalog
     {
       gs.Party.ClearLightSources();
       gs.Party.Buffs.Add(new TempBuff(Buff.Torch, gs.Turn + 2000, false));      
+      consumed = true;
+    }
+    else if (item.Id == WOLF_FGN)
+    {
+      messages.Enqueue($"{user.Name} summons a wolf!");
+      gs.Party.Special = MonsterCatalog.Get(Monsters.Wolf, rng);
       consumed = true;
     }
 

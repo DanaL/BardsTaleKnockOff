@@ -32,12 +32,15 @@ interface IBeing
   string Name { get; }  
   int HP { get; set; }
   int MaxHP { get; }
+  int MP { get; }
+  int MaxMP { get; }
   int AC { get; }
   int THAC0 { get; }
   string Condition { get; set; }
   List<TempBuff> Buffs { get; }
   bool Incapacitated { get; }
-
+  string RoleName { get; }
+  
   SaveResult RollSavingThrow(int power, Rng rng);
   string ReceiveDmg(int dmg);
 }

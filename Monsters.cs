@@ -41,6 +41,9 @@ class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, i
   public int Rank { get; set; } = rank;
   public string Condition { get; set; } = "";  
   public List<TempBuff> Buffs { get; set; } = [];
+  public int MP => 0;
+  public int MaxMP => 0;
+  public string RoleName => "Monster";
 
   public bool Incapacitated => HP < 1;
 

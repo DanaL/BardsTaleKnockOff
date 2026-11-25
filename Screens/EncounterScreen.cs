@@ -233,6 +233,8 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
 
   public void Cleanup()
   {
+    if (_app.GameState.Party.Special is Monster m && m.Incapacitated)
+      _app.GameState.Party.Special = null;
     _app.GameState.Party.ClearCombatBuffs();
     _app.GameState.Messages.Clear();
     _app.Screens.Pop();

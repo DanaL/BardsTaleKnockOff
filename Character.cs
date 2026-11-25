@@ -66,6 +66,8 @@ class Character : IBeing
 
   public List<TempBuff> Buffs { get; set; } = [];
 
+  public string RoleName => Role.ToString();
+  
   // Conditions that take a character out of action. Add STONED etc. here.
   public bool Incapacitated => Condition is "DEAD";
 
@@ -428,7 +430,7 @@ class Party
   public const int MAX_PARTY_SIZE = 6;
 
   // The roster's "S" slot, shown above the six regular members.
-  public Character? Special { get; set; }
+  public IBeing? Special { get; set; }
   public Character?[] Members { get; } = new Character?[MAX_PARTY_SIZE];
 
   public int Count => Members.Count(m => m is not null);

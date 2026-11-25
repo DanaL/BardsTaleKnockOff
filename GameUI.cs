@@ -359,19 +359,19 @@ unsafe class GameUI
     DrawStatusIcons(new(light, softStep, eye, facing, shield, carpet));
   }
 
-  void DrawRosterLine(string slot, Character? c, int left, int y)
+  void DrawRosterLine(string slot, IBeing? b, int left, int y)
   {
     _text.Draw(slot, left, y, RosterDim);
-    if (c is null)
+    if (b is null)
       return;
 
-    int currHP = int.Max(0, c.HP);
-    _text.Draw(c.Name, left + ColName, y, RosterText);
-    _text.Draw(c.AC.ToString(), left + ColAC, y, RosterText);
-    _text.Draw($"{currHP}/{c.MaxHP}", left + ColHP, y, RosterText);
-    _text.Draw(c.MaxMP > 0 ? $"{c.MP}/{c.MaxMP}" : "-", left + ColMP, y, RosterText);
-    _text.Draw(c.Condition, left + ColConditions, y, RosterText);
-    _text.Draw(c.Role.ToString(), left + ColClass, y, RosterText);
+    int currHP = int.Max(0, b.HP);
+    _text.Draw(b.Name, left + ColName, y, RosterText);
+    _text.Draw(b.AC.ToString(), left + ColAC, y, RosterText);
+    _text.Draw($"{currHP}/{b.MaxHP}", left + ColHP, y, RosterText);
+    _text.Draw(b.MaxMP > 0 ? $"{b.MP}/{b.MaxMP}" : "-", left + ColMP, y, RosterText);
+    _text.Draw(b.Condition, left + ColConditions, y, RosterText);
+    _text.Draw(b.RoleName, left + ColClass, y, RosterText);
   }
 
   void FillRect(Rgb colour, SDL_Rect r)
