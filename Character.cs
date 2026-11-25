@@ -29,20 +29,20 @@ class Character : IBeing
 {
   public const int INVENTORY_SLOTS = 12;
 
-  public required string Name { get; init; }  
+  public required string Name { get; init; }
   public required Lineage Lineage { get; init; }
   public required Role Role { get; set; }
 
   public int HP { get; set; }
   public int BaseHP { get; set; }
   public int MaxHP => BaseHP + int.Max(StatToMod(Con) * Level, Level);
-  
+
   public int MP { get; set; }
   public int BaseMP { get; set; }
   public int MaxMP => BaseMP > 0 ? BaseMP + int.Max(StatToMod(Lore) * Level, Level) : 0;
-  
+
   public string FullName => Name;
-  
+
   public string Condition { get; set; } = "";
 
   public int Str { get; set; }
@@ -93,7 +93,7 @@ class Character : IBeing
         return null;
     }
   }
-  
+
   [JsonIgnore]
   public Item? EquippedBow
   {
@@ -120,7 +120,7 @@ class Character : IBeing
     return false;
   }
 
-  
+
   [JsonIgnore]
   public int AC
   {
@@ -174,10 +174,10 @@ class Character : IBeing
         case Role.Trickster:
         case Role.Hunter:
           score = 15 + 5 * int.Max(Level - 2, 3);
-          break;          
+          break;
         case Role.Rogue:
           score = 15 + 5 * Level;
-          break;          
+          break;
         default:
           return 0;
       }
@@ -201,7 +201,7 @@ class Character : IBeing
         return int.Clamp((int)Math.Round(Level / 2.0, MidpointRounding.AwayFromZero), 1, 13);
     }
   }
-  
+
   public InvSlot?[] Inventory { get; init; } = new InvSlot?[INVENTORY_SLOTS];
 
   public string ReceiveDmg(int dmg)
@@ -240,21 +240,21 @@ class Character : IBeing
     Item item = ItemCatalog.Item(id);
     if (item.Stackable)
     {
-      for (int j = 0; j < INVENTORY_SLOTS; j++) 
+      for (int j = 0; j < INVENTORY_SLOTS; j++)
       {
-        if (Inventory[j] is InvSlot islot && islot.Id == id) 
+        if (Inventory[j] is InvSlot islot && islot.Id == id)
         {
           Inventory[j] = islot with { Count = islot.Count + count };
           return true;
         }
       }
     }
-    
+
     int slot = Array.IndexOf(Inventory, null);
     if (slot < 0)
       return false;
     Inventory[slot] = new(id, false, count);
-    
+
     return true;
   }
 
@@ -290,7 +290,7 @@ class Character : IBeing
           break;
         case Role.Magician:
         case Role.Conjurer:
-        case Role.Trickster:        
+        case Role.Trickster:
           score += 2;
           break;
         case Role.Paladin:
@@ -305,7 +305,7 @@ class Character : IBeing
           score += 1;
           break;
       }
-      
+
       // Eventually items like Luckshields will affect the score
       // foreach (var inv in Inventory.OfType<InvSlot>())
       // {
@@ -318,15 +318,15 @@ class Character : IBeing
 
   public SaveResult RollSavingThrow(int monsterRank, Rng rng)
   {
-    int roll = monsterRank + rng.Next(8);    
+    int roll = monsterRank + rng.Next(8);
     int margin = MagicPower - roll;
 
     if (margin < 0)
       return SaveResult.Failure;
     else if (margin <= 4)
       return SaveResult.Partial;
-    else 
-      return SaveResult.Success;    
+    else
+      return SaveResult.Success;
   }
 
   public void LevelUp(Rng rng)
@@ -354,8 +354,8 @@ class Character : IBeing
           AbilityPoints += 1;
         break;
       case Role.Hunter:
-         newHP = rng.Next(1, 9);
-         CritChance += rng.Next(1, 32);
+        newHP = rng.Next(1, 9);
+        CritChance += rng.Next(1, 32);
         if (nextLevel % 2 == 0)
           AbilityPoints += 1;
         break;
@@ -383,13 +383,13 @@ class Character : IBeing
     int mpDelta = MaxMP - MP;
 
     ++Level;
-    
+
     BaseHP += newHP;
     HP = MaxHP - hpDelta;
-    
+
     if (BaseMP > 0)
     {
-      int newMP = rng.Next(1, 5);      
+      int newMP = rng.Next(1, 5);
       BaseMP += newMP;
       MP = MaxMP - mpDelta;
     }
@@ -427,6 +427,8 @@ class XPTable
   };
 }
 
+enum PartySlot { Special = int.MaxValue, Slot1 = 1, Slot2 = 2, Slot3 = 3, Slot4 = 4, Slot5 = 5, Slot6 = 6, None = int.MinValue }
+
 class Party
 {
   public const int MAX_PARTY_SIZE = 6;
@@ -445,6 +447,18 @@ class Party
 
   public HashSet<int> QuestItems = [];
 
+  public IBeing? Slot(PartySlot slot)
+  {
+    if (slot == PartySlot.Special)
+      return Special;
+    else if (slot == PartySlot.None)
+      return null;
+
+    int slotNum = (int)slot;
+    
+    return Members[slotNum];
+  }
+
   public bool Add(Character c)
   {
     int slot = Array.IndexOf(Members, null);
@@ -453,6 +467,16 @@ class Party
     Members[slot] = c;
 
     return true;
+  }
+
+  public List<IBeing> ActiveMembers()
+  {
+    List<IBeing> members = [];
+    if (Special is IBeing b && !b.Incapacitated)
+      members.Add(Special);
+    members.AddRange(Members.OfType<Character>().Where(c => !c.Incapacitated));
+
+    return members;
   }
 
   public bool HasBuff(Buff buff) => Buffs.Any(b => b.Buff == buff);
@@ -486,24 +510,24 @@ class Party
     else
     {
       List<Character> party = [];
-    for (int j = 0; j < MAX_PARTY_SIZE; j++)
-    {
-      if (Members[j] is Character c && !c.InventoryFull && !c.Incapacitated)
-        party.Add(c);
+      for (int j = 0; j < MAX_PARTY_SIZE; j++)
+      {
+        if (Members[j] is Character c && !c.InventoryFull && !c.Incapacitated)
+          party.Add(c);
+      }
+
+      if (party.Count == 0)
+        return "";
+
+
+      var finder = party[rng.Next(party.Count)];
+      int count = itemId == ItemCatalog.ARROW ? 10 : 1;
+      string s = $"{finder.Name} finds ";
+      s += count > 1 ? $"{count} {item.Name.Pluralize()}" : item.Name.IndefArticle();
+      finder.AddItem(itemId, count);
+
+      return s;
     }
-
-    if (party.Count == 0)
-      return "";
-    
-    
-    var finder = party[rng.Next(party.Count)];
-    int count = itemId == ItemCatalog.ARROW ? 10 : 1;
-    string s = $"{finder.Name} finds ";
-    s += count > 1 ? $"{count} {item.Name.Pluralize()}" : item.Name.IndefArticle();
-    finder.AddItem(itemId, count);
-
-    return s;
-    }    
   }
 
   public void CheckBuffs(ulong turn)
@@ -582,14 +606,14 @@ class Party
           gs.Alert = DateTime.UtcNow.AddMilliseconds(500);
         }
       }
-    }    
+    }
   }
 
   public void ClearLightSources()
   {
     Buffs = [.. Buffs.Where(b => !IsLight(b.Buff))];
 
-    static bool IsLight(Buff buff) => buff switch 
+    static bool IsLight(Buff buff) => buff switch
     {
       Buff.MageFlame or Buff.SteelLight or Buff.Torch or Buff.Revelation => true,
       _ => false

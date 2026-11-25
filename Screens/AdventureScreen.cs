@@ -91,7 +91,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
           app.Screens.Push(new CharacterScreen(app, slot));
         break;
       case SDL_Scancode.SDL_SCANCODE_C:
-        app.Screens.Push(new ChoosePartyMemberScreen(app, this, "Who will cast a spell"));
+        app.Screens.Push(new ChoosePartyMemberScreen(app, this, "Who will cast a spell", false));
         break;
       case SDL_Scancode.SDL_SCANCODE_N:
         app.Screens.Push(new ReorderPartyScreen(app, null, ""));
@@ -645,22 +645,23 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
     else if (spell.Target == SpellTarget.PartyMember)
     {
       _spellToCast = spell;
-      app.Screens.Push(new ChoosePartyMemberScreen(app, this, $"Cast {spell.Name} on who"));
+      app.Screens.Push(new ChoosePartyMemberScreen(app, this, $"Cast {spell.Name} on who", true));
     }
   }
 
-  public void CharacterChosen(int partySlot)
+  public void CharacterChosen(PartySlot partySlot)
   {
+    int slotNum = (int)partySlot;
     if (_caster is not null && _spellToCast is not null)
     {
       // If _caster isn't null, we are picking a target of a spell
       SpellResolver sr = new([], new Battle(app.GameState, app.Rng, []));
-      foreach (string s in sr.Cast(_spellToCast, _caster, app.Rng, -1, app.GameState.Party.Members[partySlot], GS))
+      foreach (string s in sr.Cast(_spellToCast, _caster, app.Rng, -1, app.GameState.Party.Slot(partySlot), GS))
         GS.Say(s);
       _spellToCast = null;
       ResolveTurn();
     }
-    else if (app.GameState.Party.Members[partySlot] is Character c)
+    else if (app.GameState.Party.Members[slotNum] is Character c)
     {
       // We are choosing who to cast a spell here
       if (c.MaxMP == 0)

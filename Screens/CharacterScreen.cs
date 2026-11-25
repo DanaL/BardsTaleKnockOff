@@ -20,7 +20,7 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
   const int TRANSFER_GOLD = 1;
 
   int _state = MAIN;
-  int _transferToSlot = -1;
+  PartySlot _transferToSlot = PartySlot.None;
   string _transferAmount = "";
 
   public void OnKey(SDL_KeyboardEvent key)
@@ -46,7 +46,7 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
           app.GameState.Party.PoolGold(CharacterSlot);
           break;
         case SDL_Keycode.SDLK_T:
-          app.Screens.Push(new ChoosePartyMemberScreen(app, this, "Trade gold to whom", CharacterSlot) { DungeonView = false });
+          app.Screens.Push(new ChoosePartyMemberScreen(app, this, "Trade gold to whom", false, CharacterSlot) { DungeonView = false });
           break;
         case SDL_Keycode.SDLK_ESCAPE:
           app.Screens.Pop();
@@ -86,7 +86,7 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
             TradeGold(amt);
           
           _state = MAIN;
-          _transferToSlot = -1;
+          _transferToSlot = PartySlot.None;
           _transferAmount = "";
           break;
       }
@@ -96,7 +96,8 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
   void TradeGold(int amount)
   {
     Party p = app.GameState.Party;
-    if (p.Members[CharacterSlot] is not Character c || p.Members[_transferToSlot] is not Character tc)
+    int slotNum = (int)_transferToSlot;
+    if (p.Members[CharacterSlot] is not Character c || p.Members[slotNum] is not Character tc)
       return;
     
     amount = int.Min(amount, c.Gold);
@@ -113,12 +114,13 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
 
     if (app.GameState.Party!.Members[CharacterSlot] is Character c)
     {
+      int slotNum = (int)_transferToSlot;
       caption = c.Name;
       if (_state == MAIN)
       {
         lines = CharacterInfo(c);
       }
-      else if (_state == TRANSFER_GOLD && app.GameState.Party.Members[_transferToSlot] is Character tc)
+      else if (_state == TRANSFER_GOLD && app.GameState.Party.Members[slotNum] is Character tc)
       {
         lines = [$"{c.Name} has {c.Gold} gp. Transfer how much to {tc.Name}?", ""];
         lines.Add($"> {_transferAmount}");
@@ -213,7 +215,7 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
     return lines;
   }
 
-  public void CharacterChosen(int partySlot)
+  public void CharacterChosen(PartySlot partySlot)
   {
     _state = TRANSFER_GOLD;
     _transferToSlot = partySlot;

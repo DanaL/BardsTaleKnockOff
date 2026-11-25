@@ -14,7 +14,7 @@ namespace BardsTaleKnockOff;
 // Use Item not implemented yet...
 enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell, UseItem, ShootBow, MonstersAdvance }
 
-record struct BattleChoice(int PartySlot, BattleAction Action,  int Group, int TargetPartySlot, SpellInfo? Spell, int InvIdx);
+record struct BattleChoice(int PartySlot, BattleAction Action,  int Group, PartySlot TargetPartySlot, SpellInfo? Spell, int InvIdx);
 
 enum RoundResult { Continue, Victory, TPK }
 
@@ -74,11 +74,11 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
       if (Foes[n].Distance == 10 || Foes[n].Monsters[0].HasFlag(MonsterFlag.Ranged))      
       {
         int roll = rng.Next(1, 24);
-        _actions.Enqueue(new(n, BattleAction.MonsterAction, n, -1, null, -1), -roll);        
+        _actions.Enqueue(new(n, BattleAction.MonsterAction, n, PartySlot.None, null, -1), -roll);        
       }
       else
       {
-        _actions.Enqueue(new(n, BattleAction.MonstersAdvance, n, -1, null, -1), advInitiative++);
+        _actions.Enqueue(new(n, BattleAction.MonstersAdvance, n, PartySlot.None, null, -1), advInitiative++);
       }      
     }
   }
@@ -171,7 +171,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
         case BattleAction.CastSpell:
           if (choice.Spell is SpellInfo spell)
           {
-            Character? partyTarget = choice.TargetPartySlot >= 0 ? gs.Party.Members[choice.TargetPartySlot] : null;
+            IBeing? partyTarget = gs.Party.Slot(choice.TargetPartySlot);
             string s = $"{c.Name} casts {spell.Code}";
 
             if (gs.CurrTile.HasFlag(TileFlags.Antimagic))
@@ -397,11 +397,8 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
   {
     Messages.Enqueue($"{m.Name.IndefArticle().Capitalize() } casts Freeze Foes on the party!");
 
-    foreach (var c in gs.Party.Members.OfType<Character>())
+    foreach (var c in gs.Party.ActiveMembers())
     {
-      if (c.Incapacitated)
-        continue;
-      
       if (c.Buffs.Any(b => b.Buff == Buff.FreezeFoe))
         continue;
 

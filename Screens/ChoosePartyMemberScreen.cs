@@ -13,7 +13,7 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt, int ignore = -1) : IScreen
+class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt, bool specialSlot, int ignore = -1) : IScreen
 {
   public string Image { get; set; } = "";
   public string Caption { get; set; } = "";
@@ -37,7 +37,12 @@ class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt, int 
     if (slot != ignore && slot >= 0 && slot < app.GameState.Party.Count)
     {
       app.Screens.Pop();
-      src.CharacterChosen(slot);       
+      src.CharacterChosen((PartySlot) slot);
+    }
+    else if (specialSlot && key.scancode == SDL_Scancode.SDL_SCANCODE_S && app.GameState.Party.Special is not null)
+    {
+      app.Screens.Pop();
+      src.CharacterChosen(PartySlot.Special);
     }
     else
     {
@@ -57,6 +62,8 @@ class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt, int 
     string s = "1";
     if (app.GameState.Party.Count > 1)
       s += $"-{app.GameState.Party.Count}";
+    if (specialSlot && app.GameState.Party.Special is not null)
+      s += " or S";
 
     _lines.Clear();
     _lines.Add($"{prompt}: {s}");

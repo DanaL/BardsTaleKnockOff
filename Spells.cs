@@ -92,7 +92,7 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
   const int DURATION_MEDIUM = 1000;
   const int DURATION_LONG = 1500;
 
-  public List<string> Cast(SpellInfo spell, Character caster, Rng rng, int monsterGroup, Character? target, GameState gs)
+  public List<string> Cast(SpellInfo spell, Character caster, Rng rng, int monsterGroup, IBeing? target, GameState gs)
   {
     List<string> msgBuffer = [];
 

@@ -70,7 +70,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
         }
         else
         {
-          app.Screens.Push(new ChoosePartyMemberScreen(app, this, $"Trade {toTrade.Name} to whom", characterSlot) { DungeonView = false });
+          app.Screens.Push(new ChoosePartyMemberScreen(app, this, $"Trade {toTrade.Name} to whom", false, characterSlot) { DungeonView = false });
         }
         break;
       case SDL_Keycode.SDLK_ESCAPE:
@@ -241,9 +241,10 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
     ui.DrawRoster(app.GameState);
   }
 
-  public void CharacterChosen(int partySlot)
+  public void CharacterChosen(PartySlot partySlot)
   {
-    if (app.GameState.Party.Members[partySlot] is not Character tradeTo)
+    int slotNum = (int)partySlot;
+    if (app.GameState.Party.Members[slotNum] is not Character tradeTo)
       return;
 
     if (tradeTo.InventoryFull)

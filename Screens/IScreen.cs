@@ -51,6 +51,6 @@ interface IMonsterPickScreen
 
 interface IPartyPickScreen
 {
-  void CharacterChosen(int partySlot);
+  void CharacterChosen(PartySlot partySlot);
   void AbortSelection();
 }
