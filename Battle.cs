@@ -18,6 +18,95 @@ record struct BattleChoice(int PartySlot, BattleAction Action,  int Group, Party
 
 enum RoundResult { Continue, Victory, TPK }
 
+// Bonuses an attacker gets from its buffs. Damage includes dice rolls (Vorpal
+// Plating, Mage Gauntlets), so get a fresh AttackMods for each swing.
+record struct AttackMods(int ToHit, int Damage);
+
+static class CombatMods
+{
+  // Smite isn't here because its damage scales with a character's level; it's
+  // handled in CharacterMeleeAttack.
+  public static AttackMods MeleeMods(this IBeing attacker, Rng rng)
+  {
+    int hit = 0, dmg = 0;
+    foreach (var b in attacker.Buffs)
+    {
+      switch (b.Buff)
+      {
+        case Buff.Hiding:
+          hit += 3;
+          break;
+        case Buff.BattleSkill:
+          hit += 4;
+          dmg += 4;
+          break;
+        case Buff.OgreStrength:
+          hit += 7;
+          dmg += 7;
+          break;
+        case Buff.VorpalPlating:
+          dmg += rng.Next(2, 9);
+          break;
+        case Buff.MageGauntlets:
+          dmg += rng.Next(4, 17);
+          break;
+      }
+    }
+
+    return new(hit, dmg);
+  }
+
+  public static AttackMods RangedMods(this IBeing attacker)
+  {
+    int hit = 0, dmg = 0;
+    foreach (var b in attacker.Buffs)
+    {
+      switch (b.Buff)
+      {
+        case Buff.Hiding:
+          hit += 3;
+          break;
+        case Buff.BattleSkill:
+          hit += 4;
+          dmg += 4;
+          break;
+      }
+    }
+
+    return new(hit, dmg);
+  }
+
+  // Added to the roll an attacker needs to hit this target: positive makes the
+  // target harder to hit, negative easier.
+  public static int DefenseMods(this IBeing target)
+  {
+    int mod = 0;
+    foreach (var b in target.Buffs)
+    {
+      switch (b.Buff)
+      {
+        case Buff.Defending:
+          mod += 5;  // roughly Disadvantage, or the Dodge action, in 5e
+          break;
+        case Buff.Invisibility:
+          mod += 5;
+          break;
+        case Buff.PhaseBlur:
+          mod += 2;
+          break;
+        case Buff.FreezeFoe:
+          mod -= 2;
+          break;
+      }
+    }
+
+    if (target.Condition == "OLD")
+      mod -= 5;
+
+    return mod;
+  }
+}
+
 class MonsterGroup
 {
   public int Distance { get; set; }
@@ -478,29 +567,16 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     string n = Util.CalcName(m).DefArticle().Capitalize();
     int roll = rng.Next(1, 21);
     bool nat20 = roll == 20;
-    int toHitTarget = m.THAC0 - target.AC;
-
-    foreach (var buff in target.Buffs)
-    {
-      if (buff.Buff == Buff.Defending) // Not sure what BT1 did, but -5 is roughly equip to Disadvantage in 5e
-        toHitTarget += 5;                 // and what you get for taking the Dodge action
-      else if (buff.Buff == Buff.FreezeFoe)
-        toHitTarget -= 2; // Guess at what BT1 did
-      else if (buff.Buff == Buff.Invisibility)
-        toHitTarget += 5;
-      else if (buff.Buff == Buff.PhaseBlur)
-        toHitTarget += 2;
-    }
-
-    if (target.Condition == "OLD")
-      toHitTarget -= 5;
+    var mods = m.MeleeMods(rng);
+    roll += mods.ToHit;
+    int toHitTarget = m.THAC0 - target.AC + target.DefenseMods();
 
     if (m.Condition == "OLD")
       roll -= 10;
 
     if (roll >= toHitTarget || nat20)
     {
-      int dmg = rng.Next(m.DmgLow, m.DmgHigh + 1);
+      int dmg = rng.Next(m.DmgLow, m.DmgHigh + 1) + mods.Damage;
       if (m.Condition == "OLD")
         dmg /= 4;
       Messages.Enqueue($"{n} {m.Verb} {target.FullName} and hits for {dmg} hp!");
@@ -570,45 +646,23 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
     Item ammo = ItemCatalog.Item(ammoSlot.Id);
 
-    bool hiding = false;
-    bool battleSkill = false;    
-    foreach (var buff in c.Buffs)
-    {
-      if (buff.Buff == Buff.Hiding)
-        hiding = true;
-      else if (buff.Buff == Buff.BattleSkill)
-        battleSkill = true;
-    }
-
+    var mods = c.RangedMods();
     Monster target = Foes[monsterGroup].Monsters[0];
     int dexMod = Character.StatToMod(c.Dex);
     int archerBonus = c.Role == Role.Archer ? 1 + c.Level / 4 : 0;
 
-    int roll = rng.Next(1, 21) + dexMod + bow.AttackBonus + archerBonus;
-    
-    if (hiding)
-      roll += 3;
+    int roll = rng.Next(1, 21) + dexMod + bow.AttackBonus + archerBonus + mods.ToHit;
+
     if (c.Condition == "OLD")
       roll -= 10;
-    if (battleSkill)
-      roll += 4;
-    
-    int toHitTarget = c.THAC0 - target.AC;
-    foreach (var buff in target.Buffs)
-    {
-      if (buff.Buff == Buff.FreezeFoe)
-        toHitTarget -= 2;
-      else if (buff.Buff == Buff.Invisibility)
-        toHitTarget += 5;
-    }
+
+    int toHitTarget = c.THAC0 - target.AC + target.DefenseMods();
 
     string s = $"{c.Name} shoots at {target.Name.IndefArticle().ToLower()}";
     bool criticalHit = false;
     if (roll >= toHitTarget)
-    {      
-      int dmg = archerBonus + bow.DamageBonus + dexMod;
-      if (battleSkill)
-        dmg += 4;
+    {
+      int dmg = archerBonus + bow.DamageBonus + dexMod + mods.Damage;
       for (int k = 0; k < bow.NumDamageDice; k++)
         dmg += rng.Next(bow.DamageDie) + 1;
       criticalHit = c.CritChance > 0 && rng.Next(256) < c.CritChance;
@@ -643,27 +697,8 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     if (Foes[monsterGroup].Count == 0)
       return;
 
-    bool hiding = false;
-    bool vorpalPlating = false;
-    bool ogreStrength = false;
-    bool mageGauntlets = false;
-    bool battleSkill = false;
-    bool smiting = false;
-    foreach (var buff in c.Buffs)
-    {
-      if (buff.Buff == Buff.Hiding)
-        hiding = true;
-      else if (buff.Buff == Buff.VorpalPlating)
-        vorpalPlating = true;
-      else if (buff.Buff == Buff.MageGauntlets)
-        mageGauntlets = true;
-      else if (buff.Buff == Buff.BattleSkill)
-        battleSkill = true;
-      else if (buff.Buff == Buff.Smite)
-        smiting = true;
-      else if (buff.Buff == Buff.OgreStrength)
-        ogreStrength = true; 
-    }
+    bool hiding = c.Buffs.Any(b => b.Buff == Buff.Hiding);
+    bool smiting = c.Buffs.Any(b => b.Buff == Buff.Smite);
 
     Monster target = Foes[monsterGroup].Monsters[0];
     Item? weapon = c.EquippedWeapon;
@@ -687,43 +722,23 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     
     for (int j = 0; j < c.NumOfMeleeAttacks; j++)
     {
-      int roll = rng.Next(1, 21) + strMod;
+      var mods = c.MeleeMods(rng);
+      int roll = rng.Next(1, 21) + strMod + mods.ToHit;
       if (weapon is not null)
         roll += weapon.AttackBonus;
 
-      if (hiding)
-        roll += 3;
       if (c.Condition == "OLD")
          roll -= 10;
-      if (battleSkill)
-        roll += 4;
       if (smiting)
         roll += 3;
-      if (ogreStrength)
-       roll += 7;
 
-      int toHitTarget = c.THAC0 - target.AC;
-      foreach (var buff in target.Buffs)
-      {
-        if (buff.Buff == Buff.FreezeFoe)
-          toHitTarget -= 2;
-        else if (buff.Buff == Buff.Invisibility)
-          toHitTarget += 5;
-      }
+      int toHitTarget = c.THAC0 - target.AC + target.DefenseMods();
 
       if (roll >= toHitTarget)
       {
         ++hits;
-        dmg += strMod;
+        dmg += strMod + mods.Damage;
 
-        if (vorpalPlating)
-          dmg += rng.Next(2, 9);
-        if (mageGauntlets)
-          dmg += rng.Next(4, 17);
-        if (battleSkill)
-          dmg += 4;
-        if (ogreStrength)
-          dmg += 7;
         if (smiting)
           dmg += rng.Next(1, 9) * int.Max(1, c.Level / 2);
 
