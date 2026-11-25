@@ -222,9 +222,9 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
       return;
 
     Item item = ItemCatalog.Item(invSlot.Id);   
-    bool consumed = ItemCatalog.Use(item, gs);
-
     Messages.Enqueue($"{c.Name} uses {item.Name.IndefArticle()}");
+    bool consumed = ItemCatalog.Use(item, gs, c, Messages, rng);
+
     if (!consumed)
       return;
 
@@ -323,7 +323,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
     // Have to take into account the Special slot eventually
     List<(IBeing Being, bool Melee)> targets = [];    
-    if (gs.Party.Special is IBeing special)
+    if (gs.Party.Special is IBeing special && !special.Incapacitated)
       targets.Add((special, true));    
     for (int j = 0; j < gs.Party.Count; j++)
     {
