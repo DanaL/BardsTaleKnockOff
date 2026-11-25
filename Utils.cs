@@ -29,7 +29,8 @@ class AbortBattleException(string caster) : Exception(caster) {}
 
 interface IBeing
 {
-  string Name { get; }  
+  string Name { get; }
+  string FullName { get; }
   int HP { get; set; }
   int MaxHP { get; }
   int MP { get; }
@@ -40,7 +41,7 @@ interface IBeing
   List<TempBuff> Buffs { get; }
   bool Incapacitated { get; }
   string RoleName { get; }
-  
+
   SaveResult RollSavingThrow(int power, Rng rng);
   string ReceiveDmg(int dmg);
 }

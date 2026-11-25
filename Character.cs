@@ -29,7 +29,7 @@ class Character : IBeing
 {
   public const int INVENTORY_SLOTS = 12;
 
-  public required string Name { get; init; }
+  public required string Name { get; init; }  
   public required Lineage Lineage { get; init; }
   public required Role Role { get; set; }
 
@@ -40,6 +40,8 @@ class Character : IBeing
   public int MP { get; set; }
   public int BaseMP { get; set; }
   public int MaxMP => BaseMP > 0 ? BaseMP + int.Max(StatToMod(Lore) * Level, Level) : 0;
+  
+  public string FullName => Name;
   
   public string Condition { get; set; } = "";
 
@@ -67,7 +69,7 @@ class Character : IBeing
   public List<TempBuff> Buffs { get; set; } = [];
 
   public string RoleName => Role.ToString();
-  
+
   // Conditions that take a character out of action. Add STONED etc. here.
   public bool Incapacitated => Condition is "DEAD";
 

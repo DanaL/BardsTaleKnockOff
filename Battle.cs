@@ -386,7 +386,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
   void MonsterCastInvisibility(Monster m)
   {
-    Messages.Enqueue($"{m.Name.DefArticle().Capitalize() } casts Invisibility!");
+    Messages.Enqueue($"{m.FullName.Capitalize() } casts Invisibility!");
     if (!m.Buffs.Any(b => b.Buff == Buff.Invisibility))
     {
       m.Buffs.Add(new TempBuff(Buff.Invisibility, ulong.MaxValue, true));
@@ -407,11 +407,11 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
       if (c.RollSavingThrow(m.Rank, rng) == SaveResult.Success)
       {
-        Messages.Enqueue($"{c.Name} resists!");
+        Messages.Enqueue($"{c.FullName} resists!");
       }
       else
       {
-        Messages.Enqueue($"{c.Name} becomes enervated!");
+        Messages.Enqueue($"{c.FullName} becomes enervated!");
         c.Buffs.Add(new TempBuff(Buff.FreezeFoe, ulong.MaxValue, true));
       }
     }
@@ -423,7 +423,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
   void MonsterCastWitherStrike(Monster m, IBeing target)
   {
-    Messages.Enqueue($"{m.Name.IndefArticle().Capitalize() } casts Wither Strike on {target.Name}!");
+    Messages.Enqueue($"{m.Name.IndefArticle().Capitalize() } casts Wither Strike on {target.FullName}!");
     if (target.Condition == "OLD")
       return;
     
@@ -433,7 +433,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     }
     else
     {
-      Messages.Enqueue($"{target.Name} is Withered!");
+      Messages.Enqueue($"{target.FullName} is Withered!");
       target.Condition = "OLD";
     }    
   }
@@ -464,7 +464,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
   {
     int dmg = rng.Next(1, 5) * level;
     
-    string msg = $"{m.Name.DefArticle().Capitalize() } casts Arc Fire on {target.Name}";
+    string msg = $"{m.FullName.Capitalize() } casts Arc Fire on {target.FullName}";
     ResolveMonsterDmgSpell(m, target, msg, dmg);
   }
 
@@ -472,7 +472,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
   {
     int dmg = rng.Next(1, 5);
     
-    string msg = $"{m.Name.DefArticle().Capitalize() } zaps {target.Name}";
+    string msg = $"{m.FullName.Capitalize() } zaps {target.FullName}";
     ResolveMonsterDmgSpell(m, target, msg, dmg);
   }
 
@@ -506,7 +506,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
       int dmg = rng.Next(m.DmgLow, m.DmgHigh + 1);
       if (m.Condition == "OLD")
         dmg /= 4;
-      Messages.Enqueue($"{n} {m.Verb} {target.Name} and hits for {dmg} hp!");
+      Messages.Enqueue($"{n} {m.Verb} {target.FullName} and hits for {dmg} hp!");
       string s = target.ReceiveDmg(dmg);
       if (s != "")
         Messages.Enqueue(s);
@@ -516,7 +516,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
         var save = target.RollSavingThrow(m.Rank, rng);
         if (save != SaveResult.Success)
         {
-          Messages.Enqueue($"{target.Name} is poisoned!");
+          Messages.Enqueue($"{target.FullName} is poisoned!");
           target.Condition = "POISONED";
         }
       }
@@ -527,7 +527,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     }
     else
     {
-      Messages.Enqueue($"{n} {m.Verb} {target.Name} and misses!");
+      Messages.Enqueue($"{n} {m.Verb} {target.FullName} and misses!");
     }
   }
 
@@ -535,7 +535,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
   {
     if (rng.Next(3) >= 0)
     {
-      Messages.Enqueue($"The attack of the {m.Name} is acidic!");
+      Messages.Enqueue($"The attack of {m.FullName} is acidic!");
       List<int> slots = [];
       for (int j = 0; j < Character.INVENTORY_SLOTS; j++)
       {
@@ -752,7 +752,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     if (hiding)
       s = $"{c.Name} leaps from the shadows";
 
-    string targetName = target.Name.DefArticle().ToLower();
+    string targetName = target.FullName.ToLower();
     if (hits == 0)
       s += " but misses!";
     else if (criticalHit)
@@ -781,7 +781,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     Monster m = Foes[group].Monsters[targetNum];
     if (dmg >= m.HP)
     {
-      msgQ.Enqueue($"{m.Name.DefArticle().ToLower().Capitalize()} is killed!");
+      msgQ.Enqueue($"{m.FullName.ToLower().Capitalize()} is killed!");
       KillMonster(group, targetNum, gs);
       return true;
     }
