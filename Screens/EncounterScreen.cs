@@ -490,9 +490,10 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
             }
           break;
         case BattleAction.UseItem:
-          if (choice.InvIdx != -1 && _itemToUse is not null)
-          {
-            lines.Add($"{c.Name} uses {_itemToUse.Name.IndefArticle()}.");
+          if (choice.InvIdx != -1 && c.Inventory[choice.InvIdx] is InvSlot invSlot)
+          {          
+            Item item = ItemCatalog.Item(invSlot.Id);
+            lines.Add($"{c.Name} uses {item.Name.IndefArticle()}.");
           }
           break;
         case BattleAction.CastSpell:

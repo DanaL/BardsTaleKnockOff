@@ -328,7 +328,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     if (c.Inventory[invIdx] is not InvSlot invSlot)
       return;
 
-    Item item = ItemCatalog.Item(invSlot.Id);   
+    Item item = ItemCatalog.Item(invSlot.Id);
     Messages.Enqueue($"{c.Name} uses {item.Name.IndefArticle()}");
     bool consumed = ItemCatalog.Use(item, gs, c, Messages, rng);
 
