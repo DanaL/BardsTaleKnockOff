@@ -26,8 +26,7 @@ enum MonsterScript { Melee, Conjuror0, Magician0 };
 class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, int xp, int gold, MonsterScript script, string verb, string image, MonsterFlag flags, int rank) : IBeing
 {
   public string Name { get; } = name;
-  public string FullName { get; } = name.DefArticle();
-  public int AC { get; } = ac;
+  public string FullName { get; } = name.DefArticle();  
   public int HP { get; set; } = hp;
   public int MaxHP { get; init; } = hp;
   public int THAC0 { get; } = thac0;
@@ -45,6 +44,9 @@ class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, i
   public int MP => 0;
   public int MaxMP => 0;
   public string RoleName => "Monster";
+  
+  int _baseAC { get; } = ac;
+  public int AC => _baseAC + this.ACMods();
 
   public bool Incapacitated => HP < 1;
 

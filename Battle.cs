@@ -105,6 +105,24 @@ static class CombatMods
 
     return mod;
   }
+
+  // Separate from DefenseMods because for the party I display the current
+  // AC live
+  public static int ACMods(this IBeing b)
+  {
+    int mods = 0;
+    foreach (var buff in b.Buffs)
+    {
+      if (buff.Buff == Buff.AirArmour)
+        mods -= 2;
+      else if (buff.Buff == Buff.SorcShield)
+        mods -= 1;
+      else if (buff.Buff == Buff.MysticShield || buff.Buff == Buff.MysticCoatOfArmour)
+        mods -= 2;
+    }
+
+    return mods;
+  }
 }
 
 class MonsterGroup

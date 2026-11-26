@@ -133,15 +133,7 @@ class Character : IBeing
           ac -= ItemCatalog.Item(inv.Id).ACMod;
       }
 
-      foreach (var buff in Buffs)
-      {
-        if (buff.Buff == Buff.AirArmour)
-          ac -= 2;
-        else if (buff.Buff == Buff.SorcShield)
-          ac -= 1;
-        else if (buff.Buff == Buff.MysticShield || buff.Buff == Buff.MysticCoatOfArmour)
-          ac -= 2;
-      }
+      ac += this.ACMods();
 
       return ac;
     }
@@ -455,7 +447,7 @@ class Party
       return null;
 
     int slotNum = (int)slot;
-    
+
     return Members[slotNum];
   }
 

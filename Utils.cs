@@ -38,7 +38,7 @@ interface IBeing
   int AC { get; }
   int THAC0 { get; }
   string Condition { get; set; }
-  List<TempBuff> Buffs { get; }
+  List<TempBuff> Buffs { get; set; }
   bool Incapacitated { get; }
   string RoleName { get; }
 

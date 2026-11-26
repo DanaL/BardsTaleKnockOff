@@ -294,20 +294,22 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
   {
     caster.MP -= cost;
 
-    foreach (Character c in gs.Party.Members.OfType<Character>())
+    foreach (IBeing c in gs.Party.ActiveMembers()) 
+    {
       if (!c.Buffs.Any(b => b.Buff == Buff.PhaseBlur))
         c.Buffs.Add(new TempBuff(Buff.PhaseBlur, uint.MaxValue, true));
+    }
   }
 
   public static void Mysh(Character caster, GameState gs, int cost)
   {
     caster.MP -= cost;
 
-    foreach (Character c in gs.Party.Members.OfType<Character>())
+    foreach (IBeing b in gs.Party.ActiveMembers())
     {
-      // Mystic Shield and Mystic Coat of Armour can't stack/exist together
-      c.Buffs = [.. c.Buffs.Where(b => b.Buff != Buff.MysticShield && b.Buff != Buff.MysticCoatOfArmour)];
-      c.Buffs.Add(new TempBuff(Buff.MysticShield, gs.Turn + DURATION_MEDIUM, false));
+      // Mystic Shield and Mystic Coat of Armour can't stack/exist together      
+      b.Buffs = [.. b.Buffs.Where(b => b.Buff != Buff.MysticShield && b.Buff != Buff.MysticCoatOfArmour)];
+      b.Buffs.Add(new TempBuff(Buff.MysticShield, gs.Turn + DURATION_MEDIUM, false));
     }
   }
   
