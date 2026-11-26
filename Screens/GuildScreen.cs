@@ -33,6 +33,10 @@ class GuildScreen : IScreen
   {
     _app = app;
     _app.GameState.Party.Buffs.Clear();
+    foreach (var c in _app.GameState.Party.Members.OfType<Character>())
+      c.Buffs = [.. c.Buffs.Where(b => b.Buff is not Buff.MysticCoatOfArmour && b.Buff is not Buff.MysticShield)];
+    if (_app.GameState.Party.Special is IBeing special)
+      special.Buffs = [.. special.Buffs.Where(b => b.Buff is not Buff.MysticCoatOfArmour && b.Buff is not Buff.MysticShield)];
   }
 
   Party Party => _app.GameState.Party;
