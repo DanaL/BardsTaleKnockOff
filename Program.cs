@@ -46,6 +46,7 @@ unsafe class Program
     // The largest whole-number scale whose window fills no more than
     // WindowFraction of the display, leaving some room for the title bar.
     int scale = 4;
+    int maxScale = 16;
     SDL_Rect usable;
     if (SDL_GetDisplayUsableBounds(SDL_GetPrimaryDisplay(), &usable))
     {
@@ -54,7 +55,12 @@ unsafe class Program
       int availH = usable.h - DecorationAllowance;
       int fit = (int)Math.Min(availW * WindowFraction / GameUI.ScreenW, availH * WindowFraction / GameUI.ScreenH);
       scale = Math.Max(fit, 1);
+      maxScale = Math.Max(Math.Min(availW / GameUI.ScreenW, availH / GameUI.ScreenH), 1);
     }
+
+    // A size chosen with Ctrl+ / Ctrl- on this computer overrides the guess.
+    if (LoadSavedScale() is int saved)
+      scale = Math.Clamp(saved, 1, maxScale);
 
     // High pixel density gives us the full Retina resolution on macOS, where
     // window sizes are in points and each point is 2x2 pixels.
@@ -123,7 +129,10 @@ unsafe class Program
             app.Screens.Clear();
             break;
           case SDL_EventType.SDL_EVENT_KEY_DOWN:
-            app.Screens.Top?.OnKey(e.key);
+            if (ZoomStep(e.key) is int step and not 0)
+              scale = ChangeScale(window, scale, step, density, maxScale);
+            else
+              app.Screens.Top?.OnKey(e.key);
             break;
           case SDL_EventType.SDL_EVENT_TEXT_INPUT:
             app.Screens.Top?.OnText(Marshal.PtrToStringUTF8((nint)e.text.text) ?? "");
@@ -150,6 +159,70 @@ unsafe class Program
     SDL_Quit();
     
     return 0;
+  }
+
+  // Ctrl and + (or =, so Shift isn't needed) grows the window; Ctrl and -
+  // shrinks it. Returns +1, -1, or 0 for any other key.
+  static int ZoomStep(SDL_KeyboardEvent key)
+  {
+    if ((key.mod & SDL_Keymod.SDL_KMOD_CTRL) == 0)
+      return 0;
+
+    return key.key switch
+    {
+      SDL_Keycode.SDLK_EQUALS or SDL_Keycode.SDLK_PLUS or SDL_Keycode.SDLK_KP_PLUS => 1,
+      SDL_Keycode.SDLK_MINUS or SDL_Keycode.SDLK_KP_MINUS => -1,
+      _ => 0
+    };
+  }
+
+  // Resizes the window to the next crisp scale in the given direction, if
+  // there is one that fits the display, and remembers it for next time. The
+  // renderer's logical presentation rescales the game to the new size.
+  static int ChangeScale(SDL_Window* window, int scale, int step, float density, int maxScale)
+  {
+    for (int s = scale + step; s >= 1 && s <= maxScale; s += step)
+    {
+      if (CrispScale(s, density) != s)
+        continue;
+
+      SDL_RestoreWindow(window);  // a maximized window ignores SetWindowSize
+      SDL_SetWindowSize(window, GameUI.ScreenW * s, GameUI.ScreenH * s);
+      SDL_SyncWindow(window);
+      SaveScale(s);
+      return s;
+    }
+
+    return scale;
+  }
+
+  static string ScaleFile => Path.Combine(
+    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+    Util.GameFolder, "options.txt");
+
+  static int? LoadSavedScale()
+  {
+    try
+    {
+      return int.TryParse(File.ReadAllText(ScaleFile).Trim(), out int s) ? s : null;
+    }
+    catch (Exception)
+    {
+      return null;
+    }
+  }
+
+  static void SaveScale(int scale)
+  {
+    try
+    {
+      Directory.CreateDirectory(Path.GetDirectoryName(ScaleFile)!);
+      File.WriteAllText(ScaleFile, scale.ToString());
+    }
+    catch (Exception)
+    {
+      // Not worth stopping the game over; the size just won't be remembered.
+    }
   }
 
   // The largest scale up to maxScale whose size in real pixels (scale *

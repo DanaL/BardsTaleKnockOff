@@ -70,7 +70,7 @@ record MoatLeverFact(int X, int Y, int Level, int StairsX, int StairsY) : Fact($
 
 static class Util
 {
-  const string GameFolder = "DanasBardsTale";
+  public const string GameFolder = "DanasBardsTale";
   public static double ToDouble(string s) => double.Parse(s, System.Globalization.CultureInfo.InvariantCulture);
 
   public static readonly Dir[] Cardinals = [ Dir.North, Dir.South, Dir.East, Dir.West];
