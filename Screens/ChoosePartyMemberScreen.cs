@@ -33,8 +33,8 @@ class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt, bool
       return;
     }
 
-    int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
-    if (slot != ignore && slot >= 0 && slot < app.GameState.Party.Count)
+    int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1 + 1;
+    if (slot != ignore && slot >= 1 && slot <= Party.MAX_PARTY_SIZE)
     {
       app.Screens.Pop();
       src.CharacterChosen((PartySlot) slot);

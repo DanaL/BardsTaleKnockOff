@@ -52,7 +52,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
   readonly Battle _battle;
   readonly App _app;
   readonly List<MonsterGroup> _foes;
-  int _slot = 0;
+  PartySlot _slot = PartySlot.Slot1;
   int _state;
   HashSet<SDL_Scancode> _availableActions = [];
 
@@ -60,7 +60,6 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
   BattleAction _pendingAction = BattleAction.Defend;
   SpellInfo? _pendingSpell = null;
   int _chosenInvIdx = -1;
-  Item? _itemToUse = null;
   string _abortBattleMessage = "";
   string _image;
   string _caption;
@@ -85,7 +84,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
   {
     _app.GameState.Messages.Clear();
     _choices.Clear();    
-    _slot = 0;
+    _slot = PartySlot.Slot1;
     _state = PICK_ACTION;
   }
 
@@ -105,7 +104,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
             _choices.Add(new(_slot, BattleAction.MeleeAttack, 0, PartySlot.None, null, -1));
             next = true;
           }
-          else if (_app.GameState.Party.Members[_slot] is Character mc)
+          else if (_app.GameState.Party.Slot(_slot) is Character mc)
           {
             _app.Screens.Push(new ChooseMonsterGroupScreen(_app, mc, 10, _battle.Foes, this) { Caption = _caption, Image = _image });
             _pendingAction = BattleAction.MeleeAttack;
@@ -120,7 +119,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
           _choices.Add(new(_slot, BattleAction.HideInShadows, 0, PartySlot.None, null, -1));
           break;
         case CAST_SPELL_KEY:
-          if (_app.GameState.Party.Members[_slot] is Character c) 
+          if (_app.GameState.Party.Slot(_slot) is Character c) 
           {
             _pendingAction = BattleAction.CastSpell;
             _app.Screens.Push(new ChooseSpellScreen(_app, c, SpellContext.Combat, this) { Caption = _caption, Image = _image });
@@ -128,7 +127,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
           _availableActions = [];
           break;
         case USE_ITEM_KEY:
-          if (_app.GameState.Party.Members[_slot] is Character uc) 
+          if (_app.GameState.Party.Slot(_slot) is Character uc) 
           {
             _pendingAction = BattleAction.UseItem;
             InventorySelectionOptions iopts = new(_app, uc, "Use which?", false, "Use", InventoryLabel.None, true);
@@ -140,7 +139,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
           SpellChosen(Spells.Smite);
           break;
         case FIRE_BOW_KEY:
-          if (_app.GameState.Party.Members[_slot] is Character c2)
+          if (_app.GameState.Party.Slot(_slot) is Character c2)
           {
             int ammo = -1;
             do
@@ -161,7 +160,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
       {
         ++_slot;
         _availableActions = [];
-        if (_slot >= _app.GameState.Party.Alive)
+        if ((int)_slot > _app.GameState.Party.Alive)
           _state = CONFIRM;
       }
     }
@@ -457,7 +456,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
 
     foreach (var choice in _choices)
     {
-      if (_app.GameState.Party.Members[choice.PartySlot] is not Character c)
+      if (_app.GameState.Party.Slot(choice.PartySlot) is not Character c)
         continue;
 
       string monster;
@@ -532,7 +531,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
   {
     List<string> lines = [];
 
-    if (_app.GameState.Party.Members[_slot] is Character c)
+    if (_app.GameState.Party.Slot(_slot) is Character c)
     {
       string n = c.Name;
       if (c.Buffs.Any(b => b.Buff == Buff.Hiding))
@@ -540,7 +539,8 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
       lines.AddRange($"{n} has these actions available:", "", "", "", "", "");
 
       bool foesInMelee = _foes[0].Distance == 10;
-      if (foesInMelee && (_slot < 3 || c.Buffs.Any(b => b.Buff == Buff.Hiding))) 
+      bool charInMelee = _slot is PartySlot.Slot1 or PartySlot.Slot2 or PartySlot.Slot3;
+      if (foesInMelee && (charInMelee || c.Buffs.Any(b => b.Buff == Buff.Hiding))) 
       {
         _availableActions.Add(ATTACK_KEY);
         lines.Add("A) Attack foes");
@@ -587,9 +587,8 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
     ++_slot;
     _availableActions = [];
     _pendingSpell = null;
-    _itemToUse = null;
     _chosenInvIdx = -1;
-    if (_slot >= _app.GameState.Party.Alive)
+    if ((int)_slot > _app.GameState.Party.Alive)
       _state = CONFIRM;
     else
       _state = PICK_ACTION;
@@ -605,7 +604,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
         _app.Screens.Push(new ChoosePartyMemberScreen(_app, this, $"Cast {spell.Code} on whom", true) { Caption = _caption, Image = _image });
         break;
       case SpellTarget.Monsters:
-        if (_app.GameState.Party.Members[_slot] is Character c)
+        if (_app.GameState.Party.Slot(_slot) is Character c)
         {
           if (_battle.Foes.Count == 1 && _battle.Foes[0].Distance <= spell.Range)
           {
@@ -645,7 +644,6 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
     _state = PICK_ACTION;
     _pendingSpell = null;
     _chosenInvIdx = -1;
-    _itemToUse = null;
   }
 
   void SetupBowShot(Character c, int invIdx)
@@ -675,12 +673,11 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
 
   public void ItemSelected(InvSlot slot, Item item, int invIdx)
   {
-    if (_app.GameState.Party.Members[_slot] is not Character c)
+    if (_app.GameState.Party.Slot(_slot) is not Character c)
       return;
 
     _chosenInvIdx = invIdx;
-    _itemToUse = item;
-
+    
     if (item.Type == ItemType.Ammunition)
     {
       SetupBowShot(c, invIdx);           

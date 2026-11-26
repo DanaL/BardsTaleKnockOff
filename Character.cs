@@ -446,7 +446,7 @@ class Party
     else if (slot == PartySlot.None)
       return null;
 
-    int slotNum = (int)slot;
+    int slotNum = (int)slot - 1;
 
     return Members[slotNum];
   }

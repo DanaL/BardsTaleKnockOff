@@ -14,116 +14,9 @@ namespace BardsTaleKnockOff;
 // Use Item not implemented yet...
 enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell, UseItem, ShootBow, MonstersAdvance }
 
-record struct BattleChoice(int PartySlot, BattleAction Action,  int Group, PartySlot TargetPartySlot, SpellInfo? Spell, int InvIdx);
+record struct BattleChoice(PartySlot PartySlot, BattleAction Action,  int Group, PartySlot TargetPartySlot, SpellInfo? Spell, int InvIdx);
 
 enum RoundResult { Continue, Victory, TPK }
-
-// Bonuses an attacker gets from its buffs. Damage includes dice rolls (Vorpal
-// Plating, Mage Gauntlets), so get a fresh AttackMods for each swing.
-record struct AttackMods(int ToHit, int Damage);
-
-static class CombatMods
-{
-  // Smite isn't here because its damage scales with a character's level; it's
-  // handled in CharacterMeleeAttack.
-  public static AttackMods MeleeMods(this IBeing attacker, Rng rng)
-  {
-    int hit = 0, dmg = 0;
-    foreach (var b in attacker.Buffs)
-    {
-      switch (b.Buff)
-      {
-        case Buff.Hiding:
-          hit += 3;
-          break;
-        case Buff.BattleSkill:
-          hit += 4;
-          dmg += 4;
-          break;
-        case Buff.OgreStrength:
-          hit += 7;
-          dmg += 7;
-          break;
-        case Buff.VorpalPlating:
-          dmg += rng.Next(2, 9);
-          break;
-        case Buff.MageGauntlets:
-          dmg += rng.Next(4, 17);
-          break;
-      }
-    }
-
-    return new(hit, dmg);
-  }
-
-  public static AttackMods RangedMods(this IBeing attacker)
-  {
-    int hit = 0, dmg = 0;
-    foreach (var b in attacker.Buffs)
-    {
-      switch (b.Buff)
-      {
-        case Buff.Hiding:
-          hit += 3;
-          break;
-        case Buff.BattleSkill:
-          hit += 4;
-          dmg += 4;
-          break;
-      }
-    }
-
-    return new(hit, dmg);
-  }
-
-  // Added to the roll an attacker needs to hit this target: positive makes the
-  // target harder to hit, negative easier.
-  public static int DefenseMods(this IBeing target)
-  {
-    int mod = 0;
-    foreach (var b in target.Buffs)
-    {
-      switch (b.Buff)
-      {
-        case Buff.Defending:
-          mod += 5;  // roughly Disadvantage, or the Dodge action, in 5e
-          break;
-        case Buff.Invisibility:
-          mod += 5;
-          break;
-        case Buff.PhaseBlur:
-          mod += 2;
-          break;
-        case Buff.FreezeFoe:
-          mod -= 2;
-          break;
-      }
-    }
-
-    if (target.Condition == "OLD")
-      mod -= 5;
-
-    return mod;
-  }
-
-  // Separate from DefenseMods because for the party I display the current
-  // AC live
-  public static int ACMods(this IBeing b)
-  {
-    int mods = 0;
-    foreach (var buff in b.Buffs)
-    {
-      if (buff.Buff == Buff.AirArmour)
-        mods -= 2;
-      else if (buff.Buff == Buff.SorcShield)
-        mods -= 1;
-      else if (buff.Buff == Buff.MysticShield || buff.Buff == Buff.MysticCoatOfArmour)
-        mods -= 2;
-    }
-
-    return mods;
-  }
-}
 
 class MonsterGroup
 {
@@ -172,7 +65,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     }
     else
     {
-      DoPartyChoices(choices);
+      QueuePartyChoices(choices);
     }
 
     int advInitiative = 1000; // groups advancing always happens after everyone else has acted
@@ -181,20 +74,20 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
       if (Foes[n].Distance == 10 || Foes[n].Monsters[0].HasFlag(MonsterFlag.Ranged))      
       {
         int roll = rng.Next(1, 24);
-        _actions.Enqueue(new(n, BattleAction.MonsterAction, n, PartySlot.None, null, -1), -roll);        
+        _actions.Enqueue(new(PartySlot.None, BattleAction.MonsterAction, n, PartySlot.None, null, -1), -roll);        
       }
       else
       {
-        _actions.Enqueue(new(n, BattleAction.MonstersAdvance, n, PartySlot.None, null, -1), advInitiative++);
+        _actions.Enqueue(new(PartySlot.None, BattleAction.MonstersAdvance, n, PartySlot.None, null, -1), advInitiative++);
       }      
     }
   }
 
-  public void DoPartyChoices(IEnumerable<BattleChoice> choices)
+  public void QueuePartyChoices(IEnumerable<BattleChoice> choices)
   {
     foreach (var choice in choices)
     {
-      if (gs.Party.Members[choice.PartySlot] is not Character c || c.Incapacitated)
+      if (gs.Party.Slot(choice.PartySlot) is not Character c || c.Incapacitated)
         continue;
 
       switch (choice.Action)
@@ -211,6 +104,11 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
           _actions.Enqueue(choice, Initiative(c));
           break;
       }
+    }
+
+    if (gs.Party.Special is Monster m)
+    {
+      
     }
   }
 
@@ -244,11 +142,9 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     {
       AdvanceGroup(choice.Group);
     }
-    else
+    //else if (choice.PartySlot is )
+    else if (gs.Party.Slot(choice.PartySlot) is Character c && !c.Incapacitated)
     {
-      if (gs.Party.Members[choice.PartySlot] is not Character c || c.Incapacitated)
-        return;
-
       switch (choice.Action)
       {
         case BattleAction.MeleeAttack:
@@ -428,10 +324,11 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
       return;  
     }
 
-    // Have to take into account the Special slot eventually
     List<(IBeing Being, bool Melee)> targets = [];    
-    if (gs.Party.Special is IBeing special && !special.Incapacitated)
-      targets.Add((special, true));    
+    if (gs.Party.Special is IBeing special && !special.Incapacitated) 
+    {
+      targets.Add((special, true));
+    }
     for (int j = 0; j < gs.Party.Count; j++)
     {
       if (gs.Party.Members[j] is Character c && !c.Incapacitated && !c.Buffs.Any(b => b.Buff == Buff.Hiding))
@@ -844,5 +741,113 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     }
 
     return -roll;
+  }
+}
+
+
+// Bonuses an attacker gets from its buffs. Damage includes dice rolls (Vorpal
+// Plating, Mage Gauntlets), so get a fresh AttackMods for each swing.
+record struct AttackMods(int ToHit, int Damage);
+
+static class CombatMods
+{
+  // Smite isn't here because its damage scales with a character's level; it's
+  // handled in CharacterMeleeAttack.
+  public static AttackMods MeleeMods(this IBeing attacker, Rng rng)
+  {
+    int hit = 0, dmg = 0;
+    foreach (var b in attacker.Buffs)
+    {
+      switch (b.Buff)
+      {
+        case Buff.Hiding:
+          hit += 3;
+          break;
+        case Buff.BattleSkill:
+          hit += 4;
+          dmg += 4;
+          break;
+        case Buff.OgreStrength:
+          hit += 7;
+          dmg += 7;
+          break;
+        case Buff.VorpalPlating:
+          dmg += rng.Next(2, 9);
+          break;
+        case Buff.MageGauntlets:
+          dmg += rng.Next(4, 17);
+          break;
+      }
+    }
+
+    return new(hit, dmg);
+  }
+
+  public static AttackMods RangedMods(this IBeing attacker)
+  {
+    int hit = 0, dmg = 0;
+    foreach (var b in attacker.Buffs)
+    {
+      switch (b.Buff)
+      {
+        case Buff.Hiding:
+          hit += 3;
+          break;
+        case Buff.BattleSkill:
+          hit += 4;
+          dmg += 4;
+          break;
+      }
+    }
+
+    return new(hit, dmg);
+  }
+
+  // Added to the roll an attacker needs to hit this target: positive makes the
+  // target harder to hit, negative easier.
+  public static int DefenseMods(this IBeing target)
+  {
+    int mod = 0;
+    foreach (var b in target.Buffs)
+    {
+      switch (b.Buff)
+      {
+        case Buff.Defending:
+          mod += 5;  // roughly Disadvantage, or the Dodge action, in 5e
+          break;
+        case Buff.Invisibility:
+          mod += 5;
+          break;
+        case Buff.PhaseBlur:
+          mod += 2;
+          break;
+        case Buff.FreezeFoe:
+          mod -= 2;
+          break;
+      }
+    }
+
+    if (target.Condition == "OLD")
+      mod -= 5;
+
+    return mod;
+  }
+
+  // Separate from DefenseMods because for the party I display the current
+  // AC live
+  public static int ACMods(this IBeing b)
+  {
+    int mods = 0;
+    foreach (var buff in b.Buffs)
+    {
+      if (buff.Buff == Buff.AirArmour)
+        mods -= 2;
+      else if (buff.Buff == Buff.SorcShield)
+        mods -= 1;
+      else if (buff.Buff == Buff.MysticShield || buff.Buff == Buff.MysticCoatOfArmour)
+        mods -= 2;
+    }
+
+    return mods;
   }
 }

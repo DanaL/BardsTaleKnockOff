@@ -651,7 +651,6 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
 
   public void CharacterChosen(PartySlot partySlot)
   {
-    int slotNum = (int)partySlot;
     if (_caster is not null && _spellToCast is not null)
     {
       // If _caster isn't null, we are picking a target of a spell
@@ -661,7 +660,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
       _spellToCast = null;
       ResolveTurn();
     }
-    else if (app.GameState.Party.Members[slotNum] is Character c)
+    else if (app.GameState.Party.Slot(partySlot) is Character c)
     {
       // We are choosing who to cast a spell here
       if (c.MaxMP == 0)
