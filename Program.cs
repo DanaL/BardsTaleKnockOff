@@ -22,8 +22,10 @@ namespace BardsTaleKnockOff;
 unsafe class Program
 {
   // The screen is GameUI.ScreenW x ScreenH logical pixels, scaled up to the
-  // window by a whole-number factor, which keeps the pixel art crisp.
-  const int WindowScale = 4;
+  // window by a whole-number factor, which keeps the pixel art crisp. The
+  // starting window takes up about this fraction of the display, so it grows
+  // on high-resolution monitors.
+  const double WindowFraction = 0.75;
 
   static int Main()
   {
@@ -41,21 +43,21 @@ unsafe class Program
 
     //LevelGenerator.GenLevel();
     
-    // If the window won't fit on the display, the OS shrinks it, and the
-    // integer scaling then leaves black borders. So pick the largest scale
-    // that fits, leaving some room for the title bar.
-    int scale = WindowScale;
+    // The largest whole-number scale whose window fills no more than
+    // WindowFraction of the display, leaving some room for the title bar.
+    int scale = 4;
     SDL_Rect usable;
     if (SDL_GetDisplayUsableBounds(SDL_GetPrimaryDisplay(), &usable))
     {
       const int DecorationAllowance = 64;
-      int fit = Math.Min(usable.w / GameUI.ScreenW, (usable.h - DecorationAllowance) / GameUI.ScreenH);
-      scale = Math.Clamp(fit, 1, WindowScale);
+      int availW = usable.w;
+      int availH = usable.h - DecorationAllowance;
+      int fit = (int)Math.Min(availW * WindowFraction / GameUI.ScreenW, availH * WindowFraction / GameUI.ScreenH);
+      scale = Math.Max(fit, 1);
     }
 
-    // High pixel density gives us the full Retina resolution on macOS. Window
-    // sizes are in points there, so each point is 2x2 pixels, and the scale
-    // in pixels stays even, which the half-size text needs to look sharp.
+    // High pixel density gives us the full Retina resolution on macOS, where
+    // window sizes are in points and each point is 2x2 pixels.
     SDL_Window* window;
     SDL_Renderer* renderer;
     if (!SDL_CreateWindowAndRenderer("Bard's Tale Knock-Off", GameUI.ScreenW * scale, GameUI.ScreenH * scale,
@@ -65,6 +67,29 @@ unsafe class Program
       SDL_Quit();
       return 1;
     }
+    // Half-size text and art are only sharp when the scale in real pixels is
+    // even, and the pixel density is only known once the window exists.
+    float density = SDL_GetWindowPixelDensity(window);
+    scale = CrispScale(scale, density);
+
+    // Some window managers (e.g. on Pop!_OS) cap the size of a new window but
+    // allow it to be resized larger afterwards, so ask again now. If it still
+    // comes out smaller, use the largest crisp scale that fits the window we
+    // got, so there are no black borders.
+    SDL_SetWindowSize(window, GameUI.ScreenW * scale, GameUI.ScreenH * scale);
+    SDL_SyncWindow(window);
+    int actualW, actualH;
+    if (SDL_GetWindowSize(window, &actualW, &actualH))
+    {
+      int fitted = Math.Min(actualW / GameUI.ScreenW, actualH / GameUI.ScreenH);
+      if (fitted < scale)
+      {
+        scale = CrispScale(fitted, density);
+        SDL_SetWindowSize(window, GameUI.ScreenW * scale, GameUI.ScreenH * scale);
+        SDL_SyncWindow(window);
+      }
+    }
+
     SDL_SetRenderLogicalPresentation(renderer, GameUI.ScreenW, GameUI.ScreenH,
       SDL_RendererLogicalPresentation.SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
 
@@ -125,5 +150,19 @@ unsafe class Program
     SDL_Quit();
     
     return 0;
+  }
+
+  // The largest scale up to maxScale whose size in real pixels (scale *
+  // density) is even, so each half-size source pixel covers whole pixels.
+  // Falls back to 1 if there is none, e.g. a tiny display.
+  static int CrispScale(int maxScale, float density)
+  {
+    for (int s = maxScale; s >= 1; s--)
+    {
+      float pixels = s * density;
+      if (pixels == MathF.Round(pixels) && (int)pixels % 2 == 0)
+        return s;
+    }
+    return 1;
   }
 }

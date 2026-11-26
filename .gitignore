@@ -4,3 +4,5 @@ obj/
 .vs/
 *.user
 Thumbs.db
+*.sln
+.vscode
