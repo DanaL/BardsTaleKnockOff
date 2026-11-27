@@ -28,7 +28,7 @@ class Monster(string name, int ac, int hp, int thac0, int dmgLow, int dmgHigh, i
   public string Name { get; } = name;
   public string FullName { get; } = name.DefArticle();  
   public int HP { get; set; } = hp;
-  public int MaxHP { get; init; } = hp;
+  public int MaxHP { get; set; } = hp;
   public int THAC0 { get; } = thac0;
   public int DmgLow { get; } = dmgLow;
   public int DmgHigh { get; } = dmgHigh;
