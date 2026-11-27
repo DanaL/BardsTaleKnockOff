@@ -294,7 +294,7 @@ class SpellResolver(List<MonsterGroup> foes, Battle battle)
   {
     caster.MP -= cost;
 
-    foreach (IBeing c in gs.Party.ActiveMembers()) 
+    foreach (IBeing c in gs.Party.ActiveMembers())
     {
       if (!c.Buffs.Any(b => b.Buff == Buff.PhaseBlur))
         c.Buffs.Add(new TempBuff(Buff.PhaseBlur, uint.MaxValue, true));

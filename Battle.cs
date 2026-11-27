@@ -12,9 +12,10 @@
 namespace BardsTaleKnockOff;
 
 // Use Item not implemented yet...
-enum BattleAction { MeleeAttack, Defend, MonsterAction, HideInShadows, CastSpell, UseItem, ShootBow, MonstersAdvance }
+enum BattleAction { CastSpell, Defend, HideInShadows, MonstersAdvance,  MeleeAttack, MonsterAction, Pass, ShootBow,
+                    SpecialMonsterAttack, SpecialMonsterAbility, UseItem }
 
-record struct BattleChoice(PartySlot PartySlot, BattleAction Action,  int Group, PartySlot TargetPartySlot, SpellInfo? Spell, int InvIdx);
+record struct BattleChoice(PartySlot PartySlot, BattleAction Action, int Group, PartySlot TargetPartySlot, SpellInfo? Spell, int InvIdx);
 
 enum RoundResult { Continue, Victory, TPK }
 
@@ -83,7 +84,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     }
   }
 
-  public void QueuePartyChoices(IEnumerable<BattleChoice> choices)
+  void QueuePartyChoices(IEnumerable<BattleChoice> choices)
   {
     foreach (var choice in choices)
     {
@@ -108,7 +109,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
     if (gs.Party.Special is Monster m)
     {
-      
+      _actions.Enqueue(SpecialMonsterAction(m), rng.Next(1, 21));
     }
   }
 
@@ -137,12 +138,23 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     {
       _actingGroup = choice.Group;
       _actingMonster = 0;
-    }
+    }    
     else if (choice.Action == BattleAction.MonstersAdvance)
     {
       AdvanceGroup(choice.Group);
     }
-    //else if (choice.PartySlot is )
+    else if (gs.Party.Slot(choice.PartySlot) is Monster special)
+    {
+      switch (choice.Action)
+      {
+        case BattleAction.SpecialMonsterAttack:
+          SpecialMonsterAttack(special, choice.Group);
+          break;
+        default:
+          Messages.Enqueue($"{special.FullName.Capitalize()} passes.");
+          break;
+      }
+    }
     else if (gs.Party.Slot(choice.PartySlot) is Character c && !c.Incapacitated)
     {
       switch (choice.Action)
@@ -219,6 +231,36 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     }
   }
 
+  BattleChoice SpecialMonsterAction(Monster m)
+  {
+    List<BattleChoice> opts = [];
+
+    for (int j = 0; j < Foes.Count; j++)
+    {
+      if (Foes[j].Distance == 10)
+        opts.Add(new BattleChoice(PartySlot.Special, BattleAction.SpecialMonsterAttack, j, PartySlot.None, null, -1));
+    }
+
+    if (opts.Count > 0)
+      return opts[rng.Next(opts.Count)];
+
+    return new(PartySlot.Special, BattleAction.Pass, -1, PartySlot.None, null, -1);
+  }
+
+  void SpecialMonsterAttack(Monster m, int groupId)
+  {
+    if (Foes[groupId].Count == 0)
+      return;
+
+    IBeing t = Foes[groupId].Monsters[rng.Next(Foes[groupId].Count)];
+    if (t is Monster target)
+    {
+      MonsterMeleeAttack(m, target);
+      if (target.Incapacitated)
+        Foes[groupId].Monsters.Remove(target);  
+    }
+  }
+
   void CharacterUseItem(Character c, int invIdx, GameState gs)
   {
     if (c.Inventory[invIdx] is not InvSlot invSlot)
@@ -261,6 +303,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
     for (int j = Foes.Count - 1; j >= 0; j--)
     {
+      Foes[j].Monsters = [.. Foes[j].Monsters.Where(m => !m.Incapacitated)];
       if (Foes[j].Count == 0)
         Foes.RemoveAt(j);
     }
