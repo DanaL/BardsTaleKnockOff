@@ -706,26 +706,15 @@ sealed class EncounterScreen : IScreen
   int _state = PRELUDE;
   bool _advance = false;
 
-  readonly List<MonsterGroup> _groups = [];
+  readonly List<MonsterGroup> _groups;
   readonly string _blurb;
 
-  public EncounterScreen(App app, List<MonsterGroup>? monsters = null)
+  public EncounterScreen(App app, List<MonsterGroup> monsters)
   {
     _app = app;
     _app.GameState.Messages.Clear();
 
-    if (monsters is null)
-      PickMonsters();
-    else
-      _groups = monsters;
-    
-    // _groups = [ new MonsterGroup() { Monsters = [ 
-    //     MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng), MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng),
-    //     MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng), MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng),
-    //     MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng), MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng),
-    //     MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng), MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng),
-    //     MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng), MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng),        
-    //     MonsterCatalog.Get(Monsters.AcidicSlime, _app.Rng) ], Distance = 10 }];
+    _groups = monsters;
 
     List<string> summaries = [.. _groups.Select(g => $"{g.Count} {(g.Count == 1 ? g.Name : g.Name.Pluralize())} ({g.Distance}')")];
     string desc = summaries.Count switch
@@ -743,59 +732,6 @@ sealed class EncounterScreen : IScreen
       2 => $"You curse as monsters charge you. You face {desc}!",
       _ => $"The denizens of this foul place assault you! You face {desc}!"
     };
-  }
-
-  void PickMonsters()
-  {
-    var gs = _app.GameState;
-    List<(Monsters, int)> monsterOptions = [.. Util.MonsterTable[gs.CurrRegion][gs.CurrLevel]];
-    if (gs.CurrRegion == "town" && !gs.DayTime)
-      monsterOptions.AddRange((Monsters.Magician0, 4), (Monsters.Spider, 4));
-    else if (_app.GameState.CurrTile.Feature == Feature.House)
-      monsterOptions.Add((Monsters.Spider, 4));
-
-    (Monsters monsterId, int count) = monsterOptions[_app.Rng.Next(monsterOptions.Count)];
-    _groups.Add(GenGroup(monsterId, count, 10, _app.Rng));
-    if (gs.CurrRegion == "town" && _app.Rng.Next(4) == 0) 
-    {
-      (Monsters monsterId2, int count2) = monsterOptions[_app.Rng.Next(monsterOptions.Count)];
-      _groups.Add(GenGroup(monsterId2, count2, 10, _app.Rng));
-    }
-    else if (gs.CurrRegion != "town")
-    {
-      int extraGroups = _app.Rng.Next(10) switch
-      {
-        < 2 => 0,
-        >= 2 and <= 6 => 1,
-        7 or 8 => 2,
-        _ => 3
-      };
-
-      int distance = 10;
-      for (int j = 0; j < extraGroups; j++)
-      {
-        (Monsters mId, int cnt) = monsterOptions[_app.Rng.Next(monsterOptions.Count)];
-        var group = GenGroup(mId, cnt, distance, _app.Rng);
-        if (group.Monsters[0].HasFlag(MonsterFlag.Ranged))
-        {
-          int extraD = _app.Rng.Next(3) == 0 ? 20 : 10;
-          distance += extraD;
-          group.Distance += extraD;
-        }
-        _groups.Add(group);
-        distance += 10;
-      }      
-    }    
-  }
-
-  static MonsterGroup GenGroup(Monsters monsterId, int num, int distance, Rng rng)
-  {
-    MonsterGroup monsters = new() { Distance = distance };
-    int count = rng.Next(num) + 1;
-    for (int j = 0; j < count; j++)
-      monsters.Monsters.Add(MonsterCatalog.Get(monsterId, rng));
-
-    return monsters;
   }
 
   public void OnKey(SDL_KeyboardEvent key)

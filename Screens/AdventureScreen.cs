@@ -154,7 +154,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
       case Feature.House:
         app.Screens.Push(new HouseScreen(app));
         if (app.Rng.Next(2) == 0)
-          app.Screens.Push(new EncounterScreen(app));
+          SetUpEncounter();
         break;
       case Feature.Tavern:
         app.Screens.Push(new TavernScreen(app));
@@ -205,7 +205,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
         }
         else if (IsEncounter())
         {
-          app.Screens.Push(new EncounterScreen(app));
+          SetUpEncounter();
         }
         break;
       case Feature.Special4:
@@ -226,12 +226,12 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
       case Feature.StairsDown:
         app.Screens.Push(new StairsScreen(app, true));
         if (IsEncounter())
-          app.Screens.Push(new EncounterScreen(app));
+          SetUpEncounter();
         break;
       case Feature.StairsUp:
         app.Screens.Push(new StairsScreen(app, false));
         if (IsEncounter())
-          app.Screens.Push(new EncounterScreen(app));
+          SetUpEncounter();
         break;
       case Feature.Statue:
         string statueKey = $"Statue#{GS.X},{GS.Y},{GS.CurrLevel}";
@@ -240,7 +240,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
           app.Screens.Push(new StatueScreen(app, statueFact));
         }
         if (IsEncounter())
-          app.Screens.Push(new EncounterScreen(app));
+          SetUpEncounter();
         break;
       case Feature.SpecialEncounter:
         if (!GS.FactDb.ContainsKey($"BattleWon#{GS.X},{GS.Y},{GS.CurrLevel}"))
@@ -259,7 +259,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
           (GS.X, GS.Y) = dest;
         }
         if (IsEncounter())
-          app.Screens.Push(new EncounterScreen(app));
+          SetUpEncounter();
         break;
       case Feature.Trap_Blades:
       case Feature.Trap_Dart:
@@ -283,13 +283,13 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
       case Feature.Lever:
         app.Screens.Push(new ConfirmScreen(app, "You find a lever! Pull it?", PullGateLever) { Image = "lever.png" });
         if (IsEncounter())
-          app.Screens.Push(new EncounterScreen(app));
+          SetUpEncounter();
         break;
       case Feature.MoatLever:
         if (GS.FactDb.TryGetValue($"MoatLever#{GS.X},{GS.Y},{GS.CurrLevel}", out var val) && val is MoatLeverFact moatLeverFact)
           app.Screens.Push(new ConfirmScreen(app, "You find a lever! Pull it?", () => { PullMoatLever(moatLeverFact); }) { Image = "lever.png" });
         if (IsEncounter())
-          app.Screens.Push(new EncounterScreen(app));
+          SetUpEncounter();
         break;
       case Feature.StairGuardian:
         if (!GS.FactDb.ContainsKey($"BattleWon#{GS.X},{GS.Y},{GS.CurrLevel}"))
@@ -310,7 +310,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
         break;
       default:
         if (IsEncounter())
-          app.Screens.Push(new EncounterScreen(app));
+          SetUpEncounter();
         break;
     }
 
@@ -324,6 +324,17 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
       foreach (string s in msg.Split('\n'))
         GS.Say(s);
     }    
+  }
+
+  void SetUpEncounter()
+  {
+    var monsters = Encounters.Generate(GS, app.Rng);
+    IScreen scr;
+    if (monsters.Count == 1 && monsters[0].Count == 1 && app.Rng.Next(3) == 0)
+      scr = new WanderingMonsterScreen(app, monsters[0].Monsters[0]);
+    else
+      scr = new EncounterScreen(app, monsters);
+    app.Screens.Push(scr);
   }
 
   void FallIntoWater()
@@ -551,7 +562,7 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
       }
 
       if (IsEncounter())
-        app.Screens.Push(new EncounterScreen(app));
+        SetUpEncounter();
     }
 
     _idleTime = 0;
