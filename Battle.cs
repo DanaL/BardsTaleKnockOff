@@ -12,10 +12,12 @@
 namespace BardsTaleKnockOff;
 
 // Use Item not implemented yet...
-enum BattleAction { CastSpell, Defend, HideInShadows, MonstersAdvance,  MeleeAttack, MonsterAction, Pass, ShootBow,
-                    SpecialMonsterAttack, SpecialMonsterAbility, UseItem }
+enum BattleAction { CastSpell, Defend, HideInShadows, HirelingAttack, HirelingSpell, MonstersAdvance,  MeleeAttack, MonsterAction, 
+                    Pass, ShootBow, SpecialMonsterAbility, UseItem }
+enum MonsterSpell { ArcFire0, FreezeFoes, Invisibility, WitherStrike, Zap }
 
-record struct BattleChoice(PartySlot PartySlot, BattleAction Action, int Group, PartySlot TargetPartySlot, SpellInfo? Spell, int InvIdx);
+record struct BattleChoice(PartySlot PartySlot, BattleAction Action, int Group, PartySlot TargetPartySlot, 
+                              SpellInfo? Spell, int InvIdx, MonsterSpell? HirelingSpell);
 
 enum RoundResult { Continue, Victory, TPK }
 
@@ -75,11 +77,11 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
       if (Foes[n].Distance == 10 || Foes[n].Monsters[0].HasFlag(MonsterFlag.Ranged))      
       {
         int roll = rng.Next(1, 24);
-        _actions.Enqueue(new(PartySlot.None, BattleAction.MonsterAction, n, PartySlot.None, null, -1), -roll);        
+        _actions.Enqueue(new(PartySlot.None, BattleAction.MonsterAction, n, PartySlot.None, null, -1, null), -roll);        
       }
       else
       {
-        _actions.Enqueue(new(PartySlot.None, BattleAction.MonstersAdvance, n, PartySlot.None, null, -1), advInitiative++);
+        _actions.Enqueue(new(PartySlot.None, BattleAction.MonstersAdvance, n, PartySlot.None, null, -1, null), advInitiative++);
       }      
     }
   }
@@ -109,7 +111,7 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
     if (gs.Party.Special is Monster m)
     {
-      _actions.Enqueue(SpecialMonsterAction(m), rng.Next(1, 21));
+      _actions.Enqueue(PickSpecialMonsterAction(m), rng.Next(1, 21));
     }
   }
 
@@ -143,12 +145,19 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     {
       AdvanceGroup(choice.Group);
     }
-    else if (gs.Party.Slot(choice.PartySlot) is Monster special)
+    else if (gs.Party.Slot(choice.PartySlot) is Monster special && !special.Incapacitated)
     {
       switch (choice.Action)
       {
-        case BattleAction.SpecialMonsterAttack:
-          SpecialMonsterAttack(special, choice.Group);
+        case BattleAction.HirelingAttack:
+          HirelingAttack(special, choice.Group);
+          break;
+        case BattleAction.HirelingSpell:
+          if (choice.HirelingSpell is MonsterSpell spell)
+          {
+            List<IBeing> targets = Foes.Count <= choice.Group ? [] : [.. Foes[choice.Group].Monsters];
+            BuildMonsterSpell(special, spell, targets)();            
+          }
           break;
         default:
           Messages.Enqueue($"{special.FullName.Capitalize()} passes.");
@@ -231,23 +240,27 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     }
   }
 
-  BattleChoice SpecialMonsterAction(Monster m)
+  BattleChoice PickSpecialMonsterAction(Monster m)
   {
     List<BattleChoice> opts = [];
 
     for (int j = 0; j < Foes.Count; j++)
     {
       if (Foes[j].Distance == 10)
-        opts.Add(new BattleChoice(PartySlot.Special, BattleAction.SpecialMonsterAttack, j, PartySlot.None, null, -1));
+        opts.Add(new BattleChoice(PartySlot.Special, BattleAction.HirelingAttack, j, PartySlot.None, null, -1, null));
     }
+
+    int targetGroup = rng.Next(Foes.Count);
+    foreach (MonsterSpell spell in MonsterOptions(m))
+      opts.Add(new BattleChoice(PartySlot.Special, BattleAction.HirelingSpell, targetGroup, PartySlot.None, null, -1, spell));
 
     if (opts.Count > 0)
       return opts[rng.Next(opts.Count)];
 
-    return new(PartySlot.Special, BattleAction.Pass, -1, PartySlot.None, null, -1);
+    return new(PartySlot.Special, BattleAction.Pass, -1, PartySlot.None, null, -1, null);
   }
 
-  void SpecialMonsterAttack(Monster m, int groupId)
+  void HirelingAttack(Monster m, int groupId)
   {
     if (Foes[groupId].Count == 0)
       return;
@@ -393,7 +406,8 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
       options.Add(() => MonsterMeleeAttack(m, target));
     }
     
-    options.AddRange(MonsterOptions(m, [.. targets.Select(t => t.Being)]));
+    foreach (MonsterSpell spell in MonsterOptions(m))
+      options.Add(BuildMonsterSpell(m, spell, [.. targets.Select(t => t.Being)]));
     
     if (options.Count == 0)
       return;
@@ -401,35 +415,41 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     options[rng.Next(options.Count)]();
   }
 
-  List<Action> MonsterOptions(Monster m, List<IBeing> targets)
+  List<MonsterSpell> MonsterOptions(Monster m)
   {
-    List<Action> options = [];
+    List<MonsterSpell> opts = [];
     switch (m.Script)
     {
       case MonsterScript.Conjuror0:
-        options.Add(() => MonsterCastArcFire(m, Pick(targets), 1));
-        if (rng.Next(3) >= 0)
-          options.Add(() => MonsterCaseFreezeFoes(m));
+        opts.Add(MonsterSpell.ArcFire0);
+        if (rng.Next(3) == 0)
+          opts.Add(MonsterSpell.FreezeFoes);
         break;
       case MonsterScript.Magician0:
         // In og BT1, I don't remember Magicians casting WIST very often or 
         // it being a big problem in the early game so I'll make it somewhat
         // uncommon
-        options.Add(() => MonsterCastZap(m, Pick(targets)));
-        if (rng.Next(3) == 0 && !m.Buffs.Any(b => b.Buff == Buff.Invisibility))
-          options.Add(() => MonsterCastInvisibility(m));
+        opts.Add(MonsterSpell.Zap);
+        if (!m.Buffs.Any(b => b.Buff == Buff.Invisibility))
+          opts.Add(MonsterSpell.Invisibility);
         if (rng.Next(7) == 0)
-          options.Add(() => MonsterCastWitherStrike(m, Pick(targets)));
-        break;
-      default:
-        options = [];
+          opts.Add(MonsterSpell.WitherStrike);
         break;
     }
 
-    return options;
-
-    IBeing Pick(List<IBeing> targets) => targets[rng.Next(targets.Count)];
+    return opts;
   }
+
+  IBeing MPickTarget(List<IBeing> targets) => targets[rng.Next(targets.Count)];
+  Action BuildMonsterSpell(Monster m, MonsterSpell spell, List<IBeing> targets) => spell switch
+  {
+    MonsterSpell.ArcFire0 => targets.Count > 0 ? () => MonsterCastArcFire(m, MPickTarget(targets), 1) : () => { },
+    MonsterSpell.Invisibility => () => MonsterCastInvisibility(m),
+    MonsterSpell.FreezeFoes => () => MonsterCastFreezeFoes(m, targets),
+    MonsterSpell.WitherStrike => () => MonsterCastWitherStrike(m, MPickTarget(targets)),
+    MonsterSpell.Zap => () => MonsterCastZap(m, MPickTarget(targets)),
+    _ => () => { },
+  };
 
   void MonsterCastInvisibility(Monster m)
   {
@@ -440,23 +460,23 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
     }
   }
 
-  void MonsterCaseFreezeFoes(Monster m)
+  void MonsterCastFreezeFoes(Monster m, List<IBeing> targets)
   {
-    Messages.Enqueue($"{m.Name.IndefArticle().Capitalize() } casts Freeze Foes on the party!");
+    Messages.Enqueue($"{m.FullName.Capitalize() } casts Freeze Foes!");
 
-    foreach (var c in gs.Party.ActiveMembers())
+    foreach (var victim in targets)
     {
-      if (c.Buffs.Any(b => b.Buff == Buff.FreezeFoe))
+      if (victim.Buffs.Any(b => b.Buff == Buff.FreezeFoe))
         continue;
 
-      if (c.RollSavingThrow(m.Rank, rng) == SaveResult.Success)
+      if (victim.RollSavingThrow(m.Rank, rng) == SaveResult.Success)
       {
-        Messages.Enqueue($"{c.FullName} resists!");
+        Messages.Enqueue($"{victim.FullName} resists!");
       }
       else
       {
-        Messages.Enqueue($"{c.FullName} becomes enervated!");
-        c.Buffs.Add(new TempBuff(Buff.FreezeFoe, ulong.MaxValue, true));
+        Messages.Enqueue($"{victim.FullName} becomes enervated!");
+        victim.Buffs.Add(new TempBuff(Buff.FreezeFoe, ulong.MaxValue, true));
       }
     }
   }

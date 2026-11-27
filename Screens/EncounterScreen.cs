@@ -101,7 +101,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
         case ATTACK_KEY:
           if (_battle.Foes.Count == 1 && _battle.Foes[0].Distance == 10)
           {
-            _choices.Add(new(_slot, BattleAction.MeleeAttack, 0, PartySlot.None, null, -1));
+            _choices.Add(new(_slot, BattleAction.MeleeAttack, 0, PartySlot.None, null, -1, null));
             next = true;
           }
           else if (_app.GameState.Party.Slot(_slot) is Character mc)
@@ -112,11 +112,11 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
           break;
         case DEFEND_KEY:
           next = true;
-          _choices.Add(new(_slot, BattleAction.Defend, 0, PartySlot.None, null, -1));
+          _choices.Add(new(_slot, BattleAction.Defend, 0, PartySlot.None, null, -1, null));
           break;
         case HIDE_KEY:
           next = true;
-          _choices.Add(new(_slot, BattleAction.HideInShadows, 0, PartySlot.None, null, -1));
+          _choices.Add(new(_slot, BattleAction.HideInShadows, 0, PartySlot.None, null, -1, null));
           break;
         case CAST_SPELL_KEY:
           if (_app.GameState.Party.Slot(_slot) is Character c) 
@@ -608,7 +608,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
         {
           if (_battle.Foes.Count == 1 && _battle.Foes[0].Distance <= spell.Range)
           {
-            _choices.Add(new(_slot, BattleAction.CastSpell, 0, PartySlot.None, spell, -1));
+            _choices.Add(new(_slot, BattleAction.CastSpell, 0, PartySlot.None, spell, -1, null));
             ActionChosen();
           }
           else
@@ -621,7 +621,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
         
         break;
       default:
-        _choices.Add(new(_slot, _pendingAction, -1, PartySlot.None, spell, _chosenInvIdx));
+        _choices.Add(new(_slot, _pendingAction, -1, PartySlot.None, spell, _chosenInvIdx, null));
         ActionChosen();
         break;
     }
@@ -629,13 +629,13 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
 
   public void MonsterGroupChosen(int monsterGroup)
   {
-    _choices.Add(new(_slot, _pendingAction, monsterGroup, PartySlot.None, _pendingSpell, _chosenInvIdx));
+    _choices.Add(new(_slot, _pendingAction, monsterGroup, PartySlot.None, _pendingSpell, _chosenInvIdx, null));
     ActionChosen();
   }
 
   public void CharacterChosen(PartySlot partySlot)
   {
-    _choices.Add(new(_slot, _pendingAction, -1, partySlot, _pendingSpell, _chosenInvIdx));
+    _choices.Add(new(_slot, _pendingAction, -1, partySlot, _pendingSpell, _chosenInvIdx, null));
     ActionChosen();
   }
 
@@ -650,7 +650,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
   {
     if (_battle.Foes.Count == 1)
     {
-      _choices.Add(new(_slot, BattleAction.ShootBow, 0, PartySlot.None, null, invIdx));
+      _choices.Add(new(_slot, BattleAction.ShootBow, 0, PartySlot.None, null, invIdx, null));
       ActionChosen();
       if (_app.Screens.Top is not BattleScreen)
         _app.Screens.Pop();
@@ -685,7 +685,7 @@ sealed class BattleScreen : IScreen, ICastSpellScreen, IMonsterPickScreen, IPart
     else
     {
       _app.Screens.Pop(); // Unlike Character or Spell selection screens, the Inv Select screen doesn't pop itself
-      _choices.Add(new(_slot, BattleAction.UseItem, -1, PartySlot.None, null, invIdx));
+      _choices.Add(new(_slot, BattleAction.UseItem, -1, PartySlot.None, null, invIdx, null));
       ActionChosen();
     }
   }
