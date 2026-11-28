@@ -131,7 +131,6 @@ class ShoppeScreen : IScreen, IInventorySelectionScreen
   
   int _state = MAIN;
 
-  PartySlot _shopperSlot;
   Character? _shopper = null;
 
   public ShoppeScreen(App app)
@@ -164,24 +163,27 @@ class ShoppeScreen : IScreen, IInventorySelectionScreen
 
   public void OnKey(SDL_KeyboardEvent key)
   {
+    switch (key.key)
+    {
+      case SDL_Keycode.SDLK_1:
+      case SDL_Keycode.SDLK_2:
+      case SDL_Keycode.SDLK_3:
+      case SDL_Keycode.SDLK_4:
+      case SDL_Keycode.SDLK_5:
+      case SDL_Keycode.SDLK_6:
+        var slot = (PartySlot) (key.key - SDL_Keycode.SDLK_0);
+        if (_app.GameState.Party.Slot(slot) is Character c)
+        {            
+          _shopper = c;
+          _state = MENU;
+        }          
+        return;
+    }
+
     if (_state == MAIN)
     {
       switch (key.key)
       {
-        case SDL_Keycode.SDLK_1:
-        case SDL_Keycode.SDLK_2:
-        case SDL_Keycode.SDLK_3:
-        case SDL_Keycode.SDLK_4:
-        case SDL_Keycode.SDLK_5:
-        case SDL_Keycode.SDLK_6:
-          var slot = (PartySlot) (key.key - SDL_Keycode.SDLK_0);
-          if (_app.GameState.Party.Slot(slot) is Character c)
-          {            
-            _shopper = c;
-            _shopperSlot = slot;
-            _state = MENU;
-          }          
-          break;
         case SDL_Keycode.SDLK_ESCAPE:
         case SDL_Keycode.SDLK_E:
           ExitShop();
@@ -200,7 +202,8 @@ class ShoppeScreen : IScreen, IInventorySelectionScreen
             _app.Screens.Push(new PurchaseScreen(_app, _shopper, _inventory));
           break;
         case SDL_Keycode.SDLK_P:
-          _app.GameState.Party.PoolGold(_shopperSlot);
+          if (_shopper is not null)
+            _app.GameState.Party.PoolGold(_shopper);
           break;
         case SDL_Keycode.SDLK_S:
           if (_shopper is not null) 
