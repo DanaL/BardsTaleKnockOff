@@ -225,7 +225,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
         string n = i.Item2.Name;
         if (i.Item1.Count > 1)
           n += $" ({i.Item1.Count})";
-        if (i.Item1.Charges != int.MaxValue)
+        if (i.Item1.Charges != int.MaxValue && i.Item1.Charges > 0)
           n += $" ({i.Item1.Charges})";
         if (!i.Item2.UseableBy.HasFlag(character.Role))
         {
