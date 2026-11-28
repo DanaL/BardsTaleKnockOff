@@ -13,7 +13,7 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-class HealingScreen(App app, Character c, int slot) : IScreen
+class HealingScreen(App app, Character c) : IScreen
 {
   const int MAIN = 0;
   const int BROKE = 1;
@@ -34,16 +34,14 @@ class HealingScreen(App app, Character c, int slot) : IScreen
         case SDL_Scancode.SDL_SCANCODE_4:
         case SDL_Scancode.SDL_SCANCODE_5:
         case SDL_Scancode.SDL_SCANCODE_6:
-          int nextSlot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
-          if (nextSlot <= app.GameState!.Party.Count)
+          var nextSlot = (PartySlot) (key.scancode - SDL_Scancode.SDL_SCANCODE_1 + 1);
+          if (app.GameState.Party.Slot(nextSlot) is Character nc)
           {
-            Character? c = app.GameState!.Party.Members[nextSlot];
-            if (c is not null)
-              app.Screens.Replace(new HealingScreen(app, c, nextSlot));
+            app.Screens.Replace(new HealingScreen(app, nc));
           }          
           break;
         case SDL_Scancode.SDL_SCANCODE_P:
-          app.GameState.Party.PoolGold(slot);
+          app.GameState.Party.PoolGold(c);
           break;
         case SDL_Scancode.SDL_SCANCODE_H:
           HealCharacter();
@@ -199,12 +197,10 @@ class TempleScreen(App app) : IScreen
         case SDL_Scancode.SDL_SCANCODE_4:
         case SDL_Scancode.SDL_SCANCODE_5:
         case SDL_Scancode.SDL_SCANCODE_6:
-          int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
-          if (slot <= app.GameState.Party.Count)
-          {
-            Character? c = app.GameState!.Party.Members[slot];
-            if (c is not null)
-              app.Screens.Push(new HealingScreen(app, c, slot));
+          var slot = (PartySlot) (key.scancode - SDL_Scancode.SDL_SCANCODE_1 + 1);
+          if (app.GameState.Party.Slot(slot) is Character c)
+          {            
+            app.Screens.Push(new HealingScreen(app, c));
           }          
           break;
         case SDL_Scancode.SDL_SCANCODE_ESCAPE:

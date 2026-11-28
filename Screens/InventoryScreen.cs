@@ -13,7 +13,7 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-class InventoryScreen(App app, Character character, int characterSlot = -1) : IScreen, IPartyPickScreen
+class InventoryScreen(App app, Character character, PartySlot partySlot = PartySlot.None) : IScreen, IPartyPickScreen
 {
   string _status = "";
   int _cursor = 0;
@@ -34,8 +34,8 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
       case SDL_Keycode.SDLK_4:
       case SDL_Keycode.SDLK_5:
       case SDL_Keycode.SDLK_6:
-        int otherSlot = (int)(key.key - SDL_Keycode.SDLK_1);
-        if (otherSlot < app.GameState.Party.Count && app.GameState.Party.Members[otherSlot] is Character c) 
+        var otherSlot = (PartySlot)(key.key - SDL_Keycode.SDLK_1 + 1);
+        if (app.GameState.Party.Slot(otherSlot)  is Character c) 
         {
           app.Screens.Pop();
           if (app.Screens.Top is CharacterScreen cs)
@@ -70,7 +70,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
         }
         else
         {
-          app.Screens.Push(new ChoosePartyMemberScreen(app, this, $"Trade {toTrade.Name} to whom", false, characterSlot) { DungeonView = false });
+          app.Screens.Push(new ChoosePartyMemberScreen(app, this, $"Trade {toTrade.Name} to whom", false, partySlot) { DungeonView = false });
         }
         break;
       case SDL_Keycode.SDLK_ESCAPE:

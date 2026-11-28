@@ -131,7 +131,7 @@ class ShoppeScreen : IScreen, IInventorySelectionScreen
   
   int _state = MAIN;
 
-  int _shopperSlot;
+  PartySlot _shopperSlot;
   Character? _shopper = null;
 
   public ShoppeScreen(App app)
@@ -174,15 +174,12 @@ class ShoppeScreen : IScreen, IInventorySelectionScreen
         case SDL_Keycode.SDLK_4:
         case SDL_Keycode.SDLK_5:
         case SDL_Keycode.SDLK_6:
-          int slot = (int) (key.key - SDL_Keycode.SDLK_0) - 1;
-          if (slot <= _app.GameState!.Party.Count)
+          var slot = (PartySlot) (key.key - SDL_Keycode.SDLK_0);
+          if (_app.GameState.Party.Slot(slot) is Character c)
           {            
-            if (_app.GameState!.Party.Members[slot] is Character c)
-            {
-              _shopper = c;
-              _shopperSlot = slot;
-              _state = MENU;
-            }
+            _shopper = c;
+            _shopperSlot = slot;
+            _state = MENU;
           }          
           break;
         case SDL_Keycode.SDLK_ESCAPE:

@@ -443,7 +443,9 @@ class Party
       return Special;
     else if (slot == PartySlot.None)
       return null;
-
+    else if (slot < PartySlot.Slot1 || slot > PartySlot.Slot6)
+      return null;
+      
     int slotNum = (int)slot - 1;
 
     return Members[slotNum];
@@ -540,19 +542,19 @@ class Party
 
   public void PoolGold(Character c)
   {
-    for (int j = 0; j < Party.MAX_PARTY_SIZE; j++)
+    for (int j = 0; j < MAX_PARTY_SIZE; j++)
     {
       if (Members[j] == c)
       {
-        PoolGold(j);
+        PoolGold((PartySlot)(j + 1));
         break;
       }
     }
   }
 
-  public void PoolGold(int slot)
+  public void PoolGold(PartySlot slot)
   {
-    if (Members[slot] is not Character c)
+    if (Slot(slot) is not Character c)
       return;
 
     int total = 0;

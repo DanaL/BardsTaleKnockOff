@@ -124,8 +124,8 @@ class GuildScreen : IScreen
       case SDL_Keycode.SDLK_4:
       case SDL_Keycode.SDLK_5:
       case SDL_Keycode.SDLK_6:
-        int slot = (int) (key.key - SDL_Keycode.SDLK_1);
-        if (slot < _app.GameState.Party.Count)
+        var slot = (PartySlot) (key.key - SDL_Keycode.SDLK_1 + 1);
+        if (_app.GameState.Party.Slot(slot) is Character c)
           _app.Screens.Push(new CharacterScreen(_app, slot));
         break;
     }

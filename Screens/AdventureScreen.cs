@@ -86,8 +86,8 @@ sealed class AdventureScreen(App app) : IScreen, IPartyPickScreen, ICastSpellScr
       case SDL_Scancode.SDL_SCANCODE_4:
       case SDL_Scancode.SDL_SCANCODE_5:
       case SDL_Scancode.SDL_SCANCODE_6:
-        int slot = key.scancode - SDL_Scancode.SDL_SCANCODE_1;
-        if (GS.Party.Members[slot] is Character)
+        var slot = (PartySlot) (key.scancode - SDL_Scancode.SDL_SCANCODE_1 + 1);
+        if (GS.Party.Slot(slot) is Character)
           app.Screens.Push(new CharacterScreen(app, slot));
         break;
       case SDL_Scancode.SDL_SCANCODE_C:

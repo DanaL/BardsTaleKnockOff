@@ -13,9 +13,9 @@ using SDL;
 
 namespace BardsTaleKnockOff;
 
-class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
+class CharacterScreen(App app, PartySlot slot) : IScreen, IPartyPickScreen
 {
-  public int CharacterSlot { get; set; } = slot;
+  public PartySlot CharacterSlot { get; set; } = slot;
   const int MAIN = 0;
   const int TRANSFER_GOLD = 1;
 
@@ -35,12 +35,12 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
         case SDL_Keycode.SDLK_4:
         case SDL_Keycode.SDLK_5:
         case SDL_Keycode.SDLK_6:
-          int otherSlot = (int)(key.key - SDL_Keycode.SDLK_1);
-          if (otherSlot < app.GameState.Party.Count)
+          var otherSlot = (PartySlot)(key.key - SDL_Keycode.SDLK_1 + 1);
+          if (app.GameState.Party.Slot(otherSlot) is Character c)
             app.Screens.Replace(new CharacterScreen(app, otherSlot));
           break;
         case SDL_Keycode.SDLK_I:
-          app.Screens.Push(new InventoryScreen(app, app.GameState.Party.Members[CharacterSlot]!, CharacterSlot));
+          app.Screens.Push(new InventoryScreen(app, (Character) app.GameState.Party.Slot(CharacterSlot)!, CharacterSlot));
           break;
         case SDL_Keycode.SDLK_P:
           app.GameState.Party.PoolGold(CharacterSlot);
@@ -96,8 +96,7 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
   void TradeGold(int amount)
   {
     Party p = app.GameState.Party;
-    int slotNum = (int)_transferToSlot;
-    if (p.Members[CharacterSlot] is not Character c || p.Members[slotNum] is not Character tc)
+    if (p.Slot(CharacterSlot) is not Character c || p.Slot(_transferToSlot) is not Character tc)
       return;
     
     amount = int.Min(amount, c.Gold);
@@ -112,15 +111,14 @@ class CharacterScreen(App app, int slot) : IScreen, IPartyPickScreen
     string caption = "";
     List<string> lines = [];
 
-    if (app.GameState.Party!.Members[CharacterSlot] is Character c)
+    if (app.GameState.Party.Slot(CharacterSlot) is Character c)
     {
-      int slotNum = (int)_transferToSlot;
       caption = c.Name;
       if (_state == MAIN)
       {
         lines = CharacterInfo(c);
       }
-      else if (_state == TRANSFER_GOLD && app.GameState.Party.Members[slotNum] is Character tc)
+      else if (_state == TRANSFER_GOLD && app.GameState.Party.Slot(_transferToSlot) is Character tc)
       {
         lines = [$"{c.Name} has {c.Gold} gp. Transfer how much to {tc.Name}?", ""];
         lines.Add($"> {_transferAmount}");
