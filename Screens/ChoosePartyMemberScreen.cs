@@ -34,7 +34,11 @@ class ChoosePartyMemberScreen(App app, IPartyPickScreen src, string prompt, bool
     }
 
     var slot = (PartySlot) (key.scancode - SDL_Scancode.SDL_SCANCODE_1 + 1);
-    if (slot != ignore && app.GameState.Party.Slot(slot) is not null)
+    if (slot == ignore) 
+    {
+      _status = "";
+    }
+    else if (app.GameState.Party.Slot(slot) is not null)
     {
       app.Screens.Pop();
       src.CharacterChosen(slot);
