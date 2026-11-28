@@ -281,12 +281,17 @@ class Battle(GameState gs, Rng rng, List<MonsterGroup> foes)
 
     Item item = ItemCatalog.Item(invSlot.Id);
     Messages.Enqueue($"{c.Name} uses {item.Name.IndefArticle()}");
-    bool consumed = ItemCatalog.Use(item, gs, c, Messages, rng);
+    UseResult result = ItemCatalog.Use(item, gs, c, Messages, rng);
 
-    if (!consumed)
-      return;
-
-    c.Inventory[invIdx] = invSlot.Count == 1 ? null : invSlot with { Count = invSlot.Count - 1};
+    switch (result)
+    {
+      case UseResult.Consumed:
+        c.Inventory[invIdx] = invSlot.Count == 1 ? null : invSlot with { Count = invSlot.Count - 1};
+        break;
+      case UseResult.ChargeUsed:
+        c.Inventory[invIdx] = invSlot.Charges == 1 ? null : invSlot with { Charges = invSlot.Charges - 1};
+        break;
+    }    
   }
 
   // Advance the clock, expire buffs, move the fallen to the back and drop

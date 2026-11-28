@@ -25,6 +25,8 @@ record struct TempBuff(Buff Buff, ulong ExpiresOn, bool CombatOnly);
 
 readonly record struct Rgb(byte R, byte G, byte B);
 
+record struct InvSlot(int Id, bool Equipped, int Count = 1, int Charges = int.MaxValue);
+
 class AbortBattleException(string caster) : Exception(caster) {}
 
 interface IBeing

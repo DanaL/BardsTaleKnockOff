@@ -57,7 +57,7 @@ class PurchaseScreen(App app, Character character, List<(Item, int)> inventory) 
     else
     {
       character.Gold -= price;
-      character.AddItem(item.Id, count);
+      character.AddItem(item.Id, count, item.DefaultCharges);
       string n = item.Name.ToLower();
       if (count > 1)
         n = $"{n.Pluralize()} ({count})";

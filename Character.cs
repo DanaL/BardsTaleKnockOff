@@ -23,8 +23,6 @@ enum Role
   Paladin = 1 << 9
 }
 
-record struct InvSlot(int Id, bool Equipped, int Count = 1);
-
 class Character : IBeing
 {
   public const int INVENTORY_SLOTS = 12;
@@ -227,7 +225,7 @@ class Character : IBeing
 
   public bool InventoryFull => !Inventory.Any(s => s is null);
 
-  public bool AddItem(int id, int count)
+  public bool AddItem(int id, int count, int itemCharges)
   {
     Item item = ItemCatalog.Item(id);
     if (item.Stackable)
@@ -245,7 +243,7 @@ class Character : IBeing
     int slot = Array.IndexOf(Inventory, null);
     if (slot < 0)
       return false;
-    Inventory[slot] = new(id, false, count);
+    Inventory[slot] = new(id, false, count, Charges:item.DefaultCharges);
 
     return true;
   }
@@ -516,7 +514,7 @@ class Party
       int count = itemId == ItemCatalog.ARROW ? 10 : 1;
       string s = $"{finder.Name} finds ";
       s += count > 1 ? $"{count} {item.Name.Pluralize()}" : item.Name.IndefArticle();
-      finder.AddItem(itemId, count);
+      finder.AddItem(itemId, count, item.DefaultCharges);
 
       return s;
     }

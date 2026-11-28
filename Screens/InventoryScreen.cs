@@ -81,7 +81,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
 
   void UseItem()
   {
-    var (_, item) = _items[_cursor];
+    var (invSlot, item) = _items[_cursor];
 
     if (item.Type == ItemType.Ammunition)
     {
@@ -96,17 +96,31 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
     }
 
     Queue<string> mq = [];
-    bool consumed = ItemCatalog.Use(item, app.GameState, character, mq, app.Rng);
-    if (consumed)
+    UseResult result = ItemCatalog.Use(item, app.GameState, character, mq, app.Rng);
+    switch (result)
+    {
+      case UseResult.Consumed:
+        DisposeOfItem();
+        break;
+      case UseResult.ChargeUsed:
+        if (invSlot.Charges == 1)
+          DisposeOfItem();
+        else
+          character.Inventory[_cursor] = invSlot with { Charges = invSlot.Charges - 1 };
+        break;
+    }
+    
+    while (mq.Count > 0)
+      app.GameState.Say(mq.Dequeue());
+
+    void DisposeOfItem()
     {
       character.Inventory[_cursor] = null;
       GetInv();
       RecalcInventory();
       if (_cursor >= _items.Count)
-      _cursor = _items.Count - 1;
+        _cursor = _items.Count - 1;
     }
-    while (mq.Count > 0)
-      app.GameState.Say(mq.Dequeue());
   }
 
   void DiscardItem(InvSlot slot, Item item)
@@ -211,6 +225,8 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
         string n = i.Item2.Name;
         if (i.Item1.Count > 1)
           n += $" ({i.Item1.Count})";
+        if (i.Item1.Charges != int.MaxValue)
+          n += $" ({i.Item1.Charges})";
         if (!i.Item2.UseableBy.HasFlag(character.Role))
         {
           n += " *";
@@ -243,8 +259,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
 
   public void CharacterChosen(PartySlot partySlot)
   {
-    int slotNum = (int)partySlot;
-    if (app.GameState.Party.Members[slotNum] is not Character tradeTo)
+    if (app.GameState.Party.Slot(partySlot) is not Character tradeTo)
       return;
 
     if (tradeTo.InventoryFull)
@@ -261,7 +276,7 @@ class InventoryScreen(App app, Character character, int characterSlot = -1) : IS
     if (_cursor >= _items.Count)
       _cursor = _items.Count - 1;
 
-    tradeTo.AddItem(item.Id, slot.Count);
+    tradeTo.AddItem(item.Id, slot.Count, slot.Charges);
     app.Screens.Push(new PopupScreen(app, $"{character.Name} gives {item.Name.DefArticle()} to {tradeTo.Name}."));
   }
 

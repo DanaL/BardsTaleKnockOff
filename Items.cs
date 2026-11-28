@@ -17,6 +17,7 @@ namespace BardsTaleKnockOff;
 // the early stages of this project I'll just have a big lookup table.
 
 enum ItemType { Misc, Weapon, Armour, Gloves, Shield, Helmet, Ring, Bow, Ammunition, Quest }
+enum UseResult { Nothing, Consumed, ChargeUsed }
 
 record Item
 {
@@ -32,6 +33,7 @@ record Item
   public int DamageBonus { get; init; } = 0;
   public bool Useable { get; init; } = false;
   public bool Stackable { get; init; } = false;
+  public int DefaultCharges { get; init; } = 0;
 
   public int SellValue => int.Max(Value / 4, 1);
 }
@@ -102,11 +104,13 @@ class ItemCatalog
   public const int CORRODED_TOWER_SHIELD = 35;
 
   public const int WOLF_FGN = 36;
+  public const int WAND_OF_LIGHT = 37;
 
   const Role ALL = Role.Warrior | Role.Rogue | Role.Hunter | Role.Conjurer | Role.Magician
                       | Role.Sorcerer | Role.Wizard | Role.Trickster | Role.Archer | Role.Paladin;
   const Role NONCASTER = Role.Warrior | Role.Rogue | Role.Hunter | Role.Trickster | Role.Archer | Role.Paladin;
   const Role FIGHTER = Role.Warrior | Role.Archer | Role.Paladin;
+  const Role MAGE = Role.Conjurer | Role.Magician | Role.Sorcerer | Role.Wizard | Role.Trickster;
 
   public static Item Item(int id) => id switch
   {
@@ -132,6 +136,7 @@ class ItemCatalog
     LONGBOW => new() { Id = LONGBOW, Name = "Longbow", Type = ItemType.Bow, Value = 100, DamageDie = 8, NumDamageDice = 1, UseableBy = Role.Warrior | Role.Archer },
     ARROW => new() { Id = ARROW, Name = "Arrow", Type = ItemType.Ammunition, Value = 2, UseableBy = NONCASTER, Useable = true, Stackable = true },
     WOLF_FGN => new() { Id = WOLF_FGN, Name = "Wolf Figurine", Type = ItemType.Misc, Value = 150, UseableBy = ALL, Useable = true, Stackable = false },
+    WAND_OF_LIGHT => new() { Id = WAND_OF_LIGHT, Name = "Wand of Light", Type = ItemType.Misc, Value = 100, UseableBy = MAGE, Useable = true, Stackable = false, DefaultCharges = 50 },
 
     CORRODED_BROADSWORD => new() { Id = CORRODED_BROADSWORD, Name = "Corroded Broadsword", AttackBonus = -1, Type = ItemType.Weapon, Value = 20, DamageDie = 4, NumDamageDice = 1, UseableBy = FIGHTER | Role.Hunter },
     CORRODED_SHORTSWORD => new() { Id = CORRODED_SHORTSWORD, Name = "Corroded Shortsword", AttackBonus = -1, Type = ItemType.Weapon, Value = 8, DamageDie = 3, NumDamageDice = 1, UseableBy = Role.Warrior | Role.Paladin | Role.Archer | Role.Hunter | Role.Rogue | Role.Trickster },
@@ -151,24 +156,26 @@ class ItemCatalog
     _ => throw new Exception($"Item {id} is not defined!")
   };
   
-  public static bool Use(Item item, GameState gs, Character user, Queue<string> messages, Rng rng)
+  public static UseResult Use(Item item, GameState gs, Character user, Queue<string> messages, Rng rng)
   {
-    bool consumed = false;
-
-    if (item.Id == TORCH)
+    switch (item.Id)
     {
-      gs.Party.ClearLightSources();
-      gs.Party.Buffs.Add(new TempBuff(Buff.Torch, gs.Turn + 2000, false));      
-      consumed = true;
-    }
-    else if (item.Id == WOLF_FGN)
-    {
-      messages.Enqueue($"{user.Name} summons a wolf!");
-      gs.Party.Special = MonsterCatalog.Get(Monsters.Wolf, rng);
-      consumed = true;
+      case TORCH:
+        gs.Party.ClearLightSources();
+        gs.Party.Buffs.Add(new TempBuff(Buff.Torch, gs.Turn + 2000, false));
+        return UseResult.Consumed;
+      case WOLF_FGN:
+        messages.Enqueue($"{user.Name} summons a wolf!");
+        gs.Party.Special = MonsterCatalog.Get(Monsters.Wolf, rng);
+        return UseResult.Consumed;
+      case WAND_OF_LIGHT:
+        gs.Party.ClearLightSources();
+        gs.Party.Buffs.Add(new TempBuff(Buff.MageFlame, gs.Turn + SpellResolver.DURATION_MEDIUM, false));
+        messages.Enqueue($"{user.Name} conjures some light!");
+        return UseResult.ChargeUsed;
     }
 
-    return consumed;    
+    return UseResult.Nothing;    
   }
 
   public static int CorrodedId(int itemId)  => itemId switch 

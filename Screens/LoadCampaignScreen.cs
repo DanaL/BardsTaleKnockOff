@@ -55,7 +55,7 @@ class LoadCampaignScreen(App app) : IScreen
         Serialize.LoadSaveGame(app);
         app.Screens.Replace(new GuildScreen(app));
 
-        app.GameState.Party.GiveItem(ItemCatalog.WOLF_FGN, app.Rng);
+        //app.GameState.Party.GiveItem(ItemCatalog.WAND_OF_LIGHT, app.Rng);
         
         break;
       case SDL_Keycode.SDLK_ESCAPE:

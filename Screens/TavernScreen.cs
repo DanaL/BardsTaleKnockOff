@@ -55,6 +55,9 @@ class TavernScreen : IScreen
 
   void RecruitHireling()
   {
+    if (_recruit is null)
+      return;
+      
     int totalGold = _app.GameState.Party.Members.OfType<Character>().Sum(c => c.Gold);
     if (totalGold < 50)
       _app.Screens.Push(new PopupScreen(_app, "None of the sellswords here are willing to work on credit."));
