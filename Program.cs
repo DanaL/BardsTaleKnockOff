@@ -99,6 +99,11 @@ unsafe class Program
     SDL_SetRenderLogicalPresentation(renderer, GameUI.ScreenW, GameUI.ScreenH,
       SDL_RendererLogicalPresentation.SDL_LOGICAL_PRESENTATION_INTEGER_SCALE);
 
+    // With vsync, SDL_RenderPresent waits for the display's next refresh, which
+    // paces the loop to the monitor's rate. If the driver can't do vsync we
+    // fall back to sleeping ~16ms per frame.
+    bool vsync = SDL_SetRenderVSync(renderer, 1);
+
     // SDL starts with text input on; screens switch it on only when they
     // want typed characters (see App.StartTextInput).
     SDL_StopTextInput(window);
@@ -150,7 +155,8 @@ unsafe class Program
       SDL_RenderClear(renderer);
       app.Screens.Draw(ui);
       SDL_RenderPresent(renderer);
-      SDL_Delay(16);
+      if (!vsync)
+        SDL_Delay(16);
     }
 
     SDL_DestroyRenderer(renderer);
